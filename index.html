@@ -492,6 +492,142 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/14/2017-01-09-03-进程创建/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="一个游戏开发者的博客">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            
+            <a href="/2017/01/14/2017-01-09-03-进程创建/" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--进程创建分析</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-01-14 20:18:46" itemprop="dateCreated datePublished" datetime="2017-01-14T20:18:46+08:00">2017-01-14</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-21 11:19:17" itemprop="dateModified" datetime="2019-10-21T11:19:17+08:00">2019-10-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index">
+                    <span itemprop="name">linux</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            <span id="/2017/01/14/2017-01-09-03-进程创建/" class="post-meta-item leancloud_visitors" data-flag-title="《linux 0.12内核完全剖析》--进程创建分析" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2017/01/14/2017-01-09-03-进程创建/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2017/01/14/2017-01-09-03-进程创建/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>笔记重点:<br>重新分析进程的创建，发现最初的笔记还是比较简单,说起进程创建，不得不先了解进程0的创建，其后的所有进程都是以这个进程为模板进行创建，进程0的创建过程是在系统启动的main.c中进行的，在初始化之前，手动设置这个模板，更重要的是这个进程是在内核状态下切换到用户态运行的，所以之后的进程也都在用户态下运行；其次需要理解进程的控制信息(PCB)和进程本身运行的内存空间的分配情况，这点在代码中要了解透彻，进程内核态的堆栈和用户态的堆栈的的分配是分开，同时需要了解他们的分布情况，这对了解用户态下进程如何调用系统调用的理解至关重要；同时一个进程的虚拟内存分布和实际的物理内存分配是分开的，理解这一点对理解linux的内存分配方式以及缺页中断的理解，写时复制机制的理解都很重要；最后在谈到进程的调度，在此版本的调度中可以说非常简单，但是在进程调度却是linux系统一个非常大且重要的主题。<br>根据一下问题来看笔记</p>
+<ul>
+<li>进程占多大的线形地址空间</li>
+<li>进程实际分配多少物理内存</li>
+<li>创建进程的开销在哪里</li>
+</ul>
+</blockquote>
+          <!--noindex-->
+          
+            <div class="post-button">
+              <a class="btn" href="/2017/01/14/2017-01-09-03-进程创建/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </article>
+  
+  
+  
+
+    
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/14/2017-01-07-02-中断处理/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -814,7 +950,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
