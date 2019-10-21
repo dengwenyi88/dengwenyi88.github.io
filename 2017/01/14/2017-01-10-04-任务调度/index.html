@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.1">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.1">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.1" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.1">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|Roboto Slab:300,300italic,400,400italic,700,700italic|PT Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.4.1',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: 'HG95CIAAGP',
+      apiKey: 'cb058191fc2599e72638aa2c23b77593',
+      indexName: 'sherlock',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="笔记重点:进程调度一直是linux系统开发中相当重要的部分,但在最初版本中的调度如此简单，以至于你并不相信，但是在不断的发展过程中，首先在2.6内核版本中发展了抢占式的调度算法，在经历几次重大版本的迭代后在开发出CFS(完全公平的调度算法),不过调度算法的重点是，如何选择需要运行的进程以及保证性能。进程的运行很多时候会被外部的资源分配不及时而阻塞，这个时候进程睡眠等待，以及这个时候的合理调度，对">
+<meta name="keywords" content="linux-0.12">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《linux 0.12内核完全剖析》--进程调度分析">
+<meta property="og:url" content="https://dengwenyi88.github.io/2017/01/14/2017-01-10-04-任务调度/index.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="笔记重点:进程调度一直是linux系统开发中相当重要的部分,但在最初版本中的调度如此简单，以至于你并不相信，但是在不断的发展过程中，首先在2.6内核版本中发展了抢占式的调度算法，在经历几次重大版本的迭代后在开发出CFS(完全公平的调度算法),不过调度算法的重点是，如何选择需要运行的进程以及保证性能。进程的运行很多时候会被外部的资源分配不及时而阻塞，这个时候进程睡眠等待，以及这个时候的合理调度，对">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://pzpfp2uzw.bkt.clouddn.com/21.png">
+<meta property="og:image" content="http://pzpfp2uzw.bkt.clouddn.com/22.png">
+<meta property="og:updated_time" content="2019-10-21T03:57:29.241Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《linux 0.12内核完全剖析》--进程调度分析">
+<meta name="twitter:description" content="笔记重点:进程调度一直是linux系统开发中相当重要的部分,但在最初版本中的调度如此简单，以至于你并不相信，但是在不断的发展过程中，首先在2.6内核版本中发展了抢占式的调度算法，在经历几次重大版本的迭代后在开发出CFS(完全公平的调度算法),不过调度算法的重点是，如何选择需要运行的进程以及保证性能。进程的运行很多时候会被外部的资源分配不及时而阻塞，这个时候进程睡眠等待，以及这个时候的合理调度，对">
+<meta name="twitter:image" content="http://pzpfp2uzw.bkt.clouddn.com/21.png">
+  <link rel="canonical" href="https://dengwenyi88.github.io/2017/01/14/2017-01-10-04-任务调度/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>《linux 0.12内核完全剖析》--进程调度分析 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">咖啡's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">专心 专注 专业</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+        
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+      
+    
+      
+      
+        
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+      
+    
+      
+      
+        
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+      
+    
+      
+      
+        
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      
+    
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/14/2017-01-10-04-任务调度/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="一个游戏开发者的博客">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            《linux 0.12内核完全剖析》--进程调度分析
+            
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-01-14 20:18:59" itemprop="dateCreated datePublished" datetime="2017-01-14T20:18:59+08:00">2017-01-14</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-21 11:57:29" itemprop="dateModified" datetime="2019-10-21T11:57:29+08:00">2019-10-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index">
+                    <span itemprop="name">linux</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            <span id="/2017/01/14/2017-01-10-04-任务调度/" class="post-meta-item leancloud_visitors" data-flag-title="《linux 0.12内核完全剖析》--进程调度分析" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2017/01/14/2017-01-10-04-任务调度/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2017/01/14/2017-01-10-04-任务调度/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>笔记重点:<br>进程调度一直是linux系统开发中相当重要的部分,但在最初版本中的调度如此简单，以至于你并不相信，但是在不断的发展过程中，首先在2.6内核版本中发展了抢占式的调度算法，在经历几次重大版本的迭代后在开发出CFS(完全公平的调度算法),不过调度算法的重点是，如何选择需要运行的进程以及保证性能。进程的运行很多时候会被外部的资源分配不及时而阻塞，这个时候进程睡眠等待，以及这个时候的合理调度，对于CPU资源的充分利用，显得尤为重要，那调度就从进程的睡眠机制开始了解。<br>问题：</p>
+<ul>
+<li>任务调度在何时发生</li>
+<li>任务调度的基本策略是什么</li>
+<li>任务切换时怎么做到的</li>
+</ul>
+</blockquote>
+<a id="more"></a>
+
+<h4 id="1-隐含的睡眠队列"><a href="#1-隐含的睡眠队列" class="headerlink" title="1. 隐含的睡眠队列"></a>1. 隐含的睡眠队列</h4><p>建立睡眠等待队列的原因，是因为有先后顺序等待某项资源，然后要按顺序唤醒进程，就要依照这里隐含的队列顺序进行</p>
+<p>sched.c第171行</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> __sleep_on(struct task_struct **p, <span class="keyword">int</span> state)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">tmp</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!p)</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	<span class="keyword">if</span> (current == &amp;(init_task.task))</span><br><span class="line">		panic(<span class="string">"task[0] trying to sleep"</span>);</span><br><span class="line">	tmp = *p;</span><br><span class="line">	*p = current;</span><br><span class="line">	current-&gt;state = state;</span><br><span class="line">repeat:	schedule();</span><br><span class="line">  	<span class="comment">//这里的*p的内容，有可能不是上面的*p的内容即不是当前任务，也有可能是</span></span><br><span class="line">  	<span class="comment">//不是当前任务是因为在其它进程执行本函数时__sleep_on设置的</span></span><br><span class="line">	<span class="keyword">if</span> (*p &amp;&amp; *p != current) &#123;</span><br><span class="line">		(**p).state = <span class="number">0</span>;</span><br><span class="line">		current-&gt;state = TASK_UNINTERRUPTIBLE;</span><br><span class="line">		<span class="keyword">goto</span> repeat;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (!*p)</span><br><span class="line">		printk(<span class="string">"Warning: *P = NULL\n\r"</span>);</span><br><span class="line">	<span class="keyword">if</span> (*p = tmp)</span><br><span class="line">		tmp-&gt;state=<span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以下这张图展示了这个队列的大概样子，上面方块代表__sleep_on函数块,需要了解这个机制，是因为很多其它的子系统也用到类似的方法，这也是了解睡眠机制的关键</p>
+<p><img src="http://pzpfp2uzw.bkt.clouddn.com/21.png" alt="隐含的睡眠队列"></p>
+<h3 id="2-任务调度在何时发生"><a href="#2-任务调度在何时发生" class="headerlink" title="2. 任务调度在何时发生"></a>2. 任务调度在何时发生</h3><p>任务状态发生改变的时候都会要重新调度，比如睡眠了一个进程(任务),自然就要重新选一个进程继续运行，在者要是没有任务发生改变时，时间中断回调函数，会在每10ms到来时运行一次</p>
+<p>sched.c第324行</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">do_timer</span><span class="params">(<span class="keyword">long</span> cpl)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	...</span><br><span class="line">    <span class="comment">//current-&gt;counter &gt; 0意思是当前任务还有分配给他的时间片</span></span><br><span class="line">	<span class="keyword">if</span> ((--current-&gt;counter)&gt;<span class="number">0</span>) <span class="keyword">return</span>;</span><br><span class="line">	current-&gt;counter=<span class="number">0</span>;</span><br><span class="line">	<span class="keyword">if</span> (!cpl) <span class="keyword">return</span>;</span><br><span class="line">  	<span class="comment">//重点：重新调度</span></span><br><span class="line">	schedule();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-任务调度的基本策略"><a href="#3-任务调度的基本策略" class="headerlink" title="3. 任务调度的基本策略"></a>3. 任务调度的基本策略</h3><p>sched.c第120行</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">schedule</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	...</span><br><span class="line"><span class="comment">/* this is the scheduler proper: */</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">		c = <span class="number">-1</span>;</span><br><span class="line">		next = <span class="number">0</span>;</span><br><span class="line">		i = NR_TASKS;</span><br><span class="line">		p = &amp;task[NR_TASKS];</span><br><span class="line">      	<span class="comment">//挑选一个就绪态运行的进程且时间片最大的那个进程</span></span><br><span class="line">		<span class="keyword">while</span> (--i) &#123;</span><br><span class="line">			<span class="keyword">if</span> (!*--p)</span><br><span class="line">				<span class="keyword">continue</span>;</span><br><span class="line">			<span class="keyword">if</span> ((*p)-&gt;state == TASK_RUNNING &amp;&amp; (*p)-&gt;counter &gt; c)</span><br><span class="line">				c = (*p)-&gt;counter, next = i;</span><br><span class="line">		&#125;</span><br><span class="line">      	<span class="comment">//没有找到怎么办？你猜猜</span></span><br><span class="line">		<span class="keyword">if</span> (c) <span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">for</span>(p = &amp;LAST_TASK ; p &gt; &amp;FIRST_TASK ; --p)</span><br><span class="line">			<span class="keyword">if</span> (*p)</span><br><span class="line">			<span class="comment">// 这就是调整优先级的公式,对！就这么简单</span></span><br><span class="line">				(*p)-&gt;counter = ((*p)-&gt;counter &gt;&gt; <span class="number">1</span>) +</span><br><span class="line">						(*p)-&gt;priority;</span><br><span class="line">	&#125;</span><br><span class="line">  	<span class="comment">//切换进程</span></span><br><span class="line">	switch_to(next);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>备注:</p>
+<ul>
+<li>选取超时时间最少也就是分配的时间片最多的那个进程进行切换</li>
+<li>调度性能与进程的数目成线性关系，进程越多性能越差</li>
+</ul>
+<h3 id="4-切换任务的代码分析"><a href="#4-切换任务的代码分析" class="headerlink" title="4. 切换任务的代码分析"></a>4. 切换任务的代码分析</h3><p>先来看看TSS段描述符的格式:</p>
+<p><img src="http://pzpfp2uzw.bkt.clouddn.com/22.png" alt="段描述符格式"></p>
+<p>然后再来看看_TSS宏，它是寻找GDT表中本进程的tss描述符的选择符号值,每个任务包含一个ldt选择符和tss选择符</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//每个任务有一个8字节的tss选择符和8字节的ldt选择子一共16字节</span></span><br><span class="line"><span class="comment">//任务为n偏移2^4字节</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _TSS(n) ((((unsigned long) n)&lt;&lt;4)+(FIRST_TSS_ENTRY&lt;&lt;3))</span></span><br></pre></td></tr></table></figure>
+
+<p>切换代码分析</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> switch_to(n) &#123;\</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span><span class="keyword">long</span> a,b;&#125; __tmp; \</span><br><span class="line"><span class="comment">//是不是当前任务，是就不用切换直接跳到下面标号为的地方</span></span><br><span class="line">__asm__(<span class="string">"cmpl %%ecx,_current\n\t"</span> \</span><br><span class="line">	<span class="string">"je 1f\n\t"</span> \</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	%dx装载下面的_TSS(n)，也就是tss段描述符的值</span></span><br><span class="line"><span class="comment">	放到%1,%1代表__tmp.b处</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	<span class="string">"movw %%dx,%1\n\t"</span> \ </span><br><span class="line">	<span class="comment">/*%ecx为保存为切换出来的任务*/</span></span><br><span class="line">	<span class="string">"xchgl %%ecx,_current\n\t"</span> \</span><br><span class="line">	<span class="comment">/*长跳到__tmp.a处的任务，也就是上面tss保存到__tmp.b的进程*/</span></span><br><span class="line">	<span class="string">"ljmp %0\n\t"</span> \</span><br><span class="line">	<span class="string">"cmpl %%ecx,_last_task_used_math\n\t"</span> \</span><br><span class="line">	<span class="string">"jne 1f\n\t"</span> \</span><br><span class="line">	<span class="string">"clts\n"</span> \</span><br><span class="line">	<span class="string">"1:"</span> \</span><br><span class="line">	::<span class="string">"m"</span> (*&amp;__tmp.a),<span class="string">"m"</span> (*&amp;__tmp.b), \</span><br><span class="line">	<span class="string">"d"</span> (_TSS(n)),<span class="string">"c"</span> ((<span class="keyword">long</span>) task[n])); \</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>结束语:</p>
+<p>0.12版本的进程调度策略比较简单，但给了我们理解进程调度的核心意思，最新的linux代码仍然使用switch_to宏，只是已经做了非常的优化工作</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/linux-0-12/" rel="tag"># linux-0.12</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/01/14/2017-01-09-03-进程创建/" rel="next" title="《linux 0.12内核完全剖析》--进程创建分析">
+                  <i class="fa fa-chevron-left"></i> 《linux 0.12内核完全剖析》--进程创建分析
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/01/14/2017-01-12-05-任务退出/" rel="prev" title="《linux 0.12内核完全剖析》--进程退出分析">
+                  《linux 0.12内核完全剖析》--进程退出分析 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="comments"></div>
+  
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-隐含的睡眠队列"><span class="nav-text">1. 隐含的睡眠队列</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-任务调度在何时发生"><span class="nav-text">2. 任务调度在何时发生</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-任务调度的基本策略"><span class="nav-text">3. 任务调度的基本策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-切换任务的代码分析"><span class="nav-text">4. 切换任务的代码分析</span></a></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="/images/avatar.png"
+      alt="咖啡">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">一个游戏开发者的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+</div>
+
+
+
+
+      </div>
+
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">
+      
+    主题 – <a href="https://pisces.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.4.1
+  </div>
+
+        
+
+
+
+
+
+
+  
+  <script>
+  function leancloudSelector(url) {
+    return document.getElementById(url).querySelector('.leancloud-visitors-count');
+  }
+  if (CONFIG.page.isPost) {
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = visitors.getAttribute('id').trim();
+      var title = visitors.getAttribute('data-flag-title').trim();
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .then(response => response.json())
+              .then(() => {
+                leancloudSelector(url).innerText = counter.time + 1;
+              })
+            
+              .catch(error => {
+                console.log('Failed to save visitor count', error);
+              })
+          } else {
+              Counter('post', '/classes/Counter', { title: title, url: url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.log('Failed to create', error);
+                });
+            
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  } else {
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return element.getAttribute('id').trim();
+      });
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url: { '$in': entries } })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length === 0) {
+            document.querySelectorAll('.leancloud_visitors .leancloud-visitors-count').forEach(element => {
+              element.innerText = 0;
+            });
+            return;
+          }
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.url;
+            var time = item.time;
+            leancloudSelector(url).innerText = time;
+          }
+          for (var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = leancloudSelector(url);
+            if (element.innerText == '') {
+              element.innerText = 0;
+            }
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  }
+
+  fetch('https://app-router.leancloud.cn/2/route?appId=bzp0CwMQschttuGek2pUcDtq-gzGzoHsz')
+    .then(response => response.json())
+    .then(({ api_server }) => {
+      var Counter = (method, url, data) => {
+        return fetch(`https://${api_server}/1.1${url}`, {
+          method: method,
+          headers: {
+            'X-LC-Id': 'bzp0CwMQschttuGek2pUcDtq-gzGzoHsz',
+            'X-LC-Key': 'SkCmikADMPFqRHPPU8KuSaDH',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        const localhost = /http:\/\/(localhost|127.0.0.1|0.0.0.0)/;
+        if (localhost.test(document.URL)) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.1"></script><script src="/js/motion.js?v=7.4.1"></script>
+<script src="/js/schemes/pisces.js?v=7.4.1"></script>
+<script src="/js/next-boot.js?v=7.4.1"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'bzp0CwMQschttuGek2pUcDtq-gzGzoHsz',
+    appKey: 'SkCmikADMPFqRHPPU8KuSaDH',
+    placeholder: 'Just go !',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: 'zh-cn' || 'zh-cn',
+    path: location.pathname,
+    recordIP: false,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+</body>
+</html>

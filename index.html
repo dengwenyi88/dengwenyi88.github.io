@@ -492,6 +492,413 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/18/2017-01-12-06-内存管理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="一个游戏开发者的博客">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            
+            <a href="/2017/01/18/2017-01-12-06-内存管理/" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--内存管理分析</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-01-18 21:42:33" itemprop="dateCreated datePublished" datetime="2017-01-18T21:42:33+08:00">2017-01-18</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-21 12:11:38" itemprop="dateModified" datetime="2019-10-21T12:11:38+08:00">2019-10-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index">
+                    <span itemprop="name">linux</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            <span id="/2017/01/18/2017-01-12-06-内存管理/" class="post-meta-item leancloud_visitors" data-flag-title="《linux 0.12内核完全剖析》--内存管理分析" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2017/01/18/2017-01-12-06-内存管理/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2017/01/18/2017-01-12-06-内存管理/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>笔记重点:<br>在琢磨linux源代码的过程，一直有一些疑惑,比如我明明只有4G的内存，计算机却可以运行很多进程，并且为每个进程都分配4G的内存，显然内存是不够用的;还有就是操作系统是怎么知道哪些内存可用，哪些内存不可用，以及怎样有效的分配他们,在从早期操作系统的平坦式管理，到粗糙的段式管理到段页式管理，可谓对内存的管理是不断的抽象，以至于页面管理对现代操作系统的重要性，不言而喻。</p>
+<ul>
+<li>内存的大小以及可用段是通过BIOS传给操作系统初始化的</li>
+<li>内存的段页式管理需要硬件的支持!!!</li>
+<li>最初分配给进程的内存大概只有一页，其他的内存按需分配,通过缺页中断申请(进程虚拟页面和物理页面并不是一一对应)</li>
+</ul>
+</blockquote>
+          <!--noindex-->
+          
+            <div class="post-button">
+              <a class="btn" href="/2017/01/18/2017-01-12-06-内存管理/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </article>
+  
+  
+  
+
+    
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/14/2017-01-12-05-任务退出/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="一个游戏开发者的博客">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            
+            <a href="/2017/01/14/2017-01-12-05-任务退出/" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--进程退出分析</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-01-14 20:19:12" itemprop="dateCreated datePublished" datetime="2017-01-14T20:19:12+08:00">2017-01-14</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-21 12:00:50" itemprop="dateModified" datetime="2019-10-21T12:00:50+08:00">2019-10-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index">
+                    <span itemprop="name">linux</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            <span id="/2017/01/14/2017-01-12-05-任务退出/" class="post-meta-item leancloud_visitors" data-flag-title="《linux 0.12内核完全剖析》--进程退出分析" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2017/01/14/2017-01-12-05-任务退出/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2017/01/14/2017-01-12-05-任务退出/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>笔记重点：本来进程退出没有什么好谈的，但是进程退出都做了什么，可能会很模糊，比如进程退出会引发重新调度，比如资源的销毁对应进程创建的重新分配，进程的退出依赖于系统对信号的处理，所以应该先熟悉系统如何处理信号。</p>
+<ul>
+<li>信号处理是在什么时候进行的</li>
+<li>进程退出时要销毁哪些具体的资源</li>
+</ul>
+</blockquote>
+          <!--noindex-->
+          
+            <div class="post-button">
+              <a class="btn" href="/2017/01/14/2017-01-12-05-任务退出/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </article>
+  
+  
+  
+
+    
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/14/2017-01-10-04-任务调度/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="一个游戏开发者的博客">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            
+            <a href="/2017/01/14/2017-01-10-04-任务调度/" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--进程调度分析</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-01-14 20:18:59" itemprop="dateCreated datePublished" datetime="2017-01-14T20:18:59+08:00">2017-01-14</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-21 11:57:29" itemprop="dateModified" datetime="2019-10-21T11:57:29+08:00">2019-10-21</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index">
+                    <span itemprop="name">linux</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            <span id="/2017/01/14/2017-01-10-04-任务调度/" class="post-meta-item leancloud_visitors" data-flag-title="《linux 0.12内核完全剖析》--进程调度分析" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2017/01/14/2017-01-10-04-任务调度/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2017/01/14/2017-01-10-04-任务调度/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>笔记重点:<br>进程调度一直是linux系统开发中相当重要的部分,但在最初版本中的调度如此简单，以至于你并不相信，但是在不断的发展过程中，首先在2.6内核版本中发展了抢占式的调度算法，在经历几次重大版本的迭代后在开发出CFS(完全公平的调度算法),不过调度算法的重点是，如何选择需要运行的进程以及保证性能。进程的运行很多时候会被外部的资源分配不及时而阻塞，这个时候进程睡眠等待，以及这个时候的合理调度，对于CPU资源的充分利用，显得尤为重要，那调度就从进程的睡眠机制开始了解。<br>问题：</p>
+<ul>
+<li>任务调度在何时发生</li>
+<li>任务调度的基本策略是什么</li>
+<li>任务切换时怎么做到的</li>
+</ul>
+</blockquote>
+          <!--noindex-->
+          
+            <div class="post-button">
+              <a class="btn" href="/2017/01/14/2017-01-10-04-任务调度/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </article>
+  
+  
+  
+
+    
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/14/2017-01-09-03-进程创建/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -950,7 +1357,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -963,7 +1370,7 @@
             <a href="/categories/">
           
         
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
