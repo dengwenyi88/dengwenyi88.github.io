@@ -59,15 +59,15 @@
 <meta name="keywords" content="libevent,源码分析">
 <meta property="og:type" content="article">
 <meta property="og:title" content="libevent笔记--定时事件分析">
-<meta property="og:url" content="https://dengwenyi88.github.io/2019/10/14/2017-06-30-libevent定时事件/index.html">
+<meta property="og:url" content="https://dengwenyi88.github.io/2017/06/30/2017-06-30-libevent定时事件/index.html">
 <meta property="og:site_name" content="咖啡&#39;s blog">
 <meta property="og:description" content="笔记重点:定时事件的处理依赖两个结构，一个是小根堆，一个是common_timeout的结构。前者根据超时时间进行排序，最近超时的为小根堆的根节点。common_timeout_list结构是为了处理超时时间相同的一系列事件的集合，以防止小根堆随超时事件的增多而过多增加的情况,对common-timeout的理解是依据《管理超时event》这篇博客进行分析的。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-10-14T10:08:48.553Z">
+<meta property="og:updated_time" content="2019-10-14T14:03:35.453Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="libevent笔记--定时事件分析">
 <meta name="twitter:description" content="笔记重点:定时事件的处理依赖两个结构，一个是小根堆，一个是common_timeout的结构。前者根据超时时间进行排序，最近超时的为小根堆的根节点。common_timeout_list结构是为了处理超时时间相同的一系列事件的集合，以防止小根堆随超时事件的增多而过多增加的情况,对common-timeout的理解是依据《管理超时event》这篇博客进行分析的。">
-  <link rel="canonical" href="https://dengwenyi88.github.io/2019/10/14/2017-06-30-libevent定时事件/">
+  <link rel="canonical" href="https://dengwenyi88.github.io/2017/06/30/2017-06-30-libevent定时事件/">
 
 
 <script id="page-configurations">
@@ -227,7 +227,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2019/10/14/2017-06-30-libevent定时事件/">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/06/30/2017-06-30-libevent定时事件/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="咖啡">
@@ -258,11 +258,19 @@
                 
               
 
-              <time title="创建时间：2019-10-14 17:43:24 / 修改时间：18:08:48" itemprop="dateCreated datePublished" datetime="2019-10-14T17:43:24+08:00">2019-10-14</time>
+              <time title="创建时间：2017-06-30 00:00:00" itemprop="dateCreated datePublished" datetime="2017-06-30T00:00:00+08:00">2017-06-30</time>
             </span>
           
             
 
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-14 22:03:35" itemprop="dateModified" datetime="2019-10-14T22:03:35+08:00">2019-10-14</time>
+              </span>
             
           
             <span class="post-meta-item">
@@ -284,7 +292,7 @@
           
 
           
-            <span id="/2019/10/14/2017-06-30-libevent定时事件/" class="post-meta-item leancloud_visitors" data-flag-title="libevent笔记--定时事件分析" title="阅读次数">
+            <span id="/2017/06/30/2017-06-30-libevent定时事件/" class="post-meta-item leancloud_visitors" data-flag-title="libevent笔记--定时事件分析" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -302,8 +310,8 @@
       
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2019/10/14/2017-06-30-libevent定时事件/#comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/14/2017-06-30-libevent定时事件/" itemprop="commentCount"></span>
+    <a title="valine" href="/2017/06/30/2017-06-30-libevent定时事件/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2017/06/30/2017-06-30-libevent定时事件/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -382,8 +390,8 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
-                <a href="/2019/10/11/2019-10-13-mysql 源码编译/" rel="next" title="mysql 8.0.16 源码编译[Mac os x平台]">
-                  <i class="fa fa-chevron-left"></i> mysql 8.0.16 源码编译[Mac os x平台]
+                <a href="/2017/01/14/2017-01-07-02-中断处理/" rel="next" title="《linux 0.12内核完全剖析》--中断处理分析">
+                  <i class="fa fa-chevron-left"></i> 《linux 0.12内核完全剖析》--中断处理分析
                 </a>
               
             </div>
@@ -391,6 +399,10 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/10/11/2019-10-13-mysql 源码编译/" rel="prev" title="mysql 8.0.16 源码编译[Mac os x平台]">
+                  mysql 8.0.16 源码编译[Mac os x平台] <i class="fa fa-chevron-right"></i>
+                </a>
               
             </div>
           </div>
@@ -494,7 +506,9 @@
 
 
 
+
       </div>
+
 
     </div>
   </aside>
@@ -694,7 +708,7 @@ NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
     notify: false,
     appId: 'bzp0CwMQschttuGek2pUcDtq-gzGzoHsz',
     appKey: 'SkCmikADMPFqRHPPU8KuSaDH',
-    placeholder: '欢迎留言',
+    placeholder: 'Just go !',
     avatar: 'mm',
     meta: guest,
     pageSize: '10' || 10,
