@@ -55,19 +55,34 @@
   };
 </script>
 
-  <meta name="description" content="笔记重点：linux 0.12的启动代码能够给我们分析最新的linux代码给予一定的启示，启动代码虽然只有三个文件，但是对读者分析能力的要求比较高，主要是在对汇编语言以及x86编程体系的理解,以下是对linux 0.12启动代码的简要说明，对分析很重要  bootsect.S文件主要的目的是加载setup.S和内核模块 setup.S 主要目的是通过biso中断读取机器的系统数据 head.s">
-<meta name="keywords" content="linux-0.12">
+  <meta name="description" content="以自己能快速理解的方式重新梳理了innodb引擎的物理文件结构，从静态和动态的两种视角去理解文件结构，增强对innodb引擎的运行的了解。  静态视角,首先从文件读取的角度考虑整个文件的组织形式和存储结构，以便于能够顺利的解析innodb的ibd文件 动态视角,数据库文件是为数据库管理系统和数据库实例运行而服务的，在了解B+树原理的基础上，深刻理解数据在数据库中增加以后，是如何在数据库中存储，以及">
+<meta name="keywords" content="mysql,innodb">
 <meta property="og:type" content="article">
-<meta property="og:title" content="《linux 0.12内核完全剖析》--启动代码分析">
-<meta property="og:url" content="https://dengwenyi88.github.io/2017/01/14/2017-01-06-01-启动分析/index.html">
+<meta property="og:title" content="MySQL之InnoDB 文件系统之文件物理结构新解">
+<meta property="og:url" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/index.html">
 <meta property="og:site_name" content="咖啡&#39;s blog">
-<meta property="og:description" content="笔记重点：linux 0.12的启动代码能够给我们分析最新的linux代码给予一定的启示，启动代码虽然只有三个文件，但是对读者分析能力的要求比较高，主要是在对汇编语言以及x86编程体系的理解,以下是对linux 0.12启动代码的简要说明，对分析很重要  bootsect.S文件主要的目的是加载setup.S和内核模块 setup.S 主要目的是通过biso中断读取机器的系统数据 head.s">
+<meta property="og:description" content="以自己能快速理解的方式重新梳理了innodb引擎的物理文件结构，从静态和动态的两种视角去理解文件结构，增强对innodb引擎的运行的了解。  静态视角,首先从文件读取的角度考虑整个文件的组织形式和存储结构，以便于能够顺利的解析innodb的ibd文件 动态视角,数据库文件是为数据库管理系统和数据库实例运行而服务的，在了解B+树原理的基础上，深刻理解数据在数据库中增加以后，是如何在数据库中存储，以及">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-10-21T02:43:10.393Z">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/system.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/Space_File_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/ibdata1_File_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/IBD_File_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/FSP_HDR_Page_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/FSP_Header.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/XDES_Entry.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/INODE_Page_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/INODE_Entry.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/INDEX_Page_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/INDEX_Header.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/INDEX_System_Records.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/INDEX_Page_Directory.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/compact.png">
+<meta property="og:updated_time" content="2019-11-01T09:56:48.598Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="《linux 0.12内核完全剖析》--启动代码分析">
-<meta name="twitter:description" content="笔记重点：linux 0.12的启动代码能够给我们分析最新的linux代码给予一定的启示，启动代码虽然只有三个文件，但是对读者分析能力的要求比较高，主要是在对汇编语言以及x86编程体系的理解,以下是对linux 0.12启动代码的简要说明，对分析很重要  bootsect.S文件主要的目的是加载setup.S和内核模块 setup.S 主要目的是通过biso中断读取机器的系统数据 head.s">
-  <link rel="canonical" href="https://dengwenyi88.github.io/2017/01/14/2017-01-06-01-启动分析/">
+<meta name="twitter:title" content="MySQL之InnoDB 文件系统之文件物理结构新解">
+<meta name="twitter:description" content="以自己能快速理解的方式重新梳理了innodb引擎的物理文件结构，从静态和动态的两种视角去理解文件结构，增强对innodb引擎的运行的了解。  静态视角,首先从文件读取的角度考虑整个文件的组织形式和存储结构，以便于能够顺利的解析innodb的ibd文件 动态视角,数据库文件是为数据库管理系统和数据库实例运行而服务的，在了解B+树原理的基础上，深刻理解数据在数据库中增加以后，是如何在数据库中存储，以及">
+<meta name="twitter:image" content="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/system.jpg">
+  <link rel="canonical" href="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/">
 
 
 <script id="page-configurations">
@@ -81,7 +96,7 @@
   };
 </script>
 
-  <title>《linux 0.12内核完全剖析》--启动代码分析 | 咖啡's blog</title>
+  <title>MySQL之InnoDB 文件系统之文件物理结构新解 | 咖啡's blog</title>
   
 
 
@@ -227,7 +242,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/14/2017-01-06-01-启动分析/">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2019/11/01/mysql物理文件-md/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="咖啡">
@@ -241,7 +256,7 @@
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
           
-            《linux 0.12内核完全剖析》--启动代码分析
+            MySQL之InnoDB 文件系统之文件物理结构新解
             
 
           
@@ -258,19 +273,11 @@
                 
               
 
-              <time title="创建时间：2017-01-14 20:18:11" itemprop="dateCreated datePublished" datetime="2017-01-14T20:18:11+08:00">2017-01-14</time>
+              <time title="创建时间：2019-11-01 17:15:18 / 修改时间：17:56:48" itemprop="dateCreated datePublished" datetime="2019-11-01T17:15:18+08:00">2019-11-01</time>
             </span>
           
             
 
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-10-21 10:43:10" itemprop="dateModified" datetime="2019-10-21T10:43:10+08:00">2019-10-21</time>
-              </span>
             
           
             <span class="post-meta-item">
@@ -280,8 +287,8 @@
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/linux/" itemprop="url" rel="index">
-                    <span itemprop="name">linux</span>
+                  <a href="/categories/mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">mysql</span>
                   </a>
                 </span>
 
@@ -292,7 +299,7 @@
           
 
           
-            <span id="/2017/01/14/2017-01-06-01-启动分析/" class="post-meta-item leancloud_visitors" data-flag-title="《linux 0.12内核完全剖析》--启动代码分析" title="阅读次数">
+            <span id="/2019/11/01/mysql物理文件-md/" class="post-meta-item leancloud_visitors" data-flag-title="MySQL之InnoDB 文件系统之文件物理结构新解" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -310,8 +317,8 @@
       
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2017/01/14/2017-01-06-01-启动分析/#comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2017/01/14/2017-01-06-01-启动分析/" itemprop="commentCount"></span>
+    <a title="valine" href="/2019/11/01/mysql物理文件-md/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/11/01/mysql物理文件-md/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -326,41 +333,79 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <blockquote>
-<p>笔记重点：<br>linux 0.12的启动代码能够给我们分析最新的linux代码给予一定的启示，启动代码虽然只有三个文件，但是对读者分析能力的要求比较高，主要是在对汇编语言以及x86编程体系的理解,以下是对linux 0.12启动代码的简要说明，对分析很重要</p>
+        <p>以自己能快速理解的方式重新梳理了innodb引擎的物理文件结构，从静态和动态的两种视角去<br>理解文件结构，增强对innodb引擎的运行的了解。</p>
 <ul>
-<li>bootsect.S文件主要的目的是加载setup.S和内核模块</li>
-<li>setup.S 主要目的是通过biso中断读取机器的系统数据</li>
-<li>head.s 主要目的是内核初始化之前的环境配置，也就是32位保护模式运行做准备</li>
+<li>静态视角,首先从文件读取的角度考虑整个文件的组织形式和存储结构，以便于能够顺利的解析innodb的ibd文件</li>
+<li>动态视角,数据库文件是为数据库管理系统和数据库实例运行而服务的，在了解B+树原理的基础上，深刻理解数据在数据库中增加以后，是如何在数据库中存储，以及数据是如何落地的，既要保证数据存储的灵活性，又要保证数据库查询的性能。</li>
 </ul>
-</blockquote>
 <a id="more"></a>
 
-<h5 id="1-三段代码都涉及代码的移动"><a href="#1-三段代码都涉及代码的移动" class="headerlink" title="1. 三段代码都涉及代码的移动"></a>1. 三段代码都涉及代码的移动</h5><p>主要目的是为了空间复用,代码是从0x7C00开始执行，第一段代码就将bootsect.S的代码移动到绝对地址0x9000处然后再执行</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">entry start</span><br><span class="line">start:</span><br><span class="line">	mov	ax,#BOOTSEG 	&quot;BOOTSEG为0x7C0</span><br><span class="line">	mov	ds,ax</span><br><span class="line">	mov	ax,#INITSEG     &quot;0x9000</span><br><span class="line">	mov	es,ax</span><br><span class="line">	mov	cx,#256         &quot;512字节</span><br><span class="line">	sub	si,si           &quot;si = 0x0000</span><br><span class="line">	sub	di,di           &quot;di = 0x0000</span><br><span class="line">	rep                 &quot;cx递减1 直到cx为0</span><br><span class="line">	movw                &quot;移动一个字</span><br><span class="line">	jmpi	go,INITSEG  &quot;跳转到0x9000执行</span><br></pre></td></tr></table></figure>
+<h4 id="1-了解mysql的架构视图"><a href="#1-了解mysql的架构视图" class="headerlink" title="1. 了解mysql的架构视图"></a>1. 了解mysql的架构视图</h4><p>了解mysql的架构视图如下图，有助于了解innodb引擎的几种物理文件组成，一共四种:一种是系统共享的表空间ibdata1;一种是各个数据库的表空间,一个数据库一个t.ibd文件;第三种是undo表空间,在mysql中通常被叫做rollback segment,第四种是redo日志文件</p>
+<img src="/2019/11/01/mysql物理文件-md/system.jpg" title="mysql架构图">
 
-<h5 id="2-机器的系统数据都是通过BIOS的功能获取到的，内核初始化的时候都要利用到这些数据"><a href="#2-机器的系统数据都是通过BIOS的功能获取到的，内核初始化的时候都要利用到这些数据" class="headerlink" title="2. 机器的系统数据都是通过BIOS的功能获取到的，内核初始化的时候都要利用到这些数据"></a>2. 机器的系统数据都是通过BIOS的功能获取到的，内核初始化的时候都要利用到这些数据</h5><ul>
-<li>最初读取加载内核代码是使用的BIOS的INT 0x13</li>
-<li>setup.S中利用BIOS的INT 0x15功能读取内存的大小</li>
-<li>其他硬件数据</li>
-</ul>
-<h5 id="3-setup-S的主要目的是设置中断向量表述表和全局描述符表，以开启内核的32位保护模式"><a href="#3-setup-S的主要目的是设置中断向量表述表和全局描述符表，以开启内核的32位保护模式" class="headerlink" title="3. setup.S的主要目的是设置中断向量表述表和全局描述符表，以开启内核的32位保护模式"></a>3. setup.S的主要目的是设置中断向量表述表和全局描述符表，以开启内核的32位保护模式</h5><p>描述符表的定义是在setup.S的567行开始</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">gdt:</span><br><span class="line">	.word	0,0,0,0		! dummy</span><br><span class="line"></span><br><span class="line">	.word	0x07FF		! 8Mb - limit=2047 (2048*4096=8Mb)</span><br><span class="line">	.word	0x0000		! base address=0</span><br><span class="line">	.word	0x9A00		! code read/exec</span><br><span class="line">	.word	0x00C0		! granularity=4096, 386</span><br><span class="line"></span><br><span class="line">	.word	0x07FF		! 8Mb - limit=2047 (2048*4096=8Mb)</span><br><span class="line">	.word	0x0000		! base address=0</span><br><span class="line">	.word	0x9200		! data read/write</span><br><span class="line">	.word	0x00C0		! granularity=4096, 386</span><br><span class="line"></span><br><span class="line">idt_48:</span><br><span class="line">	.word	0			! idt limit=0</span><br><span class="line">	.word	0,0			! idt base=0L</span><br><span class="line"></span><br><span class="line">gdt_48:</span><br><span class="line">	.word	0x800		! gdt limit=2048, 256 GDT entries</span><br><span class="line">	.word	512+gdt,0x9	! gdt base = 0X9xxxx</span><br></pre></td></tr></table></figure>
-
-<p>设置GDT寄存器和IDT寄存器是在139行</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lidt idt_48</span><br><span class="line">lgdt gdt_48</span><br></pre></td></tr></table></figure>
-
-<p>idt_48h和gdt_48就是上面定义的<br>是一个6字节长的数据，前2字节是表的长度，后4字节是表的基地址，设置cr0的第0位为1开启保护模式</p>
-<h5 id="4-这里有非常详细的8259A的编程资料"><a href="#4-这里有非常详细的8259A的编程资料" class="headerlink" title="4. 这里有非常详细的8259A的编程资料"></a>4. 这里有非常详细的8259A的编程资料</h5><p>没有学过微机接口的同学可能对8259A的结构不够了解也是没有关系，了解这些对中断系统的了解比较关键</p>
-<h5 id="5-head-s最关键的地方是在32位保护模式下开启内存的分页处理机制"><a href="#5-head-s最关键的地方是在32位保护模式下开启内存的分页处理机制" class="headerlink" title="5. head.s最关键的地方是在32位保护模式下开启内存的分页处理机制"></a>5. head.s最关键的地方是在32位保护模式下开启内存的分页处理机制</h5><p>cr3寄存器是记录页目录的基地址，cr0的PG位置1就是开启分页处理，然后重新设置IDT和GDT，第一次设置IDT和GDT是为了head.s运行32位保护模式，设置页目录而临时设置，这个时候还不是分页模式，不能分配内存给GDT和IDT,第一次设置时IDT是空表，GDT只有3个描述符，这次设置GDT的大小是256*8-1，IDT的大小也是256，这是我认为的最主要区别。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">idt_descr:</span><br><span class="line">	.word 256*8-1		&quot;idt 包含256项</span><br><span class="line">	.long _idt</span><br><span class="line">.align 2</span><br><span class="line">.word 0</span><br><span class="line">gdt_descr:</span><br><span class="line">	.word 256*8-1		&quot;gdt 包含256项</span><br><span class="line">	.long _gdt			&quot;地址为下面的_gdt标记</span><br><span class="line"></span><br><span class="line">	.align 3</span><br><span class="line">_idt:</span><br><span class="line">	.fill 256,8,0		&quot;idt存放的地方</span><br><span class="line"></span><br><span class="line">_gdt:</span><br><span class="line">	.quad 0x0000000000000000	/* NULL descriptor */</span><br><span class="line">	.quad 0x00c09a0000000fff	/* 16Mb */</span><br><span class="line">	.quad 0x00c0920000000fff	/* 16Mb */</span><br><span class="line">	.quad 0x0000000000000000	/* TEMPORARY - don&apos;t use */</span><br><span class="line">	.fill 252,8,0			/* space for LDT&apos;s and TSS&apos;s etc */</span><br></pre></td></tr></table></figure>
-
+<h4 id="2-innodb的一页-pages"><a href="#2-innodb的一页-pages" class="headerlink" title="2. innodb的一页(pages)"></a>2. innodb的一页(pages)</h4><ul>
+<li><p>2.1 innodb的基本管理单位是页,这个让我联想到的操作系统的段页式管理,在操作系统中物理内存也被分成一页一页的,而一个进程的虚拟页可以分配到任意一页未使用的物理页上，这样就能充分使用物理内存;到数据库系统中，基本的管理单位也是页，也就是磁盘文件也分成一页一页的，每页的大小默认是16K,这个值的大小可以通过innodb_page_size参数来更改,innodb的页有不同的作用，枚举定义在fil0fil.h中(FIL_PAGE_TYPE);</p>
+</li>
+<li><p>2.2 数据库中表的行记录就保存在其中的某一页中，因此当数据发生变化时，数据落地的一定是某一些pages,查询时就是将某些匹配的记录页加载到内存中;其次页号也是用来组织数据结构的依据,相比内存中的指针来说,磁盘文件内部数据的组织通过页号和页内偏移,可以作为文件的偏移量而找到文件中的数据,加载到内存中.(类似链表中的指针)</p>
+</li>
+<li><p>2.3 这里引申了一个问题,一个表空间的最大容量是多少？</p>
 <blockquote>
-<h4 id="结论：通过对linux-0-12启动代码的分析，理解linux启动的三大步骤"><a href="#结论：通过对linux-0-12启动代码的分析，理解linux启动的三大步骤" class="headerlink" title="结论：通过对linux 0.12启动代码的分析，理解linux启动的三大步骤"></a>结论：通过对linux 0.12启动代码的分析，理解linux启动的三大步骤</h4><ul>
-<li>首先是通过BIOS提供的功能,加载linux初始化之前的环境初始化代码,setup.S和head.s；</li>
-<li>setup.S通过BIOS的中断服务获取系统硬件的一些参数并保存，给linux进行初始化提供参考；</li>
-<li>通过head.s设置系统的32位保护模式，并开启内存的分页模式</li>
+<p>(The astute may remember that InnoDB has a limit of 64TiB of data; this is actually a limit per space, and is due primarily to the page number being a 32-bit integer combined with the default page size: $ 2^32 x 16 KiB = 64 $ TiB.)<br>因为页号的最大值是32位的,一页的大小为16K,所以一个表空间的最大容量限制在64T</p>
+</blockquote>
+</li>
 </ul>
+<h4 id="3-innodb的ibd文件静态视图"><a href="#3-innodb的ibd文件静态视图" class="headerlink" title="3. innodb的ibd文件静态视图"></a>3. innodb的ibd文件静态视图</h4><p>什么是静态视图,我想你可以这样理解，就是数据库关掉以后数据库的ibd文件的物理结构，从解析ibd文件的视角来看文件结构,以便区分在数据库运行过程中文件里数据的内在逻辑结构。<br>表空间文件结构图如下图,在ibd文件中第一页(第一个16K)里始终是FSP_HDR页,大概的英文意思是file space header;然后是每256M会建立一个XDES页,其中innodb的系统表空间和为每张表建立的表空间为这张表空间结构的实际例子</p>
+<img src="/2019/11/01/mysql物理文件-md/Space_File_Overview.png" title="space file overview">
+
+<p>innodb引擎有一个默认的系统表空间</p>
+<img src="/2019/11/01/mysql物理文件-md/ibdata1_File_Overview.png" title="ibdata1 file overview">
+<p>当配置文件中配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">innodb_file_per_table=ON</span><br></pre></td></tr></table></figure>
+
+<p>将为每张表建立一个表空间,这个名字叫file per table,实际上叫每张表一个表空间更加合理,图中显示的FSP_HDR页,INODE页以及INDEX页的结构在接下来将有讲述。</p>
+<img src="/2019/11/01/mysql物理文件-md/IBD_File_Overview.png" title="IBD file view">
+
+<h5 id="3-1-FSP-HDR页"><a href="#3-1-FSP-HDR页" class="headerlink" title="3.1 FSP_HDR页"></a>3.1 <strong>FSP_HDR页</strong></h5><p>这里强调一下在ibd文件中第一页(第一个16K)里始终是FSP_HDR页,他的作用是管理接下来的0～255一共256个区的信息,其中在这个页中包含一个FSP header结构和XDES集合,将在概览图后讲述</p>
+<img src="/2019/11/01/mysql物理文件-md/FSP_HDR_Page_Overview.png" title="FSP_HDR overview">
+<ul>
+<li>FSP header,这个主要是用来管理接下来的区中包含的页，更好分配区和区里面的页提供的数据信息  <img src="/2019/11/01/mysql物理文件-md/FSP_Header.png" title="FSP_HEADER"></li>
+<li>XEDS Entry包含一个区内的64页的操作相关的信息  <img src="/2019/11/01/mysql物理文件-md/XDES_Entry.png" title="XDES Entry">
+<h5 id="3-2-INODE页"><a href="#3-2-INODE页" class="headerlink" title="3.2 INODE页"></a>3.2 <strong>INODE页</strong></h5>inode页一直让人疑惑,刚开始我以为是文件系统里那个inode节点信息重用磁盘节点信息,后来提出疑问用页可以管理了整个数据结构，为什么还需要inode呢？直到看到索引文件段管理结构图，才理解inode页实际是为了在同一个表内的数据页之上在建立不同的索引结构，而组织的逻辑数据,不同于页的是，页承载的是各种数据集,而inode页承载的是不同的索引结构,INODE页的结构比较简单,包含了INODE Entry的集合<img src="/2019/11/01/mysql物理文件-md/INODE_Page_Overview.png" title="INODE Overview"></li>
+<li>INODE Entry主要是组织不同目的页的链表信息  <img src="/2019/11/01/mysql物理文件-md/INODE_Entry.png" title="INODE Entry">
+
+</li>
+</ul>
+<h5 id="3-3-INDEX页"><a href="#3-3-INDEX页" class="headerlink" title="3.3 INDEX页"></a>3.3 <strong>INDEX页</strong></h5><p>索引页实际上就是数据页,叫法不一样,如果是叶子节点,那么这个页里面保存里我们同说所说的行记录数据，虽然我们不管不顾的只看文件的格式，但是一直要注意我们所提到的这个结构的作用，为什么这样设计很重要，以及他们的局限性</p>
+<img src="/2019/11/01/mysql物理文件-md/INDEX_Page_Overview.png" title="INDEX页概览图">
+
+<p>每个索引页都有一个INDEX Header;一个FSEG Header;两个System Records,若干个User Record,以及Page Directory</p>
+<ul>
+<li><p>Index Header</p>
+  <img src="/2019/11/01/mysql物理文件-md/INDEX_Header.png" title="INDEX HEADER">
+</li>
+<li><p>System Recoders</p>
+  <img src="/2019/11/01/mysql物理文件-md/INDEX_System_Records.png" title="System Records">
+</li>
+<li><p>Page Directory</p>
+  <img src="/2019/11/01/mysql物理文件-md/INDEX_Page_Directory.png" title="Page Dirctory"></li>
+<li><p>User records</p>
+</li>
+</ul>
+<h4 id="4-行记录格式"><a href="#4-行记录格式" class="headerlink" title="4. 行记录格式"></a>4. 行记录格式</h4><p>这里重点讲述一下行记录格式,大概他的性能关系到表的大小,这里以Compact行记录格式为例;在每个行记录里都会有record header,如下图</p>
+<img src="/2019/11/01/mysql物理文件-md/compact.png" title="ecord header">
+
+<ul>
+<li>变长字段长度列表：记录非NULL变长字段的长度列表,按列的逆序排列,使用1字节还是2字节,字节的前缀有(1exxxxxxx xxxxxxxx)</li>
+<li>NULL 标志位：标示值为NULL的列的bitmap,某列为NULL时相应bit位为1</li>
+<li>记录头信息：五个字节一共40位</li>
+<li>列数据部分：除了记录每一列对应的数据外，还有隐藏列，它们分别是 Transaction ID、Roll Pointer 以及 row_id。</li>
+</ul>
+<blockquote>
+<p>结论:通过以上的概览，可以清晰的看到整个物理文件的组成结构，足以写出解析ibd文件的信息</p>
+</blockquote>
+<p>参考资料</p>
+<blockquote>
+<p><em><a href="https://blog.jcole.us/innodb/" target="_blank" rel="noopener">Jeremy Cole的博客</a></em><br><em><a href="https://www.cnblogs.com/bdsir/p/8745553.html" target="_blank" rel="noopener">便当君的博客</a></em><br><em><a href="http://mysql.taobao.org/monthly/2016/02/01/" target="_blank" rel="noopener">阿里云的数据库内核组</a></em><br><em>MySQL技术内幕-InnoDB存储引擎(姜承尧)</em></p>
 </blockquote>
 
     </div>
@@ -377,7 +422,9 @@
           
           <div class="post-tags">
             
-              <a href="/tags/linux-0-12/" rel="tag"># linux-0.12</a>
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+            
+              <a href="/tags/innodb/" rel="tag"># innodb</a>
             
           </div>
         
@@ -387,15 +434,15 @@
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
               
+                <a href="/2019/10/11/2019-10-13-mysql 源码编译/" rel="next" title="mysql 8.0.16 源码编译[Mac os x平台]">
+                  <i class="fa fa-chevron-left"></i> mysql 8.0.16 源码编译[Mac os x平台]
+                </a>
+              
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-              
-                <a href="/2017/01/14/2017-01-07-02-中断处理/" rel="prev" title="《linux 0.12内核完全剖析》--中断处理分析">
-                  《linux 0.12内核完全剖析》--中断处理分析 <i class="fa fa-chevron-right"></i>
-                </a>
               
             </div>
           </div>
@@ -444,7 +491,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-三段代码都涉及代码的移动"><span class="nav-text">1. 三段代码都涉及代码的移动</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-机器的系统数据都是通过BIOS的功能获取到的，内核初始化的时候都要利用到这些数据"><span class="nav-text">2. 机器的系统数据都是通过BIOS的功能获取到的，内核初始化的时候都要利用到这些数据</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-setup-S的主要目的是设置中断向量表述表和全局描述符表，以开启内核的32位保护模式"><span class="nav-text">3. setup.S的主要目的是设置中断向量表述表和全局描述符表，以开启内核的32位保护模式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-这里有非常详细的8259A的编程资料"><span class="nav-text">4. 这里有非常详细的8259A的编程资料</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-head-s最关键的地方是在32位保护模式下开启内存的分页处理机制"><span class="nav-text">5. head.s最关键的地方是在32位保护模式下开启内存的分页处理机制</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#结论：通过对linux-0-12启动代码的分析，理解linux启动的三大步骤"><span class="nav-text">结论：通过对linux 0.12启动代码的分析，理解linux启动的三大步骤</span></a></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-了解mysql的架构视图"><span class="nav-text">1. 了解mysql的架构视图</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-innodb的一页-pages"><span class="nav-text">2. innodb的一页(pages)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-innodb的ibd文件静态视图"><span class="nav-text">3. innodb的ibd文件静态视图</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-FSP-HDR页"><span class="nav-text">3.1 FSP_HDR页</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-INODE页"><span class="nav-text">3.2 INODE页</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-INDEX页"><span class="nav-text">3.3 INDEX页</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-行记录格式"><span class="nav-text">4. 行记录格式</span></a></li></ol></div>
         
       </div>
       <!--/noindex-->
