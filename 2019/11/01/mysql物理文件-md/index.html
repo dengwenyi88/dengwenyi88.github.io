@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="以自己能快速理解的方式重新梳理了innodb引擎的物理文件结构，从静态和动态的两种视角去理解文件结构，增强对innodb引擎的运行的了解。  静态视角,首先从文件读取的角度考虑整个文件的组织形式和存储结构，以便于能够顺利的解析innodb的ibd文件 动态视角,数据库文件是为数据库管理系统和数据库实例运行而服务的，在了解B+树原理的基础上，深刻理解数据在数据库中增加以后，是如何在数据库中存储，以及">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql之InnoDB 文件系统之文件物理结构新解">
+<meta property="og:url" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/index.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="以自己能快速理解的方式重新梳理了innodb引擎的物理文件结构，从静态和动态的两种视角去理解文件结构，增强对innodb引擎的运行的了解。  静态视角,首先从文件读取的角度考虑整个文件的组织形式和存储结构，以便于能够顺利的解析innodb的ibd文件 动态视角,数据库文件是为数据库管理系统和数据库实例运行而服务的，在了解B+树原理的基础上，深刻理解数据在数据库中增加以后，是如何在数据库中存储，以及">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/system.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/Space_File_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/ibdata1_File_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/IBD_File_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/FSP_HDR_Page_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/FSP_Header.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/XDES_Entry.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INODE_Page_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INODE_Entry.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INDEX_Page_Overview.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INDEX_Header.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INDEX_System_Records.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INDEX_Page_Directory.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/compact.png">
+<meta property="article:published_time" content="2019-11-01T12:46:25.000Z">
+<meta property="article:modified_time" content="2021-07-31T06:43:54.000Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/system.jpg">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>mysql之InnoDB 文件系统之文件物理结构新解 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          mysql之InnoDB 文件系统之文件物理结构新解
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-01 20:46:25" itemprop="dateCreated datePublished" datetime="2019-11-01T20:46:25+08:00">2019-11-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-31 14:43:54" itemprop="dateModified" datetime="2021-07-31T14:43:54+08:00">2021-07-31</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>以自己能快速理解的方式重新梳理了innodb引擎的物理文件结构，从静态和动态的两种视角去<br>理解文件结构，增强对innodb引擎的运行的了解。</p>
+<ul>
+<li>静态视角,首先从文件读取的角度考虑整个文件的组织形式和存储结构，以便于能够顺利的解析innodb的ibd文件</li>
+<li>动态视角,数据库文件是为数据库管理系统和数据库实例运行而服务的，在了解B+树原理的基础上，深刻理解数据在数据库中增加以后，是如何在数据库中存储，以及数据是如何落地的，既要保证数据存储的灵活性，又要保证数据库查询的性能。</li>
+</ul>
+<span id="more"></span>
+
+<h4 id="1-了解mysql的架构视图"><a href="#1-了解mysql的架构视图" class="headerlink" title="1. 了解mysql的架构视图"></a>1. 了解mysql的架构视图</h4><p>了解mysql的架构视图如下图，有助于了解innodb引擎的几种物理文件组成，一共四种:</p>
+<ul>
+<li>一种是系统共享的表空间ibdata1</li>
+<li>一种是各个数据库的表空间,一个数据库一个t.ibd文件</li>
+<li>第三种是undo表空间,在mysql中通常被叫做rollback segment</li>
+<li>第四种是redo日志文件</li>
+</ul>
+<img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/system.jpg" class="" title="mysql架构图">
+
+<h4 id="2-innodb的一页-pages"><a href="#2-innodb的一页-pages" class="headerlink" title="2. innodb的一页(pages)"></a>2. innodb的一页(pages)</h4><h5 id="2-1-innodb的基本管理单位是页"><a href="#2-1-innodb的基本管理单位是页" class="headerlink" title="2.1 innodb的基本管理单位是页"></a>2.1 innodb的基本管理单位是页</h5><p>  这个让我联想到的操作系统的段页式管理,在操作系统中物理内存也被分成一页一页的,而一个进程的虚拟页可以分配到任意一页未使用的物理页上，这样就能充分使用物理内存;到数据库系统中，基本的管理单位也是页，也就是磁盘文件也分成一页一页的，每页的大小默认是16K,这个值的大小可以通过innodb_page_size参数来更改,innodb的页有不同的作用，枚举定义在fil0fil.h中(FIL_PAGE_TYPE);</p>
+<h5 id="2-2-磁盘文件内部数据的组织通过页号和页内偏移"><a href="#2-2-磁盘文件内部数据的组织通过页号和页内偏移" class="headerlink" title="2.2 磁盘文件内部数据的组织通过页号和页内偏移"></a>2.2 磁盘文件内部数据的组织通过页号和页内偏移</h5><p>  数据库中表的行记录就保存在其中的某一页中，因此当数据发生变化时，数据落地的一定是某一些pages,查询时就是将某些匹配的记录页加载到内存中;其次页号也是用来组织数据结构的依据,相比内存中的指针来说,磁盘文件内部数据的组织通过页号和页内偏移,可以作为文件的偏移量而找到文件中的数据,加载到内存中.(类似链表中的指针)</p>
+<h5 id="2-3-这里引申了一个问题-一个表空间的最大容量是多少？"><a href="#2-3-这里引申了一个问题-一个表空间的最大容量是多少？" class="headerlink" title="2.3 这里引申了一个问题,一个表空间的最大容量是多少？"></a>2.3 这里引申了一个问题,一个表空间的最大容量是多少？</h5><blockquote>
+<p>(The astute may remember that InnoDB has a limit of 64TiB of data; this is actually a limit per space, and is due primarily to the page number being a 32-bit integer combined with the default page size: $ 2^32 x 16 KiB = 64 $ TiB.)<br>因为页号的最大值是32位的,一页的大小为16K,所以一个表空间的最大容量限制在64T</p>
+</blockquote>
+<h4 id="3-innodb的ibd文件静态视图"><a href="#3-innodb的ibd文件静态视图" class="headerlink" title="3. innodb的ibd文件静态视图"></a>3. innodb的ibd文件静态视图</h4><p>什么是静态视图,我想你可以这样理解，就是数据库关掉以后数据库的ibd文件的物理结构，从解析ibd文件的视角来看文件结构,以便区分在数据库运行过程中文件里数据的内在逻辑结构。<br>表空间文件结构图如下图,磁盘空间按照16K为一页进行划分,在ibd文件中第一页(第一个16K)里始终是FSP_HDR页,大概的英文意思是file space header;然后是每256M会建立一个XDES页</p>
+<img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/Space_File_Overview.png" class="" title="space file overview">
+
+<p>其中innodb的系统表空间ibdata1和为每张表建立的表空间IBD为上图的特例;</p>
+<h5 id="3-1-innodb引擎有一个默认的系统表空间-结构如下图"><a href="#3-1-innodb引擎有一个默认的系统表空间-结构如下图" class="headerlink" title="3.1 innodb引擎有一个默认的系统表空间,结构如下图:"></a>3.1 innodb引擎有一个默认的系统表空间,结构如下图:</h5>  <img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/ibdata1_File_Overview.png" class="" title="ibdata1 file overview">
+<p>  当配置文件中配置<br>  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">innodb_file_per_table=ON</span><br></pre></td></tr></table></figure></p>
+<h5 id="3-2-将为每张表建立一个表空间-这个名字叫file-per-table-实际上叫每张表一个表空间更加合理-结构如下图所示"><a href="#3-2-将为每张表建立一个表空间-这个名字叫file-per-table-实际上叫每张表一个表空间更加合理-结构如下图所示" class="headerlink" title="3.2 将为每张表建立一个表空间,这个名字叫file per table,实际上叫每张表一个表空间更加合理,结构如下图所示:"></a>3.2 将为每张表建立一个表空间,这个名字叫file per table,实际上叫每张表一个表空间更加合理,结构如下图所示:</h5>  <img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/IBD_File_Overview.png" class="" title="IBD file view">
+<p><strong>本文重点讲述IBD文件的结构,图中显示的FSP_HDR页,INODE页以及INDEX页的结构,下文中逐一详细解释。</strong></p>
+<h4 id="4-IBD文件之FSP-HDR页"><a href="#4-IBD文件之FSP-HDR页" class="headerlink" title="4. IBD文件之FSP_HDR页"></a>4. IBD文件之FSP_HDR页</h4><p>这里强调一下在ibd文件中第一页(第一个16K)里始终是FSP_HDR页,他的作用是管理接下来的0～255一共256个区的信息,其中在这个页中包含一个FSP header结构和XDES集合,将在概览图后讲述</p>
+<img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/FSP_HDR_Page_Overview.png" class="" title="FSP_HDR overview">
+<h5 id="4-1-FSP-header"><a href="#4-1-FSP-header" class="headerlink" title="4.1 FSP header"></a>4.1 FSP header</h5><p>  这个主要是用来管理接下来的区中包含的页，更好分配区和区里面的页提供的数据信息<br>    <img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/FSP_Header.png" class="" title="FSP_HEADER"></p>
+<h5 id="4-2-XEDS-Entry"><a href="#4-2-XEDS-Entry" class="headerlink" title="4.2 XEDS Entry"></a>4.2 XEDS Entry</h5><p>  包含一个区内的64页的操作相关的信息<br>    <img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/XDES_Entry.png" class="" title="XDES Entry"></p>
+<h4 id="5-IBD文件之INODE页"><a href="#5-IBD文件之INODE页" class="headerlink" title="5. IBD文件之INODE页"></a>5. IBD文件之INODE页</h4><p>inode页一直让人疑惑,刚开始我以为是文件系统里那个inode节点信息重用磁盘节点信息,后来提出疑问用页可以管理了整个数据结构，为什么还需要inode呢？直到看到索引文件段管理结构图，才理解inode页实际是为了在同一个表内的数据页之上在建立不同的索引结构，而组织的逻辑数据,不同于页的是，页承载的是各种数据集,而inode页承载的是不同的索引结构,INODE页的结构比较简单,包含了INODE Entry的集合</p>
+<img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INODE_Page_Overview.png" class="" title="INODE Overview">
+<ul>
+<li>INODE Entry主要是组织不同目的页的链表信息<img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INODE_Entry.png" class="" title="INODE Entry"></li>
+</ul>
+<h4 id="6-IBD文件之INDEX页"><a href="#6-IBD文件之INDEX页" class="headerlink" title="6. IBD文件之INDEX页"></a>6. IBD文件之INDEX页</h4><p>索引页实际上就是数据页,叫法不一样,如果是叶子节点,那么这个页里面保存里我们同说所说的行记录数据，虽然我们不管不顾的只看文件的格式，但是一直要注意我们所提到的这个结构的作用，为什么这样设计很重要，以及他们的局限性</p>
+<img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INDEX_Page_Overview.png" class="" title="INDEX页概览图">
+
+<p>每个索引页都有一个INDEX Header;一个FSEG Header;两个System Records,若干个User Record,以及Page Directory</p>
+<h5 id="6-1-Index-Header"><a href="#6-1-Index-Header" class="headerlink" title="6.1 Index Header"></a>6.1 Index Header</h5>  <img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INDEX_Header.png" class="" title="INDEX HEADER">
+
+<h5 id="6-2-System-Recoders"><a href="#6-2-System-Recoders" class="headerlink" title="6.2 System Recoders"></a>6.2 System Recoders</h5>  <img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INDEX_System_Records.png" class="" title="System Records">
+
+<h5 id="6-3-Page-Directory"><a href="#6-3-Page-Directory" class="headerlink" title="6.3 Page Directory"></a>6.3 Page Directory</h5>  <img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/INDEX_Page_Directory.png" class="" title="Page Dirctory">
+
+<h5 id="6-4-User-records-详见下节"><a href="#6-4-User-records-详见下节" class="headerlink" title="6.4 User records (详见下节)"></a>6.4 User records (详见下节)</h5><h4 id="7-行记录格式"><a href="#7-行记录格式" class="headerlink" title="7. 行记录格式"></a>7. 行记录格式</h4><p>这里重点讲述一下行记录格式,大概他的性能关系到表的大小,这里以Compact行记录格式为例;在每个行记录里都会有record header,如下图</p>
+<img src="/2019/11/01/mysql%E7%89%A9%E7%90%86%E6%96%87%E4%BB%B6-md/compact.png" class="" title="ecord header">
+
+<ul>
+<li>变长字段长度列表：记录非NULL变长字段的长度列表,按列的逆序排列,使用1字节还是2字节,字节的前缀有(1exxxxxxx xxxxxxxx)时为使用两字节</li>
+<li>NULL 标志位：标示值为NULL的列的bitmap,某列为NULL时相应bit位为1</li>
+<li>记录头信息：五个字节一共40位</li>
+<li>列数据部分：除了记录每一列对应的数据外，还有隐藏列，它们分别是 Transaction ID、Roll Pointer 以及 row_id。</li>
+</ul>
+<blockquote>
+<p>结论:通过以上的概览，可以清晰的看到整个物理文件的组成结构，足以写出解析ibd文件的信息</p>
+</blockquote>
+<p>参考资料</p>
+<blockquote>
+<p><em><a target="_blank" rel="noopener" href="https://blog.jcole.us/innodb/">Jeremy Cole的博客</a></em><br><em><a target="_blank" rel="noopener" href="https://www.cnblogs.com/bdsir/p/8745553.html">便当君的博客</a></em><br><em><a target="_blank" rel="noopener" href="http://mysql.taobao.org/monthly/2016/02/01/">阿里云的数据库内核组</a></em><br><em>MySQL技术内幕-InnoDB存储引擎(姜承尧)</em></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/10/13/2019-10-13-mysql%20%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91/" rel="prev" title="mysql 8.0.16 源码编译[Mac os x版本]">
+      <i class="fa fa-chevron-left"></i> mysql 8.0.16 源码编译[Mac os x版本]
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/11/05/mysql%E8%AF%A6%E7%BB%86%E9%85%8D%E7%BD%AE%E5%8F%82%E8%80%83-md/" rel="next" title="mysql配置详细参考">
+      mysql配置详细参考 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E4%BA%86%E8%A7%A3mysql%E7%9A%84%E6%9E%B6%E6%9E%84%E8%A7%86%E5%9B%BE"><span class="nav-number">1.</span> <span class="nav-text">1. 了解mysql的架构视图</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-innodb%E7%9A%84%E4%B8%80%E9%A1%B5-pages"><span class="nav-number">2.</span> <span class="nav-text">2. innodb的一页(pages)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-innodb%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%AE%A1%E7%90%86%E5%8D%95%E4%BD%8D%E6%98%AF%E9%A1%B5"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 innodb的基本管理单位是页</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-%E7%A3%81%E7%9B%98%E6%96%87%E4%BB%B6%E5%86%85%E9%83%A8%E6%95%B0%E6%8D%AE%E7%9A%84%E7%BB%84%E7%BB%87%E9%80%9A%E8%BF%87%E9%A1%B5%E5%8F%B7%E5%92%8C%E9%A1%B5%E5%86%85%E5%81%8F%E7%A7%BB"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 磁盘文件内部数据的组织通过页号和页内偏移</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-%E8%BF%99%E9%87%8C%E5%BC%95%E7%94%B3%E4%BA%86%E4%B8%80%E4%B8%AA%E9%97%AE%E9%A2%98-%E4%B8%80%E4%B8%AA%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%9A%84%E6%9C%80%E5%A4%A7%E5%AE%B9%E9%87%8F%E6%98%AF%E5%A4%9A%E5%B0%91%EF%BC%9F"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 这里引申了一个问题,一个表空间的最大容量是多少？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-innodb%E7%9A%84ibd%E6%96%87%E4%BB%B6%E9%9D%99%E6%80%81%E8%A7%86%E5%9B%BE"><span class="nav-number">3.</span> <span class="nav-text">3. innodb的ibd文件静态视图</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-innodb%E5%BC%95%E6%93%8E%E6%9C%89%E4%B8%80%E4%B8%AA%E9%BB%98%E8%AE%A4%E7%9A%84%E7%B3%BB%E7%BB%9F%E8%A1%A8%E7%A9%BA%E9%97%B4-%E7%BB%93%E6%9E%84%E5%A6%82%E4%B8%8B%E5%9B%BE"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 innodb引擎有一个默认的系统表空间,结构如下图:</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-%E5%B0%86%E4%B8%BA%E6%AF%8F%E5%BC%A0%E8%A1%A8%E5%BB%BA%E7%AB%8B%E4%B8%80%E4%B8%AA%E8%A1%A8%E7%A9%BA%E9%97%B4-%E8%BF%99%E4%B8%AA%E5%90%8D%E5%AD%97%E5%8F%ABfile-per-table-%E5%AE%9E%E9%99%85%E4%B8%8A%E5%8F%AB%E6%AF%8F%E5%BC%A0%E8%A1%A8%E4%B8%80%E4%B8%AA%E8%A1%A8%E7%A9%BA%E9%97%B4%E6%9B%B4%E5%8A%A0%E5%90%88%E7%90%86-%E7%BB%93%E6%9E%84%E5%A6%82%E4%B8%8B%E5%9B%BE%E6%89%80%E7%A4%BA"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 将为每张表建立一个表空间,这个名字叫file per table,实际上叫每张表一个表空间更加合理,结构如下图所示:</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-IBD%E6%96%87%E4%BB%B6%E4%B9%8BFSP-HDR%E9%A1%B5"><span class="nav-number">4.</span> <span class="nav-text">4. IBD文件之FSP_HDR页</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-1-FSP-header"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 FSP header</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-XEDS-Entry"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 XEDS Entry</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-IBD%E6%96%87%E4%BB%B6%E4%B9%8BINODE%E9%A1%B5"><span class="nav-number">5.</span> <span class="nav-text">5. IBD文件之INODE页</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-IBD%E6%96%87%E4%BB%B6%E4%B9%8BINDEX%E9%A1%B5"><span class="nav-number">6.</span> <span class="nav-text">6. IBD文件之INDEX页</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#6-1-Index-Header"><span class="nav-number">6.1.</span> <span class="nav-text">6.1 Index Header</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-2-System-Recoders"><span class="nav-number">6.2.</span> <span class="nav-text">6.2 System Recoders</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-3-Page-Directory"><span class="nav-number">6.3.</span> <span class="nav-text">6.3 Page Directory</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-4-User-records-%E8%AF%A6%E8%A7%81%E4%B8%8B%E8%8A%82"><span class="nav-number">6.4.</span> <span class="nav-text">6.4 User records (详见下节)</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-%E8%A1%8C%E8%AE%B0%E5%BD%95%E6%A0%BC%E5%BC%8F"><span class="nav-number">7.</span> <span class="nav-text">7. 行记录格式</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术的朝圣之旅</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

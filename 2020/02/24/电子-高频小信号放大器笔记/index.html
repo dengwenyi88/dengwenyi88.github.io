@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="目的:本文旨在帮助学习高频小信号放大器能少走一些弯路，为后面继续理解做一些笔记，  一. 目的说明学习高频小信号放大器的目的主要是分析这种类型的电路，也可以设计这种电路，遇到这种电路知道大概的原理，以及影响这种电路的几种参数，同时作为收信的第一段电路，理解这种电路的原理，是理解无线电原理的第一步，也是大部分高频电子线路课程的最开始讲解的电路。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="高频小信号调谐放大器快速入门">
+<meta property="og:url" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="目的:本文旨在帮助学习高频小信号放大器能少走一些弯路，为后面继续理解做一些笔记，  一. 目的说明学习高频小信号放大器的目的主要是分析这种类型的电路，也可以设计这种电路，遇到这种电路知道大概的原理，以及影响这种电路的几种参数，同时作为收信的第一段电路，理解这种电路的原理，是理解无线电原理的第一步，也是大部分高频电子线路课程的最开始讲解的电路。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/07.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/00.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/04.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/05.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/03.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/02.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/02.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/03.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/08.png">
+<meta property="article:published_time" content="2020-02-24T12:00:00.000Z">
+<meta property="article:modified_time" content="2021-08-04T11:49:58.000Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="高频">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/07.png">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>高频小信号调谐放大器快速入门 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          高频小信号调谐放大器快速入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-24 20:00:00" itemprop="dateCreated datePublished" datetime="2020-02-24T20:00:00+08:00">2020-02-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-08-04 19:49:58" itemprop="dateModified" datetime="2021-08-04T19:49:58+08:00">2021-08-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8/%E7%94%B5%E5%AD%90%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">电子技术</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>目的:本文旨在帮助学习高频小信号放大器能少走一些弯路，为后面继续理解做一些笔记，</p>
+</blockquote>
+<h4 id="一-目的说明"><a href="#一-目的说明" class="headerlink" title="一. 目的说明"></a>一. 目的说明</h4><p>学习高频小信号放大器的目的主要是分析这种类型的电路，也可以设计这种电路，遇到这种电路知道大概的原理，以及影响这种电路的几种参数，同时作为收信的第一段电路，理解这种电路的原理，是理解无线电原理的第一步，也是大部分高频电子线路课程的最开始讲解的电路。<span id="more"></span> 我学习高频电路的目的，旨在学习完低频电子线路以后拓展电子线路知识结构，同时做为无线电爱好者而开始学习的，高频小信号调谐放大器，作为从天线收到小信号，要进行放大才能进行检波，解调以后得到原始信号的第一个电路，相当重要。</p>
+<h4 id="二-前置知识点"><a href="#二-前置知识点" class="headerlink" title="二. 前置知识点"></a>二. 前置知识点</h4><h5 id="2-1-高频小信号调谐放大器的性能参数"><a href="#2-1-高频小信号调谐放大器的性能参数" class="headerlink" title="2.1 高频小信号调谐放大器的性能参数"></a>2.1 高频小信号调谐放大器的性能参数</h5><pre><code>* 增益 这里是指功率增益，也可以指电压增益，毕竟放大的信号大多以电压为主
+* 通频带
+* 选择性 有两个指标一个是矩形系数一个是抑制比
+* 工作稳定性
+* 噪声系数
+</code></pre>
+<p>通频带这个概念理解透彻: 官方定义是：<strong>放大器的电压增益下降到最大值的0.7倍时，所对应的频率范围</strong>。左边一个频率，右边一个频率构成的范围，所以有些叫带宽BW。因为调频的时候，频率是一个范围，所以如果通频带不够宽，那么调频的时候就会失真(白话就是丢掉一些信号)。通频带跟下面的这个特性<strong>选择性</strong>是矛盾的，通常通频带较宽的放大器，必然导致放大器的频率选择性不好。参考下图理解:</p>
+<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/07.png" class="" title="带宽">
+
+<h5 id="2-2-前置知识点"><a href="#2-2-前置知识点" class="headerlink" title="2.2 前置知识点"></a>2.2 前置知识点</h5><pre><code>* 电容
+* 电感
+* 电导
+* LC并联电路的相关参数
+* 形式等效电路
+* 有载品质因数和空载品质因数
+</code></pre>
+<h4 id="三-推导"><a href="#三-推导" class="headerlink" title="三. 推导"></a>三. 推导</h4><h5 id="3-1-电路等效变换"><a href="#3-1-电路等效变换" class="headerlink" title="3.1 电路等效变换"></a>3.1 电路等效变换</h5><p><strong>这段讲的是单调谐放大器的实际电路到等效电路的变换，对于理解很重要</strong><br>单调谐放大器实际电路:</p>
+<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/00.png" class="" title="实际电路">
+<p>以上电路去除偏置电路以后的原理性电路图:</p>
+<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/04.png" class="" title="原理性电路">
+<p>用形式等效电路代替以后的基本电路图:</p>
+<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/05.png" class="" title="等效电路">
+<p>只画出集电极部分的电路图,也就是上面晶体管右边到负载部分的电路图:</p>
+<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/03.png" class="" title="等效电路">
+<p>初级线圈和次级线圈按匝数将电路参数分配到负载电路中:</p>
+<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/02.png" class="" title="总导纳">
+
+<h5 id="3-2-放大器的电压增益"><a href="#3-2-放大器的电压增益" class="headerlink" title="3.2 放大器的电压增益"></a>3.2 放大器的电压增益</h5><p>$$<br>\dot{A_v} = \frac{\dot{V_{o1}}}{\dot{V_{i1}}} = \frac{-y_{fe}}{y_{oe}+Y^{‘}_{L}}<br>$$</p>
+<p>参数说明：</p>
+<p>$g_{o1}$ 代表晶体管的输出电导</p>
+<p>$G_p$ 代表回路本身的损耗</p>
+<p>$g_{i2}$ 代表负载的电导</p>
+<p>从以下图得出以下两个公式:</p>
+<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/02.png" class="" title="总导纳">
+<p>图(a)得出总等效导纳:<br>$$<br>Y^{‘}={p_1}^2(y_{oe}+Y^{‘}_L)<br>$$<br>图(b)得到: $$Y^{‘}=G^{‘}p + j(\omega C{\Sigma}-\frac{1}{\omega L_1})$$</p>
+<p>总等效导纳公式变换一下：<br>$$<br>y_{oe}+Y^{‘}_L=\frac{Y^{‘}}{p_1^2}<br>$$</p>
+<p>式子代入到上面的电压增益公式中结果为：<br>$$<br>\dot{A_v}=-\frac{p^2_1y_{fe}}{Y^{‘}}=\frac{\dot{V_{o1}}}{\dot{V_{i1}}}<br>$$</p>
+<p>实际的电压增益为如下图的最右边的电压除以最左边的输入电压:</p>
+<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/03.png" class="" title="实际电压增益">
+
+<p>$$<br>\dot{A_v}=\frac{\dot{V_{i2}}}{\dot{V_{i1}}}= \frac{(\frac{p_2}{p_1})\dot{V_{o1}}}{\dot{V_{i1}}}=-\frac{p_1p_2y_{fe}}{Y^{‘}}<br>$$</p>
+<p>将以下两个公式代入到上面的实际电压增益公式中：<br>$$Y^{‘}=G^{‘}<em>p + j(\omega C</em>{\Sigma}-\frac{1}{\omega L_1})\text{(总等效导纳公式)}$$</p>
+<p>公式:<br>$$<br>\omega C_{\Sigma} = \frac{1}{\omega_0 L_1}\text{(谐振回路的条件)}<br>$$</p>
+<p>所以谐振点上的电压增益为:</p>
+<p>$$<br>\dot{A_{v0}}=-\frac{p_1p_2y_{fe}}{G^{‘}<em>p}=-\frac{p_1p_2y</em>{fe}}{G_p+g^{‘}<em>{o1}+g^{‘}</em>{i2}}<br>$$</p>
+<p>要获得最大的电压增益，需要选取适当的p1和p2值，使负载导纳能与晶体的的输出导纳相匹配(白话的意思就是阻抗要匹配,现在是计算阻抗匹配情况下的最大电压增益)，匹配条件为:</p>
+<p>$$<br>g^{‘}<em>{i2} = g^{‘}</em>{o1} + G_p = \frac{G^{‘}_p}{2}<br>$$</p>
+<p>推导的最后的电压最大增益为:</p>
+<p>$$<br>(A_{v0})<em>{max} = -\frac{y</em>{fe}}{2\sqrt{g_{o1}g_{i2}}}<br>$$</p>
+<p>推导得到的最大功率增益为：<br>$$<br>(A_{v0})<em>{max} = -\frac{y</em>{fe}}{2\sqrt{g_{o1}g_{i2}}}<br>$$ </p>
+<p>列出上面两个公式的目的是，清楚两个结果，第一是功能增益和电压增益的关系，第二是功率增益值的大小只跟晶体管的参数有关，与电路的参数关系无关<br>附上高频电路基础上的证明方法:</p>
+<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/08.png" class="" title="简单的证明方法">
+
+<h5 id="3-3-通频带和选择性"><a href="#3-3-通频带和选择性" class="headerlink" title="3.3 通频带和选择性"></a>3.3 通频带和选择性</h5><p>这里要指出通频带的宽度越宽，选择性越差；<br>推导高频电子线路第五版3.3.17公式待后续完善<br>回路的有载品质因数的公式如下：<br>$$<br>Q_{L} = \frac{\omega_0 C_{\Sigma}}{G^{‘}_p}=\frac{1}{\omega_0 L_1 G^{‘}_p}<br>$$</p>
+<p>推导出通频带的公式:<br>$$<br>2{\Delta}f_{0.7} = \frac{f_0}{Q_L}<br>$$<br>其中$Q_L$就是上面所说的有载品质因数，结论是$Q_L$越高，通频带越窄。</p>
+<p>稳定性和噪声系数未完待续</p>
+<h4 id="学习书籍的建议"><a href="#学习书籍的建议" class="headerlink" title="学习书籍的建议"></a>学习书籍的建议</h4><pre><code>* 高频电路基础--陈光梦
+* 高频电子线路第五版  
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1t86sQ6bUhtHoxC85EoUISQ" title="密码:21ak">点击下载</a><br>两本书要交叉看，第一本高频电路基础介绍高频小信号调谐放大器电路的原理，简单易懂，第二本介绍电路更加学术化，更加严谨，可以互为参考，当然更多的可以参考百度文库里的ppt。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%AB%98%E9%A2%91/" rel="tag"># 高频</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/18/cplusplus%E7%AC%94%E8%AE%B0-%E8%AE%A9%E7%A8%8B%E5%BA%8F%E6%9B%B4%E7%AE%80%E6%B4%81/" rel="prev" title="c++11的新特性(一）--让程序更简洁">
+      <i class="fa fa-chevron-left"></i> c++11的新特性(一）--让程序更简洁
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/29/%E6%89%8B%E5%86%99%E7%BA%A2%E9%BB%91%E6%A0%91%E6%8E%A8%E5%AF%BC%E8%BF%87%E7%A8%8B/" rel="next" title="红黑树算法推导过程">
+      红黑树算法推导过程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E7%9B%AE%E7%9A%84%E8%AF%B4%E6%98%8E"><span class="nav-number">1.</span> <span class="nav-text">一. 目的说明</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%E7%82%B9"><span class="nav-number">2.</span> <span class="nav-text">二. 前置知识点</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E8%B0%83%E8%B0%90%E6%94%BE%E5%A4%A7%E5%99%A8%E7%9A%84%E6%80%A7%E8%83%BD%E5%8F%82%E6%95%B0"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 高频小信号调谐放大器的性能参数</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86%E7%82%B9"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 前置知识点</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-%E6%8E%A8%E5%AF%BC"><span class="nav-number">3.</span> <span class="nav-text">三. 推导</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-%E7%94%B5%E8%B7%AF%E7%AD%89%E6%95%88%E5%8F%98%E6%8D%A2"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 电路等效变换</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-%E6%94%BE%E5%A4%A7%E5%99%A8%E7%9A%84%E7%94%B5%E5%8E%8B%E5%A2%9E%E7%9B%8A"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 放大器的电压增益</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-%E9%80%9A%E9%A2%91%E5%B8%A6%E5%92%8C%E9%80%89%E6%8B%A9%E6%80%A7"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 通频带和选择性</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AD%A6%E4%B9%A0%E4%B9%A6%E7%B1%8D%E7%9A%84%E5%BB%BA%E8%AE%AE"><span class="nav-number">4.</span> <span class="nav-text">学习书籍的建议</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术的朝圣之旅</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+          load: ['[tex]/mhchem'],
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+          packages: {'[+]': ['mhchem']},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

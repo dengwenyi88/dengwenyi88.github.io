@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="笔记重点:  定时事件的处理依赖两个结构，一个是小根堆，一个是common_timeout的结构。 小根堆根据超时时间进行排序，最近超时的为小根堆的根节点。 common_timeout_list结构是为了处理超时时间相同的一系列事件的集合，以防止小根堆随超时事件的增多而过多增加的情况,对common-timeout的理解是依据《管理超时event》这篇博客进行分析的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="libevent笔记--定时事件分析">
+<meta property="og:url" content="https://dengwenyi88.github.io/2017/06/30/2017-06-30-libevent%E5%AE%9A%E6%97%B6%E4%BA%8B%E4%BB%B6/index.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="笔记重点:  定时事件的处理依赖两个结构，一个是小根堆，一个是common_timeout的结构。 小根堆根据超时时间进行排序，最近超时的为小根堆的根节点。 common_timeout_list结构是为了处理超时时间相同的一系列事件的集合，以防止小根堆随超时事件的增多而过多增加的情况,对common-timeout的理解是依据《管理超时event》这篇博客进行分析的。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-06-30T10:30:00.000Z">
+<meta property="article:modified_time" content="2021-07-31T06:43:54.000Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="libevent">
+<meta property="article:tag" content="源码分析">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/2017/06/30/2017-06-30-libevent%E5%AE%9A%E6%97%B6%E4%BA%8B%E4%BB%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>libevent笔记--定时事件分析 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/06/30/2017-06-30-libevent%E5%AE%9A%E6%97%B6%E4%BA%8B%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          libevent笔记--定时事件分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-06-30 18:30:00" itemprop="dateCreated datePublished" datetime="2017-06-30T18:30:00+08:00">2017-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-31 14:43:54" itemprop="dateModified" datetime="2021-07-31T14:43:54+08:00">2021-07-31</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8/libevent/" itemprop="url" rel="index"><span itemprop="name">libevent</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>笔记重点:</p>
+<ul>
+<li>定时事件的处理依赖两个结构，一个是小根堆，一个是common_timeout的结构。</li>
+<li>小根堆根据超时时间进行排序，最近超时的为小根堆的根节点。</li>
+<li>common_timeout_list结构是为了处理超时时间相同的一系列事件的集合，以防止小根堆随超时事件的增多而过多增加的情况,对common-timeout的理解是依据《管理超时event》这篇博客进行分析的。</li>
+</ul>
+</blockquote>
+<span id="more"></span>
+<h4 id="一-common-timeout-list结构的理解"><a href="#一-common-timeout-list结构的理解" class="headerlink" title="一. common_timeout_list结构的理解"></a>一. common_timeout_list结构的理解</h4><h5 id="1-使用common-timeout-list结构的理由"><a href="#1-使用common-timeout-list结构的理由" class="headerlink" title="1. 使用common_timeout_list结构的理由"></a>1. 使用common_timeout_list结构的理由</h5><p>所以要在小根堆之外再次使用common-timeout的结构，是因为超时事件在小根堆中，是按照超时时间的先后次序进行一个排序，对于超时时间相同的情况，插入到小根堆只会让堆变大，而失去了堆排序的基本作用，所以这个时候，需要将相同的超时时间集合一起来，然后在放入到小根堆中的一个节点中。</p>
+<h5 id="2-一个时间："><a href="#2-一个时间：" class="headerlink" title="2. 一个时间："></a>2. 一个时间：</h5><p>这个时间是在使用event_add函数时的第二个参数，common_timeout系统使用时时间做了特殊的处理，这里的struct timeval表示时间在windows下是64位，在linux下是32位，在common-timeout中，使用了32位中的21～32位的12位用来保存common-timeout中需要的额外信息,即12位中高4位全为1表示common-timeout时间，12位中的低8位表示在common-timeout结构中超时事件集合中本事件所在的索引位置</p>
+<h5 id="3-一个结构："><a href="#3-一个结构：" class="headerlink" title="3. 一个结构："></a>3. 一个结构：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">common_timeout_list</span> &#123;</span></span><br><span class="line">    <span class="comment">//相同的超时事件列表</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">event_list</span> <span class="title">events</span>;</span></span><br><span class="line">    <span class="comment">//超时时间</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timeval</span> <span class="title">duration</span>;</span></span><br><span class="line">    <span class="comment">//放在小根堆上的超时事件</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">event</span> <span class="title">timeout_event</span>;</span></span><br><span class="line">    <span class="comment">//所属的调度器</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">event_base</span> *<span class="title">base</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>这个结构就是在event_base中的表示一系列超时时间的集合。</p>
+<h5 id="4-一个函数："><a href="#4-一个函数：" class="headerlink" title="4. 一个函数："></a>4. 一个函数：</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">const</span> struct timeval *</span></span><br><span class="line"><span class="function"><span class="title">event_base_init_common_timeout</span><span class="params">(struct event_base *base,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">const</span> struct timeval *duration)</span></span>&#123;</span><br><span class="line">    ……</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个函数的作用就是使用一个时间，在调度器中创建common_timeout_list结构，并创建common_timeout_list结构中的timeout_event事件，并将给的时间的高32～21位初始化，就是说初始化上面的一个结构和一个时间。</p>
+<h5 id="5-添加超时时间"><a href="#5-添加超时时间" class="headerlink" title="5. 添加超时时间"></a>5. 添加超时时间</h5><ul>
+<li>event_add====&gt;event_add_nolock_====&gt;event_queue_insert_timeout====&gt;insert_common_timeout_inorder</li>
+<li>insert_common_timeout_inorder函数是从列表的最后开始搜索超时时间点小于当前事件时间点的节点，什么情况下有可能导致有大于当前事件时间点的节点？</li>
+<li>event_add_nolock_中如果当前事件是事件队列的第一个事件，那么需要调用common_timeout_schedule函数，将common_timeout_list结构中的timeout_event事件放入小根堆中进行调度</li>
+</ul>
+<h5 id="6-超时事件激活"><a href="#6-超时事件激活" class="headerlink" title="6. 超时事件激活"></a>6. 超时事件激活</h5><p>common_timeout_callback函数<br>该函数是通过小根堆上的超时处理执行的回调，判断事件列表的第一个节点是否超时，如果超时则处理激活这个事件（就是放入激活队列）<br>删除这个事件，当队列中还有事件时，重新将common_timeout_list结构中的timeout_event事件放入到小根堆中监听。<br>注：小根堆中事件超时时是否会删除这个事件，所以common_timeout事件回调后还要重新加入到小根堆？</p>
+<p><strong>结论：</strong><br><strong>以上之所以我开始讲common_timeout_list结构，是因为当大量重复的的定时事件时，需要使用common_timeout_list将相同的事件集合起来，因为它们的超时时间是相同的，并且创建一个内部超时事件放到小根堆上，用来监听这个集合的超时，这样就不用把所有的事件加入到小根堆中，而用一个事件代替，这就是设计思路。</strong></p>
+<h4 id="二-定时器增删减"><a href="#二-定时器增删减" class="headerlink" title="二. 定时器增删减"></a>二. 定时器增删减</h4><h5 id="1-小根堆"><a href="#1-小根堆" class="headerlink" title="1.小根堆"></a>1.小根堆</h5><p>要理解小根堆的原理，可以参考这篇笔记，这里要讲的是利用小根堆的特性，根节点的事件是最接近now的时间，也就是最先超时的。</p>
+<h5 id="2-添加定时事件到调度器"><a href="#2-添加定时事件到调度器" class="headerlink" title="2.添加定时事件到调度器"></a>2.添加定时事件到调度器</h5><p>event_add ====&gt; event_add_nolock_ ====&gt; event_queue_insert_timeout<br>【event.c/3363】</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">event_queue_insert_timeout</span><span class="params">(struct event_base *base, struct event *ev)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ……</span><br><span class="line">    <span class="comment">//如果是common_timeout_list</span></span><br><span class="line">    <span class="keyword">if</span> (is_common_timeout(&amp;ev-&gt;ev_timeout, base)) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">common_timeout_list</span> *<span class="title">ctl</span> =</span></span><br><span class="line">            get_common_timeout_list(base, &amp;ev-&gt;ev_timeout);</span><br><span class="line">        <span class="comment">//插入到common_timeout_list集合中</span></span><br><span class="line">        insert_common_timeout_inorder(ctl, ev);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">//插入到小根堆中</span></span><br><span class="line">        min_heap_push_(&amp;base-&gt;timeheap, ev);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里需要注意的地方就是event_add_nolock_函数中，将定时的时间计算成绝对时间，也就是超时的时间点，然后在将超时事件加入到小根堆中。</p>
+<h5 id="3-定时事件的触发"><a href="#3-定时事件的触发" class="headerlink" title="3.定时事件的触发"></a>3.定时事件的触发</h5><p>定时事件的触发，是利用调度器的超时等待功能来实现的，首先计算小根堆中最先超时的事件需要等待的超时时间，然后传入到调度器的调度接口等待超时。接口超时完成以后，将超时的事件加入到激活队列中，等待执行。<br>【event.c】1878行</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">event_base_loop</span><span class="params">(struct event_base *base, <span class="keyword">int</span> flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ……</span><br><span class="line">    <span class="keyword">while</span> (!done) &#123;</span><br><span class="line">        ……</span><br><span class="line">        tv_p = &amp;tv;</span><br><span class="line">        <span class="keyword">if</span> (!N_ACTIVE_CALLBACKS(base) &amp;&amp; !(flags &amp; EVLOOP_NONBLOCK)) &#123;</span><br><span class="line">            <span class="comment">//计算最近超时事件所需的时间</span></span><br><span class="line">            timeout_next(base, &amp;tv_p);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            evutil_timerclear(&amp;tv);</span><br><span class="line">        &#125;</span><br><span class="line">        ……</span><br><span class="line">        clear_time_cache(base);</span><br><span class="line">        <span class="comment">//调度等待超时</span></span><br><span class="line">        res = evsel-&gt;dispatch(base, tv_p);</span><br><span class="line">        ……</span><br><span class="line">        <span class="comment">//将已经超时的事件加入到激活队列中</span></span><br><span class="line">        timeout_process(base);</span><br><span class="line">        <span class="keyword">if</span> (N_ACTIVE_CALLBACKS(base)) &#123;</span><br><span class="line">            <span class="comment">//激活队列事件执行</span></span><br><span class="line">            <span class="keyword">int</span> n = event_process_active(base);</span><br><span class="line">            <span class="keyword">if</span> ((flags &amp; EVLOOP_ONCE)</span><br><span class="line">                &amp;&amp; N_ACTIVE_CALLBACKS(base) == <span class="number">0</span></span><br><span class="line">                &amp;&amp; n != <span class="number">0</span>)</span><br><span class="line">                done = <span class="number">1</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (flags &amp; EVLOOP_NONBLOCK)</span><br><span class="line">            done = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ……</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="4-超时回调执行"><a href="#4-超时回调执行" class="headerlink" title="4.超时回调执行"></a>4.超时回调执行</h5><p>event_process_active ====&gt; event_process_active_signal_queue ====&gt;event_persist_closure</p>
+<ul>
+<li>这里在阅读代码的时候要注意,timeout_process函数中，将超时事件从监听队列中删除了，然后将超时事件添加到激活队列。而在event_process_active_signal_queue函数中，对待定时回调事件(持久的超时事件),调用event_persist_closure函数在将超时事件加回到监听队列中。</li>
+<li>定时事件的处理中，还应该注意对于超时事件的处理，设定一定的超时时间，而在超时时间到来之前，事件已经得到处理，那么下次再处理的超时时间点是现在时间+超时时间，如果回调的原因是已经超时的时候，是超时时间点+超时时间，代码中并没有简单的用现在时间+超时时间进行处理。(套接字的读写超时时的处理)<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">event_persist_closure</span><span class="params">(struct event_base *base, struct event *ev)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ……</span><br><span class="line">    <span class="keyword">if</span> (ev-&gt;ev_io_timeout.tv_sec || ev-&gt;ev_io_timeout.tv_usec) &#123;</span><br><span class="line">       ……</span><br><span class="line">        gettime(base, &amp;now);</span><br><span class="line">        <span class="keyword">if</span> (is_common_timeout(&amp;ev-&gt;ev_timeout, base)) &#123;</span><br><span class="line">            <span class="comment">//在event_add的第二个参数的超时值</span></span><br><span class="line">            delay = ev-&gt;ev_io_timeout;</span><br><span class="line">            usec_mask = delay.tv_usec &amp; ~MICROSECONDS_MASK;</span><br><span class="line">            delay.tv_usec &amp;= MICROSECONDS_MASK;</span><br><span class="line">            <span class="keyword">if</span> (ev-&gt;ev_res &amp; EV_TIMEOUT) &#123;</span><br><span class="line">                relative_to = ev-&gt;ev_timeout;</span><br><span class="line">                relative_to.tv_usec &amp;= MICROSECONDS_MASK;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                relative_to = now;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//在event_add的第二个参数的超时值</span></span><br><span class="line">            delay = ev-&gt;ev_io_timeout;</span><br><span class="line">            <span class="keyword">if</span> (ev-&gt;ev_res &amp; EV_TIMEOUT) &#123;</span><br><span class="line">                <span class="comment">//超时时用超时时间点</span></span><br><span class="line">                relative_to = ev-&gt;ev_timeout;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">//用当前时间</span></span><br><span class="line">                relative_to = now;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        evutil_timeradd(&amp;relative_to, &amp;delay, &amp;run_at);</span><br><span class="line">        ……</span><br><span class="line">        <span class="comment">//使用绝对时间将持久时间加入到监听队列</span></span><br><span class="line">        event_add_nolock_(ev, &amp;run_at, <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    ……</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="5-删除超时事件-2018-01-12"><a href="#5-删除超时事件-2018-01-12" class="headerlink" title="5.删除超时事件(2018-01-12)"></a>5.删除超时事件(2018-01-12)</h5>调用的路径如下：<br>event_base_loop<br>   ====&gt;timeout_process<pre><code>         ====&gt;event_del_nolock_
+              ====&gt;event_queue_remove_timeout
+</code></pre>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">event_queue_remove_timeout</span><span class="params">(struct event_base *base, struct event *ev)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">     EVENT_BASE_ASSERT_LOCKED(base);</span><br><span class="line">     <span class="keyword">if</span> (EVUTIL_FAILURE_CHECK(!(ev-&gt;ev_flags &amp; EVLIST_TIMEOUT))) &#123;</span><br><span class="line">          event_errx(<span class="number">1</span>, <span class="string">&quot;%s: %p(fd &quot;</span>EV_SOCK_FMT<span class="string">&quot;) not on queue %x&quot;</span>, __func__,</span><br><span class="line">              ev, EV_SOCK_ARG(ev-&gt;ev_fd), EVLIST_TIMEOUT);</span><br><span class="line">          <span class="keyword">return</span>;</span><br><span class="line">     &#125;</span><br><span class="line">     DECR_EVENT_COUNT(base, ev-&gt;ev_flags);</span><br><span class="line">     ev-&gt;ev_flags &amp;= ~EVLIST_TIMEOUT;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">if</span> (is_common_timeout(&amp;ev-&gt;ev_timeout, base)) &#123;</span><br><span class="line">          <span class="class"><span class="keyword">struct</span> <span class="title">common_timeout_list</span> *<span class="title">ctl</span> =</span>  get_common_timeout_list(base, &amp;ev-&gt;ev_timeout);</span><br><span class="line">          TAILQ_REMOVE(&amp;ctl-&gt;events, ev, ev_timeout_pos.ev_next_with_common_timeout);</span><br><span class="line">     &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="comment">//在这里删掉小根堆上</span></span><br><span class="line">          min_heap_erase_(&amp;base-&gt;timeheap, ev);</span><br><span class="line">     &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/libevent/" rel="tag"># libevent</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="tag"># 源码分析</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/01/12/2017-01-12-05-%E4%BB%BB%E5%8A%A1%E9%80%80%E5%87%BA/" rel="prev" title="《linux 0.12内核完全剖析》--进程退出分析">
+      <i class="fa fa-chevron-left"></i> 《linux 0.12内核完全剖析》--进程退出分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/06/10/Mac%20OS%20X%E4%B8%AD%E5%AE%89%E8%A3%85universal-ctags/" rel="next" title="Mac OS X中安装universal-ctags">
+      Mac OS X中安装universal-ctags <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-common-timeout-list%E7%BB%93%E6%9E%84%E7%9A%84%E7%90%86%E8%A7%A3"><span class="nav-number">1.</span> <span class="nav-text">一. common_timeout_list结构的理解</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E4%BD%BF%E7%94%A8common-timeout-list%E7%BB%93%E6%9E%84%E7%9A%84%E7%90%86%E7%94%B1"><span class="nav-number">1.1.</span> <span class="nav-text">1. 使用common_timeout_list结构的理由</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E4%B8%80%E4%B8%AA%E6%97%B6%E9%97%B4%EF%BC%9A"><span class="nav-number">1.2.</span> <span class="nav-text">2. 一个时间：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-%E4%B8%80%E4%B8%AA%E7%BB%93%E6%9E%84%EF%BC%9A"><span class="nav-number">1.3.</span> <span class="nav-text">3. 一个结构：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-%E4%B8%80%E4%B8%AA%E5%87%BD%E6%95%B0%EF%BC%9A"><span class="nav-number">1.4.</span> <span class="nav-text">4. 一个函数：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-%E6%B7%BB%E5%8A%A0%E8%B6%85%E6%97%B6%E6%97%B6%E9%97%B4"><span class="nav-number">1.5.</span> <span class="nav-text">5. 添加超时时间</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#6-%E8%B6%85%E6%97%B6%E4%BA%8B%E4%BB%B6%E6%BF%80%E6%B4%BB"><span class="nav-number">1.6.</span> <span class="nav-text">6. 超时事件激活</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E5%AE%9A%E6%97%B6%E5%99%A8%E5%A2%9E%E5%88%A0%E5%87%8F"><span class="nav-number">2.</span> <span class="nav-text">二. 定时器增删减</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E5%B0%8F%E6%A0%B9%E5%A0%86"><span class="nav-number">2.1.</span> <span class="nav-text">1.小根堆</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E6%B7%BB%E5%8A%A0%E5%AE%9A%E6%97%B6%E4%BA%8B%E4%BB%B6%E5%88%B0%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="nav-number">2.2.</span> <span class="nav-text">2.添加定时事件到调度器</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-%E5%AE%9A%E6%97%B6%E4%BA%8B%E4%BB%B6%E7%9A%84%E8%A7%A6%E5%8F%91"><span class="nav-number">2.3.</span> <span class="nav-text">3.定时事件的触发</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-%E8%B6%85%E6%97%B6%E5%9B%9E%E8%B0%83%E6%89%A7%E8%A1%8C"><span class="nav-number">2.4.</span> <span class="nav-text">4.超时回调执行</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-%E5%88%A0%E9%99%A4%E8%B6%85%E6%97%B6%E4%BA%8B%E4%BB%B6-2018-01-12"><span class="nav-number">2.5.</span> <span class="nav-text">5.删除超时事件(2018-01-12)</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术的朝圣之旅</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
