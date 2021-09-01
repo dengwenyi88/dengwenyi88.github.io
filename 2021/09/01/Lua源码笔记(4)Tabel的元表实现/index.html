@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="通过元表metatable细节分析，能够更好的理解metatable在整个lua的使用中的作用，通过原理更好的利用lua的特性；首先metatable的元表，系统会给一些默认的元表方法，其次玩家可以通过setmetatable的API设置元表，这样玩家就自定义table的运行时的一些行为。我的理解是lua的设计者尝试想通过metatable,来封装统一table的数据和行为，接近于面向对象的思路">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lua源码笔记(4)之Table的元表实现细节">
+<meta property="og:url" content="https://dengwenyi88.github.io/2021/09/01/Lua%E6%BA%90%E7%A0%81%E7%AC%94%E8%AE%B0(4)Tabel%E7%9A%84%E5%85%83%E8%A1%A8%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="通过元表metatable细节分析，能够更好的理解metatable在整个lua的使用中的作用，通过原理更好的利用lua的特性；首先metatable的元表，系统会给一些默认的元表方法，其次玩家可以通过setmetatable的API设置元表，这样玩家就自定义table的运行时的一些行为。我的理解是lua的设计者尝试想通过metatable,来封装统一table的数据和行为，接近于面向对象的思路">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-09-01T08:05:14.983Z">
+<meta property="article:modified_time" content="2021-09-01T09:41:47.387Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="lua">
+<meta property="article:tag" content="源码">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/2021/09/01/Lua%E6%BA%90%E7%A0%81%E7%AC%94%E8%AE%B0(4)Tabel%E7%9A%84%E5%85%83%E8%A1%A8%E5%AE%9E%E7%8E%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Lua源码笔记(4)之Table的元表实现细节 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2021/09/01/Lua%E6%BA%90%E7%A0%81%E7%AC%94%E8%AE%B0(4)Tabel%E7%9A%84%E5%85%83%E8%A1%A8%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Lua源码笔记(4)之Table的元表实现细节
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-09-01 16:05:14 / 修改时间：17:41:47" itemprop="dateCreated datePublished" datetime="2021-09-01T16:05:14+08:00">2021-09-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8/lua/" itemprop="url" rel="index"><span itemprop="name">lua</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>通过元表metatable细节分析，能够更好的理解metatable在整个lua的使用中的作用，通过原理更好的利用lua的特性；首先metatable的元表，系统会给一些默认的元表方法，其次玩家可以通过setmetatable的API设置元表，这样玩家就自定义table的运行时的一些行为。我的理解是lua的设计者尝试想通过metatable,来封装统一table的数据和行为，接近于面向对象的思路，但lua作为一门嵌入式的语言，是增强宿主语言的能力，因为力求实现和使用简洁又能实现统一。</p>
+</blockquote>
+<span id="more"></span>
+
+<h4 id="tag-methods"><a href="#tag-methods" class="headerlink" title="tag methods"></a>tag methods</h4><p><strong>ltm.c是实现元方法的主要实现文件,tm是tag methods的缩写。<br>无论是fasttm宏，还是luaT_gettmbyobj，都会调用luaH_getstr函数来获取key的值</strong></p>
+<ul>
+<li><p>luaH_getstr函数分析</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里要说明的是key作为函数名字保存在table中</span></span><br><span class="line"><span class="function"><span class="keyword">const</span> TValue *<span class="title">luaH_getstr</span> <span class="params">(Table *t, TString *key)</span> </span>&#123;</span><br><span class="line">  Node *n = <span class="built_in">hashstr</span>(t, key);</span><br><span class="line">  <span class="keyword">do</span> &#123;  <span class="comment">/* check whether `key&#x27; is somewhere in the chain */</span></span><br><span class="line">    <span class="comment">// 如果key是字符串且字符串相等则返回值</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">ttisstring</span>(<span class="built_in">gkey</span>(n)) &amp;&amp; <span class="built_in">rawtsvalue</span>(<span class="built_in">gkey</span>(n)) == key)</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">gval</span>(n);  <span class="comment">/* that&#x27;s it */</span></span><br><span class="line">    <span class="keyword">else</span> n = <span class="built_in">gnext</span>(n);</span><br><span class="line">  &#125; <span class="keyword">while</span> (n);</span><br><span class="line">  <span class="keyword">return</span> luaO_nilobject;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>fasttm宏实际是调用luaT_gettm函数</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// l为lua_State， et为元表，e为TMS枚举</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> fasttm(l,et,e)  gfasttm(G(l), et, e)</span></span><br><span class="line"><span class="comment">// 先通过Table的flags标记位判断，如果该位存在，表示没有该元方法，直接返回NULL</span></span><br><span class="line"><span class="comment">// 否则才通过luaT_gettm去取</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> gfasttm(g,et,e) ((et) == NULL ? NULL : \</span></span><br><span class="line"><span class="meta">  ((et)-&gt;flags &amp; (1u<span class="meta-string">&lt;&lt;(e))) ? NULL : luaT_gettm(et, e, (g)-&gt;</span>tmname[e]))</span></span><br></pre></td></tr></table></figure></li>
+<li><p>获得元方法函数luaT_gettm和luaT_gettmbyobj</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">const</span> TValue *<span class="title">luaT_gettm</span> <span class="params">(Table *events, TMS event, TString *ename)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// events为table,ename为key得到tm</span></span><br><span class="line">  <span class="keyword">const</span> TValue *tm = <span class="built_in">luaH_getstr</span>(events, ename);</span><br><span class="line">  <span class="built_in">lua_assert</span>(event &lt;= TM_EQ);</span><br><span class="line">  <span class="comment">// 这里需要注意的是如果没有这个元方法则会标记,优化细节</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">ttisnil</span>(tm)) &#123;  <span class="comment">/* no tag method? */</span></span><br><span class="line">    events-&gt;flags |= <span class="built_in">cast_byte</span>(<span class="number">1u</span>&lt;&lt;event);  <span class="comment">/* cache this fact */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span> <span class="keyword">return</span> tm;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">const</span> TValue *<span class="title">luaT_gettmbyobj</span> <span class="params">(lua_State *L, <span class="keyword">const</span> TValue *o, TMS event)</span> </span>&#123;</span><br><span class="line">  Table *mt;</span><br><span class="line">  <span class="comment">// 根据o的类型，重点是当是lua的table时使用的是metatable</span></span><br><span class="line">  <span class="built_in"><span class="keyword">switch</span></span> (<span class="built_in">ttype</span>(o)) &#123;</span><br><span class="line">    <span class="keyword">case</span> LUA_TTABLE:</span><br><span class="line">      mt = <span class="built_in">hvalue</span>(o)-&gt;metatable;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> LUA_TUSERDATA:</span><br><span class="line">      mt = <span class="built_in">uvalue</span>(o)-&gt;metatable;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      mt = <span class="built_in">G</span>(L)-&gt;mt[<span class="built_in">ttype</span>(o)];</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 这里要强调的是要得到table的元方法是以mt为table</span></span><br><span class="line">  <span class="comment">// G(L)-&gt;tmname[event]的字符串为key得到这个元方法</span></span><br><span class="line">  <span class="keyword">return</span> (mt ? <span class="built_in">luaH_getstr</span>(mt, <span class="built_in">G</span>(L)-&gt;tmname[event]) : luaO_nilobject);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>上述luaT_gettmbyobj中对G(L)-&gt;tmname[event]的限制范围</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 初始化L的时候就将这些系统默认的元方法名字写进了G(L)中</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">luaT_init</span> <span class="params">(lua_State *L)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">char</span> *<span class="keyword">const</span> luaT_eventname[] = &#123;  <span class="comment">/* ORDER TM */</span></span><br><span class="line">    <span class="string">&quot;__index&quot;</span>, <span class="string">&quot;__newindex&quot;</span>,</span><br><span class="line">    <span class="string">&quot;__gc&quot;</span>, <span class="string">&quot;__mode&quot;</span>, <span class="string">&quot;__eq&quot;</span>,</span><br><span class="line">    <span class="string">&quot;__add&quot;</span>, <span class="string">&quot;__sub&quot;</span>, <span class="string">&quot;__mul&quot;</span>, <span class="string">&quot;__div&quot;</span>, <span class="string">&quot;__mod&quot;</span>,</span><br><span class="line">    <span class="string">&quot;__pow&quot;</span>, <span class="string">&quot;__unm&quot;</span>, <span class="string">&quot;__len&quot;</span>, <span class="string">&quot;__lt&quot;</span>, <span class="string">&quot;__le&quot;</span>,</span><br><span class="line">    <span class="string">&quot;__concat&quot;</span>, <span class="string">&quot;__call&quot;</span></span><br><span class="line">  &#125;;</span><br><span class="line">  <span class="keyword">int</span> i;</span><br><span class="line">  <span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;TM_N; i++) &#123;</span><br><span class="line">    <span class="built_in">G</span>(L)-&gt;tmname[i] = <span class="built_in">luaS_new</span>(L, luaT_eventname[i]);</span><br><span class="line">    <span class="built_in">luaS_fix</span>(<span class="built_in">G</span>(L)-&gt;tmname[i]);  <span class="comment">/* never collect these names */</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ltm.h中元方法的枚举定义</span></span><br><span class="line"><span class="comment">// 其中最重要的就是TM_INDEX</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">enum</span> &#123;</span></span><br><span class="line">  TM_INDEX,</span><br><span class="line">  TM_NEWINDEX,</span><br><span class="line">  TM_GC,</span><br><span class="line">  TM_MODE,</span><br><span class="line">  TM_EQ,  <span class="comment">/* last tag method with `fast&#x27; access */</span></span><br><span class="line">  TM_ADD,</span><br><span class="line">  TM_SUB,</span><br><span class="line">  TM_MUL,</span><br><span class="line">  TM_DIV,</span><br><span class="line">  TM_MOD,</span><br><span class="line">  TM_POW,</span><br><span class="line">  TM_UNM,</span><br><span class="line">  TM_LEN,</span><br><span class="line">  TM_LT,</span><br><span class="line">  TM_LE,</span><br><span class="line">  TM_CONCAT,</span><br><span class="line">  TM_CALL,</span><br><span class="line">  TM_N		<span class="comment">/* number of elements in the enum */</span></span><br><span class="line">&#125; TMS;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="luaV-gettable函数分析"><a href="#luaV-gettable函数分析" class="headerlink" title="luaV_gettable函数分析"></a>luaV_gettable函数分析</h4><p>总结VM中使用luaT_gettmbyobj或者luaT_gettm<br>** 注:luaV_前缀的一般是给VM调用的 **</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这个函数统一了获取table的数据和调用table的函数</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">luaV_gettable</span> <span class="params">(lua_State *L, <span class="keyword">const</span> TValue *t, TValue *key, StkId val)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> loop;</span><br><span class="line">  <span class="keyword">for</span> (loop = <span class="number">0</span>; loop &lt; MAXTAGLOOP; loop++) &#123;</span><br><span class="line">    <span class="keyword">const</span> TValue *tm;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">ttistable</span>(t)) &#123;  </span><br><span class="line">      <span class="comment">// t是一个Lua的Table</span></span><br><span class="line">      Table *h = <span class="built_in">hvalue</span>(t);</span><br><span class="line">      <span class="comment">// 调用luaH_get获得这个key的值</span></span><br><span class="line">      <span class="keyword">const</span> TValue *res = <span class="built_in">luaH_get</span>(h, key);</span><br><span class="line">      <span class="comment">// res的值不为空或者不是tm(元方法)</span></span><br><span class="line">      <span class="keyword">if</span> (!<span class="built_in">ttisnil</span>(res) || (tm = <span class="built_in">fasttm</span>(L, h-&gt;metatable, TM_INDEX)) == <span class="literal">NULL</span>) &#123; </span><br><span class="line">        <span class="comment">// 设置val并返回(获得数据)</span></span><br><span class="line">        <span class="built_in">setobj2s</span>(L, val, res);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 不是Table时获得t的TM_INDEX元方法</span></span><br><span class="line">    <span class="comment">// 在luaT_gettmbyobj中还有LUA_TUSERDATA类型(玩家自定义类型)</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">ttisnil</span>(tm = <span class="built_in">luaT_gettmbyobj</span>(L, t, TM_INDEX)))</span><br><span class="line">      <span class="built_in">luaG_typeerror</span>(L, t, <span class="string">&quot;index&quot;</span>);</span><br><span class="line">    <span class="comment">// 当tm是一个函数时调用callTMres执行函数</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">ttisfunction</span>(tm)) &#123;</span><br><span class="line">      <span class="built_in">callTMres</span>(L, val, tm, t, key);</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 通过table的index继承了一些元方法时</span></span><br><span class="line">    <span class="comment">// 向上查找元方法(有点继承的味道)</span></span><br><span class="line">    <span class="comment">// 嵌套次数为MAXTAGLOOP</span></span><br><span class="line">    t = tm;  </span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">luaG_runerror</span>(L, <span class="string">&quot;loop in gettable&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/lua/" rel="tag"># lua</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81/" rel="tag"># 源码</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/08/Lua%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90(3)%E4%B9%8BTable%E7%9A%84rehash/" rel="prev" title="Lua源码笔记(3)之Table的rehash">
+      <i class="fa fa-chevron-left"></i> Lua源码笔记(3)之Table的rehash
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#tag-methods"><span class="nav-number">1.</span> <span class="nav-text">tag methods</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#luaV-gettable%E5%87%BD%E6%95%B0%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">luaV_gettable函数分析</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术的朝圣之旅</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">24</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

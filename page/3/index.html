@@ -158,6 +158,98 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/10/2017-01-10-04-%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2017/01/10/2017-01-10-04-%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--进程调度分析</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-01-10 20:00:00" itemprop="dateCreated datePublished" datetime="2017-01-10T20:00:00+08:00">2017-01-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-31 14:43:54" itemprop="dateModified" datetime="2021-07-31T14:43:54+08:00">2021-07-31</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/Linux%E5%86%85%E6%A0%B8/" itemprop="url" rel="index"><span itemprop="name">Linux内核</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>笔记重点:<br>进程调度一直是linux系统开发中相当重要的部分,但在最初版本中的调度如此简单，以至于你并不相信，但是在不断的发展过程中，首先在2.6内核版本中发展了抢占式的调度算法，在经历几次重大版本的迭代后在开发出CFS(完全公平的调度算法),不过调度算法的重点是，如何选择需要运行的进程以及保证性能。进程的运行很多时候会被外部的资源分配不及时而阻塞，这个时候进程睡眠等待，以及这个时候的合理调度，对于CPU资源的充分利用，显得尤为重要，那调度就从进程的睡眠机制开始了解。<br>问题：</p>
+<ul>
+<li>任务调度在何时发生</li>
+<li>任务调度的基本策略是什么</li>
+<li>任务切换时怎么做到的</li>
+</ul>
+</blockquote>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/01/10/2017-01-10-04-%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/09/2017-01-06-01-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -227,98 +319,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2017/01/09/2017-01-06-01-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/09/2017-01-09-03-%E8%BF%9B%E7%A8%8B%E5%88%9B%E5%BB%BA/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/sherlock.png">
-      <meta itemprop="name" content="咖啡">
-      <meta itemprop="description" content="技术的朝圣之旅">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="咖啡's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2017/01/09/2017-01-09-03-%E8%BF%9B%E7%A8%8B%E5%88%9B%E5%BB%BA/" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--进程创建分析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2017-01-09 15:00:00" itemprop="dateCreated datePublished" datetime="2017-01-09T15:00:00+08:00">2017-01-09</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-07-31 14:43:54" itemprop="dateModified" datetime="2021-07-31T14:43:54+08:00">2021-07-31</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%9F%BA%E7%A1%80/Linux%E5%86%85%E6%A0%B8/" itemprop="url" rel="index"><span itemprop="name">Linux内核</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>笔记重点:<br>重新分析进程的创建，发现最初的笔记还是比较简单,说起进程创建，不得不先了解进程0的创建。</p>
-<ul>
-<li>进程0之后创建的所有进程都是以这个进程为模板进行创建，进程0的创建过程是在系统启动的main.c中进行的，在系统初始化之前，手动设置这个进程0，更重要的是这个进程是在内核状态下切换到用户态运行的，所以之后的进程也都在用户态下运行；</li>
-<li>其次需要理解进程的控制信息(PCB)和进程本身运行的内存空间的分配情况，这点在代码中要了解透彻，进程内核态的堆栈和用户态的堆栈的的分配是分开，同时需要了解他们的分布情况，这对了解用户态下进程如何调用系统调用的理解至关重要；同时一个进程的虚拟内存分布和实际的物理内存分配是分开的，理解这一点对理解linux的内存分配方式以及缺页中断的理解，写时复制机制的理解都很重要；</li>
-<li>最后在谈到进程的调度，在此版本的调度中可以说非常简单，但是在进程调度却是linux系统一个非常大且重要的主题。</li>
-</ul>
-</blockquote>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2017/01/09/2017-01-09-03-%E8%BF%9B%E7%A8%8B%E5%88%9B%E5%BB%BA/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -430,6 +430,98 @@
   
   
 
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/2017/01/09/2017-01-09-03-%E8%BF%9B%E7%A8%8B%E5%88%9B%E5%BB%BA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2017/01/09/2017-01-09-03-%E8%BF%9B%E7%A8%8B%E5%88%9B%E5%BB%BA/" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--进程创建分析</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-01-09 15:00:00" itemprop="dateCreated datePublished" datetime="2017-01-09T15:00:00+08:00">2017-01-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-31 14:43:54" itemprop="dateModified" datetime="2021-07-31T14:43:54+08:00">2021-07-31</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/Linux%E5%86%85%E6%A0%B8/" itemprop="url" rel="index"><span itemprop="name">Linux内核</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>笔记重点:<br>重新分析进程的创建，发现最初的笔记还是比较简单,说起进程创建，不得不先了解进程0的创建。</p>
+<ul>
+<li>进程0之后创建的所有进程都是以这个进程为模板进行创建，进程0的创建过程是在系统启动的main.c中进行的，在系统初始化之前，手动设置这个进程0，更重要的是这个进程是在内核状态下切换到用户态运行的，所以之后的进程也都在用户态下运行；</li>
+<li>其次需要理解进程的控制信息(PCB)和进程本身运行的内存空间的分配情况，这点在代码中要了解透彻，进程内核态的堆栈和用户态的堆栈的的分配是分开，同时需要了解他们的分布情况，这对了解用户态下进程如何调用系统调用的理解至关重要；同时一个进程的虚拟内存分布和实际的物理内存分配是分开的，理解这一点对理解linux的内存分配方式以及缺页中断的理解，写时复制机制的理解都很重要；</li>
+<li>最后在谈到进程的调度，在此版本的调度中可以说非常简单，但是在进程调度却是linux系统一个非常大且重要的主题。</li>
+</ul>
+</blockquote>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/01/09/2017-01-09-03-%E8%BF%9B%E7%A8%8B%E5%88%9B%E5%BB%BA/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
 
   
   <nav class="pagination">
@@ -501,7 +593,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">24</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
