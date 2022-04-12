@@ -228,7 +228,6 @@
 </ul>
 </blockquote>
 <span id="more"></span>
-
 <h5 id="1-三段代码都涉及代码的移动"><a href="#1-三段代码都涉及代码的移动" class="headerlink" title="1. 三段代码都涉及代码的移动"></a>1. 三段代码都涉及代码的移动</h5><p>主要目的是为了空间复用,代码是从0x7C00开始执行，第一段代码就将bootsect.S的代码移动到绝对地址0x9000处然后再执行</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">entry start</span><br><span class="line">start:</span><br><span class="line">	mov	ax,#BOOTSEG 	&quot;BOOTSEG为0x7C0</span><br><span class="line">	mov	ds,ax</span><br><span class="line">	mov	ax,#INITSEG     &quot;0x9000</span><br><span class="line">	mov	es,ax</span><br><span class="line">	mov	cx,#256         &quot;512字节</span><br><span class="line">	sub	si,si           &quot;si = 0x0000</span><br><span class="line">	sub	di,di           &quot;di = 0x0000</span><br><span class="line">	rep                 &quot;cx递减1 直到cx为0</span><br><span class="line">	movw                &quot;移动一个字</span><br><span class="line">	jmpi	go,INITSEG  &quot;跳转到0x9000执行</span><br></pre></td></tr></table></figure>
 <h5 id="2-机器的系统数据都是通过BIOS的功能获取到的，内核初始化的时候都要利用到这些数据"><a href="#2-机器的系统数据都是通过BIOS的功能获取到的，内核初始化的时候都要利用到这些数据" class="headerlink" title="2. 机器的系统数据都是通过BIOS的功能获取到的，内核初始化的时候都要利用到这些数据"></a>2. 机器的系统数据都是通过BIOS的功能获取到的，内核初始化的时候都要利用到这些数据</h5><ul>
@@ -238,7 +237,6 @@
 </ul>
 <h5 id="3-setup-S的主要目的是设置中断向量表述表和全局描述符表，以开启内核的32位保护模式"><a href="#3-setup-S的主要目的是设置中断向量表述表和全局描述符表，以开启内核的32位保护模式" class="headerlink" title="3. setup.S的主要目的是设置中断向量表述表和全局描述符表，以开启内核的32位保护模式"></a>3. setup.S的主要目的是设置中断向量表述表和全局描述符表，以开启内核的32位保护模式</h5><p>描述符表的定义是在setup.S的567行开始</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">gdt:</span><br><span class="line">	.word	0,0,0,0		! dummy</span><br><span class="line"></span><br><span class="line">	.word	0x07FF		! 8Mb - limit=2047 (2048*4096=8Mb)</span><br><span class="line">	.word	0x0000		! base address=0</span><br><span class="line">	.word	0x9A00		! code read/exec</span><br><span class="line">	.word	0x00C0		! granularity=4096, 386</span><br><span class="line"></span><br><span class="line">	.word	0x07FF		! 8Mb - limit=2047 (2048*4096=8Mb)</span><br><span class="line">	.word	0x0000		! base address=0</span><br><span class="line">	.word	0x9200		! data read/write</span><br><span class="line">	.word	0x00C0		! granularity=4096, 386</span><br><span class="line"></span><br><span class="line">idt_48:</span><br><span class="line">	.word	0			! idt limit=0</span><br><span class="line">	.word	0,0			! idt base=0L</span><br><span class="line"></span><br><span class="line">gdt_48:</span><br><span class="line">	.word	0x800		! gdt limit=2048, 256 GDT entries</span><br><span class="line">	.word	512+gdt,0x9	! gdt base = 0X9xxxx</span><br></pre></td></tr></table></figure>
-
 <p>设置GDT寄存器和IDT寄存器是在139行</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lidt idt_48</span><br><span class="line">lgdt gdt_48</span><br></pre></td></tr></table></figure>
 <p>idt_48h和gdt_48就是上面定义的<br>是一个6字节长的数据，前2字节是表的长度，后4字节是表的基地址，设置cr0的第0位为1开启保护模式</p>
@@ -364,7 +362,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -450,6 +448,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 

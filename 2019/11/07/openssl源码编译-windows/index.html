@@ -226,22 +226,17 @@
 <li>安装Visual Studio 2017</li>
 </ul>
 <span id="more"></span>
-
-<h4 id="1-解压openssl-1-0-2t到磁盘根目录-避免有中文目录"><a href="#1-解压openssl-1-0-2t到磁盘根目录-避免有中文目录" class="headerlink" title="1. 解压openssl-1.0.2t到磁盘根目录(避免有中文目录)"></a>1. 解压openssl-1.0.2t到磁盘根目录(避免有中文目录)</h4><h4 id="2-创建配置文件"><a href="#2-创建配置文件" class="headerlink" title="2. 创建配置文件"></a>2. 创建配置文件</h4><p>这里需要将perl的bin目录加入到系统path中,在openssl-1.0.2t目录下执行以下语句之后,</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 在这里配置将要安装的目录</span><br><span class="line">perl Configure --prefix=f:\openssl VC-WIN64A</span><br><span class="line"># 在openssl-1.0.2t根目录下运行批处理,生成Makefile文件</span><br><span class="line">ms\do_win64a</span><br></pre></td></tr></table></figure>
+<h4 id="1-解压openssl-1-0-2t到磁盘根目录-避免有中文目录"><a href="#1-解压openssl-1-0-2t到磁盘根目录-避免有中文目录" class="headerlink" title="1. 解压openssl-1.0.2t到磁盘根目录(避免有中文目录)"></a>1. 解压openssl-1.0.2t到磁盘根目录(避免有中文目录)</h4><h4 id="2-创建配置文件"><a href="#2-创建配置文件" class="headerlink" title="2. 创建配置文件"></a>2. 创建配置文件</h4><p>这里需要将perl的bin目录加入到系统path中,在openssl-1.0.2t目录下执行以下语句之后,<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 在这里配置将要安装的目录</span><br><span class="line">perl Configure --prefix=f:\openssl VC-WIN64A</span><br><span class="line"># 在openssl-1.0.2t根目录下运行批处理,生成Makefile文件</span><br><span class="line">ms\do_win64a</span><br></pre></td></tr></table></figure></p>
 <blockquote>
 <p><strong>注意事项:</strong><br>Windows版本选择是这三个 VC-WIN32 | VC-WIN64A | VC-WIN64I</p>
 <ul>
 <li>VC-WIN32是32位版本</li>
 <li>VC-WIN64A是正常的x86-64x版本，大家用的AMD和英特尔i系列x64都是用这个选项</li>
-<li>VC-WIN64 是ia-64版本，存64位指令，与x86指令不兼容，Intel安腾系列服务器CPU采用此架构</li>
+<li>VC-WIN64 是ia-64版本，存64位指令，与x86指令不兼容，Intel安腾系列服务器CPU采用此架构<h4 id="3-编译安装"><a href="#3-编译安装" class="headerlink" title="3. 编译安装"></a>3. 编译安装</h4>静态库编译<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">nmake -f ms\nt.mak clean</span><br><span class="line">nmake -f ms\nt.mak</span><br><span class="line">nmake -f ms\nt.mak test</span><br><span class="line">nmake -f ms\nt.mak install</span><br></pre></td></tr></table></figure>
+动态库编译<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">nmake -f ms\ntdll.mak clean</span><br><span class="line">nmake -f ms\ntdll.mak</span><br><span class="line">nmake -f ms\ntdll.mak test</span><br><span class="line">nmake -f ms\ntdll.mak install</span><br></pre></td></tr></table></figure>
+以上运行nmake,需要在vs2017的tools中找到【适用于vs2017的x64本机工具命令提示】</li>
 </ul>
 </blockquote>
-<h4 id="3-编译安装"><a href="#3-编译安装" class="headerlink" title="3. 编译安装"></a>3. 编译安装</h4><p>静态库编译</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">nmake -f ms\nt.mak clean</span><br><span class="line">nmake -f ms\nt.mak</span><br><span class="line">nmake -f ms\nt.mak test</span><br><span class="line">nmake -f ms\nt.mak install</span><br></pre></td></tr></table></figure>
-<p>动态库编译</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">nmake -f ms\ntdll.mak clean</span><br><span class="line">nmake -f ms\ntdll.mak</span><br><span class="line">nmake -f ms\ntdll.mak test</span><br><span class="line">nmake -f ms\ntdll.mak install</span><br></pre></td></tr></table></figure>
-<p>以上运行nmake,需要在vs2017的tools中找到【适用于vs2017的x64本机工具命令提示】</p>
 
     </div>
 
@@ -354,7 +349,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -440,6 +435,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 

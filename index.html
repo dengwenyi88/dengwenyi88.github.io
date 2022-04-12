@@ -217,8 +217,7 @@
 
       
           <blockquote>
-<p>本文全面梳理了在阅读Lua5.4.3时的内容,以便以后查阅,也分享给我的朋友们;内容包括:Lua虚拟机中字符串的使用;Table表的实现;函数的解析和使用;以及gc改进后的原理分析;另外分析lua在c++游戏开发中的实际应用;xlua中使用lua虚拟机的方式。</p>
-</blockquote>
+<p>本文全面梳理了在阅读Lua5.4.3时的内容,以便以后查阅,也分享给我的朋友们;内容包括:Lua虚拟机中字符串的使用;Table表的实现;函数的解析和使用;以及gc改进后的原理分析;另外分析lua在c++游戏开发中的实际应用;xlua中使用lua虚拟机的方式。<br>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2022/04/09/Lua%E6%BA%90%E7%A0%81%E7%AC%94%E8%AE%B0(9)%E4%B9%8BLua5.4.3%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/#more" rel="contents">
@@ -304,8 +303,7 @@
 
       
           <blockquote>
-<p>本文是为了将sshd服务公开在公网时,为加强安全性设置google二次验证的配置方式记录;这里对免密登陆前做一次验证码登陆;依靠google的安全性验证防止攻击.</p>
-</blockquote>
+<p>本文是为了将sshd服务公开在公网时,为加强安全性设置google二次验证的配置方式记录;这里对免密登陆前做一次验证码登陆;依靠google的安全性验证防止攻击.<br>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2022/01/04/sshd%E4%BA%8C%E6%AC%A1%E9%AA%8C%E8%AF%81%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97/#more" rel="contents">
@@ -472,8 +470,7 @@
 
       
           <blockquote>
-<p>理解Lua中对字符串的处理方式,可以看到哈希表这种数据结构在实际开发中的作用;从而在开发的过程中对哈希加深理解和运用，顾名思义哈希，有从大的空间哈希到一个小的空间里，也有从小的空间哈希到一个很大的空间里，但在代数学的术语里就是映射,从大的空间映射到小的空间里，固然有可能碰到映射到一个位置上，所以产生了碰撞，处理的方法就是将碰撞的节点链接在一起。</p>
-</blockquote>
+<p>理解Lua中对字符串的处理方式,可以看到哈希表这种数据结构在实际开发中的作用;从而在开发的过程中对哈希加深理解和运用，顾名思义哈希，有从大的空间哈希到一个小的空间里，也有从小的空间哈希到一个很大的空间里，但在代数学的术语里就是映射,从大的空间映射到小的空间里，固然有可能碰到映射到一个位置上，所以产生了碰撞，处理的方法就是将碰撞的节点链接在一起。<br>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2021/09/03/Lua%E6%BA%90%E7%A0%81%E7%AC%94%E8%AE%B0(7)%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%9A%84%E5%A4%84%E7%90%86/#more" rel="contents">
@@ -733,8 +730,7 @@
 
       
           <blockquote>
-<p>通过元表metatable细节分析，能够更好的理解metatable在整个lua的使用中的作用，通过原理更好的利用lua的特性；首先metatable的元表，系统会给一些默认的元表方法，其次玩家可以通过setmetatable的API设置元表，这样玩家就自定义table的运行时的一些行为。我的理解是lua的设计者尝试想通过metatable,来封装统一table的数据和行为，接近于面向对象的思路，但lua作为一门嵌入式的语言，是增强宿主语言的能力，因为力求实现和使用简洁又能实现统一。</p>
-</blockquote>
+<p>通过元表metatable细节分析，能够更好的理解metatable在整个lua的使用中的作用，通过原理更好的利用lua的特性；首先metatable的元表，系统会给一些默认的元表方法，其次玩家可以通过setmetatable的API设置元表，这样玩家就自定义table的运行时的一些行为。我的理解是lua的设计者尝试想通过metatable,来封装统一table的数据和行为，接近于面向对象的思路，但lua作为一门嵌入式的语言，是增强宿主语言的能力，因为力求实现和使用简洁又能实现统一。<br>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2021/09/01/Lua%E6%BA%90%E7%A0%81%E7%AC%94%E8%AE%B0(4)Tabel%E7%9A%84%E5%85%83%E8%A1%A8%E5%AE%9E%E7%8E%B0/#more" rel="contents">
@@ -820,7 +816,7 @@
 
       
           <blockquote>
-<p><a href="/2021/08/06/Lua%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90(2)%E4%B9%8BTable%E7%9A%84newkey/">上一篇文章</a>提到在设置一个新的键值时，当没有可用的空间时，会出发rehash操作，而上文也提到设置键值是关乎Lua在宿主语言中运行的性能最重要的操作,而当设置键值newkey操作触发rehash时，rehash的性能又关乎到newkey的性能，具体过程参看下列详细的分析过程，<strong>其中rehash函数中的computesizes和resize函数需要重点理解。</strong></p>
+<p><a href="/2021/08/06/Lua源码剖析(2">上一篇文章</a>之Table的newkey/)提到在设置一个新的键值时，当没有可用的空间时，会出发rehash操作，而上文也提到设置键值是关乎Lua在宿主语言中运行的性能最重要的操作,而当设置键值newkey操作触发rehash时，rehash的性能又关乎到newkey的性能，具体过程参看下列详细的分析过程，<strong>其中rehash函数中的computesizes和resize函数需要重点理解。</strong></p>
 </blockquote>
           <!--noindex-->
             <div class="post-button">
@@ -1102,7 +1098,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1188,6 +1184,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 

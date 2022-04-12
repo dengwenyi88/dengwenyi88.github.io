@@ -220,19 +220,20 @@
 
       
         <blockquote>
-<p>本文是为了将sshd服务公开在公网时,为加强安全性设置google二次验证的配置方式记录;这里对免密登陆前做一次验证码登陆;依靠google的安全性验证防止攻击.</p>
+<p>本文是为了将sshd服务公开在公网时,为加强安全性设置google二次验证的配置方式记录;这里对免密登陆前做一次验证码登陆;依靠google的安全性验证防止攻击.<br><span id="more"></span></p>
 </blockquote>
-<span id="more"></span>
-
 <ol>
 <li><p>安装PAM模块</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yum install -y epel-release</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> yum install -y google-authenticator</span></span><br></pre></td></tr></table></figure></li>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> yum install -y epel-release</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> yum install -y google-authenticator</span></span><br></pre></td></tr></table></figure>
+</li>
 <li><p>生成二次验证代码</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 生成验证码</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 哪个账号需要动态验证码，请切换到该账号下操作</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> -t: 使用 TOTP 验证</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> -f: 将配置保存到 ~/.google_authenticator 文件里面</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> -d: 不允许重复使用以前使用的令牌</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> -w 3: 使用令牌进行身份验证以进行时钟偏移</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> -e 10: 生成 10 个紧急备用代码</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> -r 3 -R 30: 限速 - 每 30 秒允许 3 次登录</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> google-authenticator -t -f -d -w 3 -e 10 -r 3 -R 30</span></span><br></pre></td></tr></table></figure>
 <p>注意：默认情况下，命令 google-authenticator 生成的文件路径在 ~/.google_authenticator，为了能够让 PAM 读取含有所需 key 的文件 ~/.google_authenticator，可先将其复制到 ~/.ssh/ 目录中（同时更改文件owner），再通过设置指令 secret=${HOME}/.ssh/.google_authenticator。这样即便已经启用了 SELinux，PAM 仍可以读取所需的文件内容，而不会被 SELinux 拦截。<br>完整指令common-auth文件内容：</p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">auth</span> <span class="string">required</span> <span class="string">pam_google_authenticator.so</span> <span class="string">secret=$&#123;HOME&#125;/.ssh/.google_authenticator</span></span><br><span class="line"><span class="comment"># or</span></span><br><span class="line"><span class="string">auth</span> <span class="string">required</span> <span class="string">pam_google_authenticator.so</span> <span class="string">secret=$&#123;HOME&#125;/.ssh/.google_authenticator</span> [<span class="string">authtok_prompt=Verification</span> <span class="attr">code:</span> ]</span><br></pre></td></tr></table></figure></li>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">auth</span> <span class="string">required</span> <span class="string">pam_google_authenticator.so</span> <span class="string">secret=$&#123;HOME&#125;/.ssh/.google_authenticator</span></span><br><span class="line"><span class="comment"># or</span></span><br><span class="line"><span class="string">auth</span> <span class="string">required</span> <span class="string">pam_google_authenticator.so</span> <span class="string">secret=$&#123;HOME&#125;/.ssh/.google_authenticator</span> [<span class="string">authtok_prompt=Verification</span> <span class="attr">code:</span> ]</span><br></pre></td></tr></table></figure>
+</li>
 <li><p>SSH服务器配置二次验证<br>/etc/pam.d/sshd的文件修改</p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#在/etc/pam.d/中增加common-auth文件</span></span><br><span class="line"><span class="comment"># 首先进行google验证器的验证</span></span><br><span class="line"><span class="string">auth</span> <span class="string">include</span> <span class="string">common-auth</span></span><br></pre></td></tr></table></figure></li>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#在/etc/pam.d/中增加common-auth文件</span></span><br><span class="line"><span class="comment"># 首先进行google验证器的验证</span></span><br><span class="line"><span class="string">auth</span> <span class="string">include</span> <span class="string">common-auth</span></span><br></pre></td></tr></table></figure>
+</li>
 <li><p>sshd_config文件修改</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 密钥登录</span></span><br><span class="line">PubkeyAuthentication yes</span><br><span class="line"><span class="meta">#</span><span class="bash"> 先进行验证码验证</span></span><br><span class="line">AuthenticationMethods keyboard-interactive,publickey</span><br><span class="line"><span class="meta">#</span><span class="bash"> 禁止密码登录</span></span><br><span class="line">PasswordAuthentication no</span><br><span class="line"><span class="meta">#</span><span class="bash"> Change to no to <span class="built_in">disable</span> s/key passwords</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 开启二次验证</span></span><br><span class="line">ChallengeResponseAuthentication yes</span><br></pre></td></tr></table></figure></li>
 </ol>
@@ -347,7 +348,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -433,6 +434,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 

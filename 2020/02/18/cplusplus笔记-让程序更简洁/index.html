@@ -220,17 +220,20 @@
 
       
         <blockquote>
-<p>以下描述的c++11的7个新特性有没有让程序更简洁？是值得深度思考的，在我看来新增加的语法糖，可能带来便利，但也会加深学习曲线，增加代码阅读的难度，当然更应该在实践中加深理解，理解设计的初衷。</p>
+<p>以下描述的c++11的7个新特性有没有让程序更简洁？是值得深度思考的，在我看来新增加的语法糖，可能带来便利，但也会加深学习曲线，增加代码阅读的难度，当然更应该在实践中加深理解，理解设计的初衷。<br><span id="more"></span></p>
 </blockquote>
-<span id="more"></span>
-
 <h4 id="1-lambda表达式"><a href="#1-lambda表达式" class="headerlink" title="1. lambda表达式"></a>1. lambda表达式</h4><p>这个特性还是很有必要有，但我思考是为了增加函数式编程而加进来的。lambda表达式在这里的主要用途就是写闭包函数</p>
 <h4 id="2-auto关键字和decltype关键字"><a href="#2-auto关键字和decltype关键字" class="headerlink" title="2. auto关键字和decltype关键字"></a>2. auto关键字和decltype关键字</h4><p>两个关键字的区别:auto是通过定义时推导,decltype是通过表达式推导；我认为在模板编程的时候很有用处，在参数未实例化之前<br>使用auto关键字来代替定义，等到编译时自行推导，代码简洁</p>
 <h4 id="3-模板别名和模板默认参数"><a href="#3-模板别名和模板默认参数" class="headerlink" title="3. 模板别名和模板默认参数"></a>3. 模板别名和模板默认参数</h4><p>模板右括号，在c++11之前的模板编程中是需要空格的,模板别名的定义也由#define改成了用表达式来定义</p>
 <h4 id="4-基于范围的for循环"><a href="#4-基于范围的for循环" class="headerlink" title="4. 基于范围的for循环"></a>4. 基于范围的for循环</h4><p>基于范围的for循环，有一些细节：首先for循环偏向于开始时确定循环范围，这样不适合在中途删除容器的元素；<br>for(auto n : array) {<br>    // 要注意临时变量的值类型和引用类型的使用<br>}<br>自定义类型时要定义begin和end函数</p>
 <h4 id="5-std-function和std-bind"><a href="#5-std-function和std-bind" class="headerlink" title="5. std::function和std::bind"></a>5. std::function和std::bind</h4><p>std::function被成为可调用对象包装器，在std库中没有之前，一直使用的是boost库中的；而这一次在标准库可以直接<br>使用function和bind,在也不用到处定义函数指针而烦恼了。</p>
-<h4 id="6-列表初始化"><a href="#6-列表初始化" class="headerlink" title="6. 列表初始化"></a>6. 列表初始化</h4><p>列表初始化的设计初衷是什么？为了统一的初始化？也许是的，就是为了初始化的统一，这里要注意的是聚合类型<br>才能使用列表初始化<br>聚合类型的定义:<br>    * 普通数组<br>    * 类且无自定义的构造函数<br>    * 无基类无虚拟函数<br>    * 无私有的或者保护的非静态数据成员<br>    * 不能有直接初始化的非静态数据成员</p>
-<h4 id="7-tuple元组"><a href="#7-tuple元组" class="headerlink" title="7. tuple元组"></a>7. tuple元组</h4><p>不同类型的集合，这让我想起了lua中的table，当然还是有本质区别；</p>
+<h4 id="6-列表初始化"><a href="#6-列表初始化" class="headerlink" title="6. 列表初始化"></a>6. 列表初始化</h4><p>列表初始化的设计初衷是什么？为了统一的初始化？也许是的，就是为了初始化的统一，这里要注意的是聚合类型<br>才能使用列表初始化<br>聚合类型的定义:</p>
+<pre><code>* 普通数组
+* 类且无自定义的构造函数
+* 无基类无虚拟函数
+* 无私有的或者保护的非静态数据成员
+* 不能有直接初始化的非静态数据成员
+</code></pre><h4 id="7-tuple元组"><a href="#7-tuple元组" class="headerlink" title="7. tuple元组"></a>7. tuple元组</h4><p>不同类型的集合，这让我想起了lua中的table，当然还是有本质区别；</p>
 <p>以下是上面六个特性的实例程序</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;map&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Position</span> &#123;</span></span><br><span class="line">    <span class="keyword">int</span> x;</span><br><span class="line">    <span class="keyword">int</span> y;</span><br><span class="line"><span class="comment">// 列表初始化时不允许私有和保护成员</span></span><br><span class="line"><span class="comment">//private:</span></span><br><span class="line"><span class="comment">//    int z;</span></span><br><span class="line"><span class="comment">// 列表初始化时不允许直接初始化的非静态数据成员</span></span><br><span class="line"><span class="comment">//  int f = 100;</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Print</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;x:&quot;</span> &lt;&lt; x &lt;&lt; <span class="string">&quot; y:&quot;</span> &lt;&lt; y &lt;&lt; std::endl;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MessageHandle</span> &#123;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">bool</span> <span class="title">Init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 特性5 std::bind</span></span><br><span class="line">        m_handle.<span class="built_in">insert</span>(std::<span class="built_in">make_pair</span>(<span class="number">10</span>, std::<span class="built_in">bind</span>(&amp;MessageHandle::ProcessPos1,<span class="keyword">this</span>,std::placeholders::_1)));</span><br><span class="line">        m_handle.<span class="built_in">insert</span>(std::<span class="built_in">make_pair</span>(<span class="number">100</span>,std::<span class="built_in">bind</span>(&amp;MessageHandle::ProcessPos2,<span class="keyword">this</span>,std::placeholders::_1)));</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Handle</span><span class="params">(<span class="keyword">int</span> code,Position&amp; pos)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">auto</span> it = m_handle.<span class="built_in">find</span>(code);</span><br><span class="line">        <span class="keyword">if</span>(it!=m_handle.<span class="built_in">end</span>()) &#123;</span><br><span class="line">            it-&gt;<span class="built_in">second</span>(pos);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;code :&quot;</span> &lt;&lt; code &lt;&lt; <span class="string">&quot; not found!&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">ProcessPos1</span><span class="params">(Position&amp; pos)</span> </span>&#123;</span><br><span class="line">        pos.x *= <span class="number">10</span>;</span><br><span class="line">        pos.y *= <span class="number">10</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">ProcessPos2</span><span class="params">(Position&amp; pos)</span> </span>&#123;</span><br><span class="line">        pos.x *= <span class="number">100</span>;</span><br><span class="line">        pos.y *= <span class="number">100</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="comment">// 特性3 模板的别名和std::function</span></span><br><span class="line">    <span class="keyword">using</span> <span class="keyword">handler_t</span> = std::function&lt;<span class="built_in"><span class="keyword">void</span></span>(Position&amp; pos)&gt;;</span><br><span class="line">    std::map&lt;<span class="keyword">int</span>,<span class="keyword">handler_t</span>&gt; m_handle;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 特性6 列表初始化</span></span><br><span class="line">    std::vector&lt;<span class="keyword">int</span>&gt; arr = &#123;<span class="number">10</span>,<span class="number">12</span>,<span class="number">8</span>,<span class="number">22</span>,<span class="number">9</span>,<span class="number">99</span>,<span class="number">37</span>&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//特性1和特性2 </span></span><br><span class="line">    <span class="comment">// lambda表达式</span></span><br><span class="line">    <span class="keyword">auto</span> count = std::<span class="built_in">count_if</span>(arr.<span class="built_in">begin</span>(),arr.<span class="built_in">end</span>(),[](<span class="keyword">int</span> x) &#123; <span class="keyword">return</span> x &gt; <span class="number">10</span>;&#125;);</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;count :&quot;</span> &lt;&lt; count &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 特性4 基于范围的for循环</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">auto</span>&amp; n : arr) &#123;</span><br><span class="line">        std::cout &lt;&lt; n &lt;&lt; std::endl;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//特性6 统一的初始化方式</span></span><br><span class="line">    Position pos &#123;<span class="number">100</span>,<span class="number">99</span>&#125;;</span><br><span class="line">    pos.<span class="built_in">Print</span>();</span><br><span class="line"></span><br><span class="line">    MessageHandle handler;</span><br><span class="line">    handler.<span class="built_in">Init</span>();</span><br><span class="line">    handler.<span class="built_in">Handle</span>(<span class="number">10</span>,pos);</span><br><span class="line">    pos.<span class="built_in">Print</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>编译命令：<br>g++ test.cpp -o test -std=c++11</p>
@@ -346,7 +349,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -432,6 +435,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 

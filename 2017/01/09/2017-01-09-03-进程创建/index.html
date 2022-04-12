@@ -243,9 +243,7 @@
 <li>创建进程的开销在哪里</li>
 </ul>
 </blockquote>
-<h4 id="一-从fork系统调用开始"><a href="#一-从fork系统调用开始" class="headerlink" title="一.  从fork系统调用开始"></a>一.  从fork系统调用开始</h4><p>kernel/sys_call.s第222行</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">_sys_fork:</span><br><span class="line">	call _find_empty_process		#为新进程分配id</span><br><span class="line">	testl %eax,%eax					#测试是否分配了id</span><br><span class="line">	js 1f							#id若为负数则返回</span><br><span class="line">	push %gs                        #压入copy_process需要的参数</span><br><span class="line">	pushl %esi</span><br><span class="line">	pushl %edi</span><br><span class="line">	pushl %ebp</span><br><span class="line">	pushl %eax</span><br><span class="line">	call _copy_process				#调用copy_process函数</span><br><span class="line">	addl $20,%esp					#丢弃压栈内容</span><br><span class="line">1:	ret</span><br></pre></td></tr></table></figure>
-
+<h4 id="一-从fork系统调用开始"><a href="#一-从fork系统调用开始" class="headerlink" title="一.  从fork系统调用开始"></a>一.  从fork系统调用开始</h4><p>kernel/sys_call.s第222行<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">_sys_fork:</span><br><span class="line">	call _find_empty_process		#为新进程分配id</span><br><span class="line">	testl %eax,%eax					#测试是否分配了id</span><br><span class="line">	js 1f							#id若为负数则返回</span><br><span class="line">	push %gs                        #压入copy_process需要的参数</span><br><span class="line">	pushl %esi</span><br><span class="line">	pushl %edi</span><br><span class="line">	pushl %ebp</span><br><span class="line">	pushl %eax</span><br><span class="line">	call _copy_process				#调用copy_process函数</span><br><span class="line">	addl $20,%esp					#丢弃压栈内容</span><br><span class="line">1:	ret</span><br></pre></td></tr></table></figure></p>
 <h4 id="二-copy-process函数分析"><a href="#二-copy-process函数分析" class="headerlink" title="二. copy_process函数分析"></a>二. copy_process函数分析</h4><p>作用:  复制当前进程的代码段和数据段以及环境</p>
 <p>这里需要说明的是每个任务的线性地址为64M,每个任务的线性地址不重叠。</p>
 <h5 id="1-copy-process函数重点"><a href="#1-copy-process函数重点" class="headerlink" title="1. copy_process函数重点"></a>1. copy_process函数重点</h5><ul>
@@ -253,10 +251,10 @@
 <li>新进程的内核堆栈的设置以及新进程的返回值</li>
 </ul>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">p-&gt;tss.ep0 = PAGE_SIZE+ (<span class="keyword">long</span>)p;			<span class="comment">//设置新进程的内核堆栈</span></span><br><span class="line">p-&gt;tss.ss0 = <span class="number">0x10</span>;							<span class="comment">//内核数据段选择子</span></span><br><span class="line">		...</span><br><span class="line">p-&gt;tss.eax = <span class="number">0</span>;								<span class="comment">//新进程的返回值为0</span></span><br></pre></td></tr></table></figure>
-
 <p>下表是任务状态段(tss)的字段表格,这里可以参考<a target="_blank" rel="noopener" href="http://www.cnblogs.com/wanghetao/archive/2011/10/28/2228130.html">任务状态段</a>的描述,tss是task_struct中的一个字段.<br><img src="http://pzpfp2uzw.bkt.clouddn.com/16.png" alt="任务状态段描述"><br>进程的内核堆栈和用户堆栈的区别，内核堆栈分配在分配给task_struct结构的一页内存的顶端,也就是地址(long)p + PAGE_SIZE的位置,<br>进程的内核堆栈示意如图:<br><img src="http://pzpfp2uzw.bkt.clouddn.com/18.jpg" alt="任务的堆栈"><br>进程的用户堆栈示意图:<br><img src="http://pzpfp2uzw.bkt.clouddn.com/17.jpg" alt="进程的用户堆栈"></p>
 <ul>
-<li>设置进程的tss段和ldt段<br>代码参考fork.c第130行<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//gdt为gdt表的首地址，nr&lt;&lt;1表示每个任务有两项状态段和局部段</span></span><br><span class="line"><span class="comment">//p-&gt;tss表示tss在task_struct中的偏移</span></span><br><span class="line"><span class="comment">//p-&gt;ldt表示ldt在task_struct中的偏移</span></span><br><span class="line">set_tss_desc(gdt+(nr&lt;&lt;<span class="number">1</span>)+FIRST_TSS_ENTRY,&amp;(p-&gt;tss));</span><br><span class="line">set_ldt_desc(gdt+(nr&lt;&lt;<span class="number">1</span>)+FIRST_LDT_ENTRY,&amp;(p-&gt;ldt));</span><br></pre></td></tr></table></figure></li>
+<li>设置进程的tss段和ldt段<br>代码参考fork.c第130行<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//gdt为gdt表的首地址，nr&lt;&lt;1表示每个任务有两项状态段和局部段</span></span><br><span class="line"><span class="comment">//p-&gt;tss表示tss在task_struct中的偏移</span></span><br><span class="line"><span class="comment">//p-&gt;ldt表示ldt在task_struct中的偏移</span></span><br><span class="line">set_tss_desc(gdt+(nr&lt;&lt;<span class="number">1</span>)+FIRST_TSS_ENTRY,&amp;(p-&gt;tss));</span><br><span class="line">set_ldt_desc(gdt+(nr&lt;&lt;<span class="number">1</span>)+FIRST_LDT_ENTRY,&amp;(p-&gt;ldt));</span><br></pre></td></tr></table></figure>
+</li>
 </ul>
 <p>每个任务都有一个tss段和ldt段，存放在gdt表中,如下图所示:<br><img src="http://pzpfp2uzw.bkt.clouddn.com/15.jpg" alt="tss和ldt示意图"></p>
 <h5 id="2-copy-mem函数重点"><a href="#2-copy-mem函数重点" class="headerlink" title="2. copy_mem函数重点"></a>2. copy_mem函数重点</h5><ul>
@@ -266,7 +264,6 @@
 </ul>
 <p><img src="http://pzpfp2uzw.bkt.clouddn.com/13.jpg" alt="段描述符"></p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _get_base(addr) (&#123;\</span></span><br><span class="line"><span class="meta">unsigned long __base; \</span></span><br><span class="line"><span class="meta">#段描述符有两个32位,%3代表 addr+7的内容，也就是上图第一行的基地址31~24的内容放到dh寄存器</span></span><br><span class="line">__asm__(<span class="string">&quot;movb %3,%%dh\n\t&quot;</span> \</span><br><span class="line">	#%<span class="number">2</span>代表addr+<span class="number">4</span>的内容,上图第一行基地址的内容放到dl寄存器</span><br><span class="line">	<span class="string">&quot;movb %2,%%dl\n\t&quot;</span> \</span><br><span class="line">	#上面两行构成dx的内容，右移<span class="number">16</span>位空出低<span class="number">16</span>位</span><br><span class="line">	<span class="string">&quot;shll $16,%%edx\n\t&quot;</span> \</span><br><span class="line">	#将addr+<span class="number">2</span>的内容，上图第二行<span class="number">31</span>~<span class="number">16</span>的内容放到%dx，edx中构成了完整的段基址</span><br><span class="line">	<span class="string">&quot;movw %1,%%dx&quot;</span> \</span><br><span class="line">	:<span class="string">&quot;=d&quot;</span> (__base) \</span><br><span class="line">	:<span class="string">&quot;m&quot;</span> (*((addr)+<span class="number">2</span>)), \</span><br><span class="line">	 <span class="string">&quot;m&quot;</span> (*((addr)+<span class="number">4</span>)), \</span><br><span class="line">	 <span class="string">&quot;m&quot;</span> (*((addr)+<span class="number">7</span>))); \</span><br><span class="line">__base;&#125;)</span><br></pre></td></tr></table></figure>
-
 <ul>
 <li>copy_mem函数的get_limit(0x0f)中0x0f的意思,段选择子的格式如下：</li>
 </ul>
@@ -280,14 +277,8 @@
 </li>
 </ul>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">copy_mem</span><span class="params">(<span class="keyword">int</span> nr,struct task_struct * p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> old_data_base,new_data_base,data_limit;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> old_code_base,new_code_base,code_limit;</span><br><span class="line">	</span><br><span class="line">  	<span class="comment">//0x0f为代码段选择子</span></span><br><span class="line">  	<span class="comment">//下面有对段选择子的说明</span></span><br><span class="line">	code_limit=get_limit(<span class="number">0x0f</span>);</span><br><span class="line">  	<span class="comment">//0x17为数据段选择子</span></span><br><span class="line">	data_limit=get_limit(<span class="number">0x17</span>);</span><br><span class="line">  	<span class="comment">//下面有重点分析</span></span><br><span class="line">	old_code_base = get_base(current-&gt;ldt[<span class="number">1</span>]);</span><br><span class="line">	old_data_base = get_base(current-&gt;ldt[<span class="number">2</span>]);</span><br><span class="line">	<span class="keyword">if</span> (old_data_base != old_code_base)</span><br><span class="line">		panic(<span class="string">&quot;We don&#x27;t support separate I&amp;D&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span> (data_limit &lt; code_limit)</span><br><span class="line">		panic(<span class="string">&quot;Bad data_limit&quot;</span>);</span><br><span class="line">  	<span class="comment">//进程线形地址的基地址为 64M X 进程号</span></span><br><span class="line">	new_data_base = new_code_base = nr * TASK_SIZE;</span><br><span class="line">	p-&gt;start_code = new_code_base;</span><br><span class="line">  	<span class="comment">//设置ldt[1]代码段的线性地址</span></span><br><span class="line">	set_base(p-&gt;ldt[<span class="number">1</span>],new_code_base);</span><br><span class="line">  	<span class="comment">//设置ldt[2]数据段的线性地址</span></span><br><span class="line">	set_base(p-&gt;ldt[<span class="number">2</span>],new_data_base);</span><br><span class="line"> 	<span class="comment">//拷贝页表,在内存管理中详细说明</span></span><br><span class="line">	<span class="keyword">if</span> (copy_page_tables(old_data_base,new_data_base,data_limit)) &#123;</span><br><span class="line">		free_page_tables(new_data_base,data_limit);</span><br><span class="line">		<span class="keyword">return</span> -ENOMEM;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <h4 id="三-进程管理-创建-依赖内存管理子系统"><a href="#三-进程管理-创建-依赖内存管理子系统" class="headerlink" title="三. 进程管理(创建)依赖内存管理子系统"></a>三. 进程管理(创建)依赖内存管理子系统</h4><p>copy_process的第77行,用来分配一页物理内存(通常是4k)给新进程</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span>* <span class="title">p</span>;</span></span><br><span class="line">...</span><br><span class="line">p = (struct task_struct*)get_free_page();</span><br></pre></td></tr></table></figure>
-
-
-
-
-
 
     </div>
 
@@ -397,7 +388,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -483,6 +474,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 

@@ -228,7 +228,7 @@
 <li>编译成字节码<br>扫描Lua源文件编译成字节码的过程，从实现角度来看，仅仅是一次扫描包含了词法分析，语法分析而进生成虚拟机的可执行的字节码；从而延伸到其他脚本语言解释成字节码的常规流程，比如java相对于jvm,c#相对于.net runtime;在到静态语言中比如c的词法分析和语法分析,最后链接成为能够在特定架构机器中执行的可执行文件,这里包含了编译的基本流程。这里需要注意一个重要问题，就是在解析Lua源码生成字节码前，是需要先了解Lua虚拟机的指令集，这个指令集是最终语法树能够产生的最终结果；所以上升到学习编译原理，很多人并不清楚如何开始，上升到理论高度时讲解起从上至下的分析和从下往上推导时会不知所措，这个时候学习Lua源码编译成字节码将会是一个很好的开端，这也是我多年以前精读gcc源码分析后,认真理清c语言编译过程，从预处理到词法分析，再到生成语法树从而生成汇编，然后链接成机器码的每个步骤后，得到的一点感悟,理解Lua源码编译成字节码就可以了解很多编译原理理论的现实版本；现如今编译器设计领域已经是一个复杂而庞大的工程。</li>
 <li>Lua虚拟机原理<br>学习Lua虚拟机的原理能学习到什么呢,我个人理解是能够对Lua虚拟机的栈帧的理解，也就是函数调用过程的理解，其次是虚拟机所能够提供的指令集。函数执行是有一个自己的环境，这个环境就是函数的执行环境，而栈帧就是保护这个函数的执行环境；从而延伸到一些虚拟机的共性上来，你可以将虚拟机想象成实际执行程序的一台计算机，而函数执行也类似操作系统中的一个任务，任务有自己单独的执行环境，以及有自己的栈帧，为什么需要栈帧呢，其中一个重要的原因是保持当前执行环境，当遇到一个中断怎么处理呢，就需要保护现场，实际就是保护这个栈帧，保存这个栈帧的内容就是保存这个任务执行的上下文，当中断执行完毕以后，要切换回这个任务继续执行时，实际是恢复这个任务的栈帧，当然实际的实现可能更为复杂，操作系统在任务之间切换上下文，为了效率可能有硬件来支持这个上下文的切换，现在linux为了兼顾大部分的硬件使用了软切换，通过对lua函数的执行的切换过程的理解，可以一次了解虚拟机执行的过程以及大部分计算机执行流的基本过程，这里顺便说一句利用栈溢出获取计算机的控制执行权，其大部分的思路就是在函数切换中将执行流导向到自己程序的执行中来，这里主要是说虚拟机的执行过程所能学习到的运行时的一些理论。其次学习Lua虚拟机也可以第一次窥见gc回收算法，在大部分的虚拟机中都有gc回收，比如jvm的，c#的，或者golang的，这些gc回收算法的高效性关乎一个语言利用内存的高效性。最后是一个关于虚拟机的指令集的学习。</li>
 </ul>
-<p>** 总结 **<br>总而言之学习Lua源码可以从中学习计算机领域众多知识的精妙运用，是将计算机的各个方面的理论知识付诸实践的经典实例。最重要的是代码量是个人可以承受的,<strong>源代码才是最好的老师</strong>，花时间精力是值得的。</p>
+<p><strong> 总结 </strong><br>总而言之学习Lua源码可以从中学习计算机领域众多知识的精妙运用，是将计算机的各个方面的理论知识付诸实践的经典实例。最重要的是代码量是个人可以承受的,<strong>源代码才是最好的老师</strong>，花时间精力是值得的。</p>
 
     </div>
 
@@ -341,7 +341,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -427,6 +427,59 @@
   
 
   
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
 
   
 

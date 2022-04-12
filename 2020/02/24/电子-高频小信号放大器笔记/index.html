@@ -37,9 +37,10 @@
 <meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/03.png">
 <meta property="og:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/08.png">
 <meta property="article:published_time" content="2020-02-24T12:00:00.000Z">
-<meta property="article:modified_time" content="2021-08-04T11:49:58.000Z">
+<meta property="article:modified_time" content="2022-04-12T07:56:33.253Z">
 <meta property="article:author" content="咖啡">
 <meta property="article:tag" content="高频">
+<meta property="article:tag" content="[object Object]">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://dengwenyi88.github.io/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/07.png">
 
@@ -202,7 +203,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-08-04 19:49:58" itemprop="dateModified" datetime="2021-08-04T19:49:58+08:00">2021-08-04</time>
+                <time title="修改时间：2022-04-12 15:56:33" itemprop="dateModified" datetime="2022-04-12T15:56:33+08:00">2022-04-12</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -238,61 +239,49 @@
 * 选择性 有两个指标一个是矩形系数一个是抑制比
 * 工作稳定性
 * 噪声系数
-</code></pre>
-<p>通频带这个概念理解透彻: 官方定义是：<strong>放大器的电压增益下降到最大值的0.7倍时，所对应的频率范围</strong>。左边一个频率，右边一个频率构成的范围，所以有些叫带宽BW。因为调频的时候，频率是一个范围，所以如果通频带不够宽，那么调频的时候就会失真(白话就是丢掉一些信号)。通频带跟下面的这个特性<strong>选择性</strong>是矛盾的，通常通频带较宽的放大器，必然导致放大器的频率选择性不好。参考下图理解:</p>
-<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/07.png" class="" title="带宽">
-
+</code></pre><p>通频带这个概念理解透彻: 官方定义是：<strong>放大器的电压增益下降到最大值的0.7倍时，所对应的频率范围</strong>。左边一个频率，右边一个频率构成的范围，所以有些叫带宽BW。因为调频的时候，频率是一个范围，所以如果通频带不够宽，那么调频的时候就会失真(白话就是丢掉一些信号)。通频带跟下面的这个特性<strong>选择性</strong>是矛盾的，通常通频带较宽的放大器，必然导致放大器的频率选择性不好。参考下图理解:<br><img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/07.png" class="" title="带宽"></p>
 <h5 id="2-2-前置知识点"><a href="#2-2-前置知识点" class="headerlink" title="2.2 前置知识点"></a>2.2 前置知识点</h5><pre><code>* 电容
 * 电感
 * 电导
 * LC并联电路的相关参数
 * 形式等效电路
 * 有载品质因数和空载品质因数
-</code></pre>
-<h4 id="三-推导"><a href="#三-推导" class="headerlink" title="三. 推导"></a>三. 推导</h4><h5 id="3-1-电路等效变换"><a href="#3-1-电路等效变换" class="headerlink" title="3.1 电路等效变换"></a>3.1 电路等效变换</h5><p><strong>这段讲的是单调谐放大器的实际电路到等效电路的变换，对于理解很重要</strong><br>单调谐放大器实际电路:</p>
-<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/00.png" class="" title="实际电路">
-<p>以上电路去除偏置电路以后的原理性电路图:</p>
-<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/04.png" class="" title="原理性电路">
-<p>用形式等效电路代替以后的基本电路图:</p>
-<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/05.png" class="" title="等效电路">
-<p>只画出集电极部分的电路图,也就是上面晶体管右边到负载部分的电路图:</p>
-<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/03.png" class="" title="等效电路">
-<p>初级线圈和次级线圈按匝数将电路参数分配到负载电路中:</p>
-<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/02.png" class="" title="总导纳">
-
-<h5 id="3-2-放大器的电压增益"><a href="#3-2-放大器的电压增益" class="headerlink" title="3.2 放大器的电压增益"></a>3.2 放大器的电压增益</h5><p>$$<br>\dot{A_v} = \frac{\dot{V_{o1}}}{\dot{V_{i1}}} = \frac{-y_{fe}}{y_{oe}+Y^{‘}_{L}}<br>$$</p>
-<p>参数说明：</p>
+</code></pre><h4 id="三-推导"><a href="#三-推导" class="headerlink" title="三. 推导"></a>三. 推导</h4><h5 id="3-1-电路等效变换"><a href="#3-1-电路等效变换" class="headerlink" title="3.1 电路等效变换"></a>3.1 电路等效变换</h5><p><strong>这段讲的是单调谐放大器的实际电路到等效电路的变换，对于理解很重要</strong><br>单调谐放大器实际电路:<br><img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/00.png" class="" title="实际电路"><br>以上电路去除偏置电路以后的原理性电路图:<br><img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/04.png" class="" title="原理性电路"><br>用形式等效电路代替以后的基本电路图:<br><img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/05.png" class="" title="等效电路"><br>只画出集电极部分的电路图,也就是上面晶体管右边到负载部分的电路图:<br><img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/03.png" class="" title="等效电路"><br>初级线圈和次级线圈按匝数将电路参数分配到负载电路中:<br><img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/02.png" class="" title="总导纳"></p>
+<h5 id="3-2-放大器的电压增益"><a href="#3-2-放大器的电压增益" class="headerlink" title="3.2 放大器的电压增益"></a>3.2 放大器的电压增益</h5><script type="math/tex; mode=display">
+\dot{A_v} = \frac{\dot{V_{o1}}}{\dot{V_{i1}}} = \frac{-y_{fe}}{y_{oe}+Y^{'}_{L}}</script><p>参数说明：</p>
 <p>$g_{o1}$ 代表晶体管的输出电导</p>
 <p>$G_p$ 代表回路本身的损耗</p>
 <p>$g_{i2}$ 代表负载的电导</p>
-<p>从以下图得出以下两个公式:</p>
-<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/02.png" class="" title="总导纳">
-<p>图(a)得出总等效导纳:<br>$$<br>Y^{‘}={p_1}^2(y_{oe}+Y^{‘}_L)<br>$$<br>图(b)得到: $$Y^{‘}=G^{‘}p + j(\omega C{\Sigma}-\frac{1}{\omega L_1})$$</p>
-<p>总等效导纳公式变换一下：<br>$$<br>y_{oe}+Y^{‘}_L=\frac{Y^{‘}}{p_1^2}<br>$$</p>
-<p>式子代入到上面的电压增益公式中结果为：<br>$$<br>\dot{A_v}=-\frac{p^2_1y_{fe}}{Y^{‘}}=\frac{\dot{V_{o1}}}{\dot{V_{i1}}}<br>$$</p>
-<p>实际的电压增益为如下图的最右边的电压除以最左边的输入电压:</p>
-<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/03.png" class="" title="实际电压增益">
-
-<p>$$<br>\dot{A_v}=\frac{\dot{V_{i2}}}{\dot{V_{i1}}}= \frac{(\frac{p_2}{p_1})\dot{V_{o1}}}{\dot{V_{i1}}}=-\frac{p_1p_2y_{fe}}{Y^{‘}}<br>$$</p>
-<p>将以下两个公式代入到上面的实际电压增益公式中：<br>$$Y^{‘}=G^{‘}<em>p + j(\omega C</em>{\Sigma}-\frac{1}{\omega L_1})\text{(总等效导纳公式)}$$</p>
-<p>公式:<br>$$<br>\omega C_{\Sigma} = \frac{1}{\omega_0 L_1}\text{(谐振回路的条件)}<br>$$</p>
-<p>所以谐振点上的电压增益为:</p>
-<p>$$<br>\dot{A_{v0}}=-\frac{p_1p_2y_{fe}}{G^{‘}<em>p}=-\frac{p_1p_2y</em>{fe}}{G_p+g^{‘}<em>{o1}+g^{‘}</em>{i2}}<br>$$</p>
-<p>要获得最大的电压增益，需要选取适当的p1和p2值，使负载导纳能与晶体的的输出导纳相匹配(白话的意思就是阻抗要匹配,现在是计算阻抗匹配情况下的最大电压增益)，匹配条件为:</p>
-<p>$$<br>g^{‘}<em>{i2} = g^{‘}</em>{o1} + G_p = \frac{G^{‘}_p}{2}<br>$$</p>
-<p>推导的最后的电压最大增益为:</p>
-<p>$$<br>(A_{v0})<em>{max} = -\frac{y</em>{fe}}{2\sqrt{g_{o1}g_{i2}}}<br>$$</p>
-<p>推导得到的最大功率增益为：<br>$$<br>(A_{v0})<em>{max} = -\frac{y</em>{fe}}{2\sqrt{g_{o1}g_{i2}}}<br>$$ </p>
-<p>列出上面两个公式的目的是，清楚两个结果，第一是功能增益和电压增益的关系，第二是功率增益值的大小只跟晶体管的参数有关，与电路的参数关系无关<br>附上高频电路基础上的证明方法:</p>
-<img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/08.png" class="" title="简单的证明方法">
-
-<h5 id="3-3-通频带和选择性"><a href="#3-3-通频带和选择性" class="headerlink" title="3.3 通频带和选择性"></a>3.3 通频带和选择性</h5><p>这里要指出通频带的宽度越宽，选择性越差；<br>推导高频电子线路第五版3.3.17公式待后续完善<br>回路的有载品质因数的公式如下：<br>$$<br>Q_{L} = \frac{\omega_0 C_{\Sigma}}{G^{‘}_p}=\frac{1}{\omega_0 L_1 G^{‘}_p}<br>$$</p>
-<p>推导出通频带的公式:<br>$$<br>2{\Delta}f_{0.7} = \frac{f_0}{Q_L}<br>$$<br>其中$Q_L$就是上面所说的有载品质因数，结论是$Q_L$越高，通频带越窄。</p>
+<p>从以下图得出以下两个公式:<br><img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/02.png" class="" title="总导纳"><br>图(a)得出总等效导纳:</p>
+<script type="math/tex; mode=display">
+Y^{'}={p_1}^2(y_{oe}+Y^{'}_L)</script><p>图(b)得到: <script type="math/tex">Y^{‘}=G^{‘}p + j(\omega C{\Sigma}-\frac{1}{\omega L_1})</script></p>
+<p>总等效导纳公式变换一下：</p>
+<script type="math/tex; mode=display">
+y_{oe}+Y^{'}_L=\frac{Y^{'}}{p_1^2}</script><p>式子代入到上面的电压增益公式中结果为：</p>
+<script type="math/tex; mode=display">
+\dot{A_v}=-\frac{p^2_1y_{fe}}{Y^{'}}=\frac{\dot{V_{o1}}}{\dot{V_{i1}}}</script><p>实际的电压增益为如下图的最右边的电压除以最左边的输入电压:<br><img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/03.png" class="" title="实际电压增益"></p>
+<script type="math/tex; mode=display">
+\dot{A_v}=\frac{\dot{V_{i2}}}{\dot{V_{i1}}}= \frac{(\frac{p_2}{p_1})\dot{V_{o1}}}{\dot{V_{i1}}}=-\frac{p_1p_2y_{fe}}{Y^{'}}</script><p>将以下两个公式代入到上面的实际电压增益公式中：</p>
+<script type="math/tex; mode=display">Y^{'}=G^{'}_p + j(\omega C_{\Sigma}-\frac{1}{\omega L_1})\text{(总等效导纳公式)}</script><p>公式:</p>
+<script type="math/tex; mode=display">
+\omega C_{\Sigma} = \frac{1}{\omega_0 L_1}\text{(谐振回路的条件)}</script><p>所以谐振点上的电压增益为:</p>
+<script type="math/tex; mode=display">
+\dot{A_{v0}}=-\frac{p_1p_2y_{fe}}{G^{'}_p}=-\frac{p_1p_2y_{fe}}{G_p+g^{'}_{o1}+g^{'}_{i2}}</script><p>要获得最大的电压增益，需要选取适当的p1和p2值，使负载导纳能与晶体的的输出导纳相匹配(白话的意思就是阻抗要匹配,现在是计算阻抗匹配情况下的最大电压增益)，匹配条件为:</p>
+<script type="math/tex; mode=display">
+g^{'}_{i2} = g^{'}_{o1} + G_p = \frac{G^{'}_p}{2}</script><p>推导的最后的电压最大增益为:</p>
+<script type="math/tex; mode=display">
+(A_{v0})_{max} = -\frac{y_{fe}}{2\sqrt{g_{o1}g_{i2}}}</script><p>推导得到的最大功率增益为：</p>
+<script type="math/tex; mode=display">
+(A_{v0})_{max} = -\frac{y_{fe}}{2\sqrt{g_{o1}g_{i2}}}</script><p>列出上面两个公式的目的是，清楚两个结果，第一是功能增益和电压增益的关系，第二是功率增益值的大小只跟晶体管的参数有关，与电路的参数关系无关<br>附上高频电路基础上的证明方法:<br><img src="/2020/02/24/%E7%94%B5%E5%AD%90-%E9%AB%98%E9%A2%91%E5%B0%8F%E4%BF%A1%E5%8F%B7%E6%94%BE%E5%A4%A7%E5%99%A8%E7%AC%94%E8%AE%B0/08.png" class="" title="简单的证明方法"></p>
+<h5 id="3-3-通频带和选择性"><a href="#3-3-通频带和选择性" class="headerlink" title="3.3 通频带和选择性"></a>3.3 通频带和选择性</h5><p>这里要指出通频带的宽度越宽，选择性越差；<br>推导高频电子线路第五版3.3.17公式待后续完善<br>回路的有载品质因数的公式如下：</p>
+<script type="math/tex; mode=display">
+Q_{L} = \frac{\omega_0 C_{\Sigma}}{G^{'}_p}=\frac{1}{\omega_0 L_1 G^{'}_p}</script><p>推导出通频带的公式:</p>
+<script type="math/tex; mode=display">
+2{\Delta}f_{0.7} = \frac{f_0}{Q_L}</script><p>其中$Q_L$就是上面所说的有载品质因数，结论是$Q_L$越高，通频带越窄。</p>
 <p>稳定性和噪声系数未完待续</p>
 <h4 id="学习书籍的建议"><a href="#学习书籍的建议" class="headerlink" title="学习书籍的建议"></a>学习书籍的建议</h4><pre><code>* 高频电路基础--陈光梦
 * 高频电子线路第五版  
-</code></pre>
-<p><a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1t86sQ6bUhtHoxC85EoUISQ" title="密码:21ak">点击下载</a><br>两本书要交叉看，第一本高频电路基础介绍高频小信号调谐放大器电路的原理，简单易懂，第二本介绍电路更加学术化，更加严谨，可以互为参考，当然更多的可以参考百度文库里的ppt。</p>
+</code></pre><p><a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1t86sQ6bUhtHoxC85EoUISQ" title="密码:21ak">点击下载</a><br>两本书要交叉看，第一本高频电路基础介绍高频小信号调谐放大器电路的原理，简单易懂，第二本介绍电路更加学术化，更加严谨，可以互为参考，当然更多的可以参考百度文库里的ppt。</p>
 
     </div>
 
@@ -303,6 +292,7 @@
       <footer class="post-footer">
           <div class="post-tags">
               <a href="/tags/%E9%AB%98%E9%A2%91/" rel="tag"># 高频</a>
+              <a href="/tags/object-Object/" rel="tag"># [object Object]</a>
           </div>
 
         
@@ -405,7 +395,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -497,7 +487,6 @@
   if (typeof MathJax === 'undefined') {
     window.MathJax = {
       loader: {
-          load: ['[tex]/mhchem'],
         source: {
           '[tex]/amsCd': '[tex]/amscd',
           '[tex]/AMScd': '[tex]/amscd'
@@ -505,7 +494,6 @@
       },
       tex: {
         inlineMath: {'[+]': [['$', '$']]},
-          packages: {'[+]': ['mhchem']},
         tags: 'ams'
       },
       options: {
