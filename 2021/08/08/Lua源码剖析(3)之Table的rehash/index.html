@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="上一篇文章之Table的newkey&#x2F;)提到在设置一个新的键值时，当没有可用的空间时，会出发rehash操作，而上文也提到设置键值是关乎Lua在宿主语言中运行的性能最重要的操作,而当设置键值newkey操作触发rehash时，rehash的性能又关乎到newkey的性能，具体过程参看下列详细的分析过程，其中rehash函数中的computesizes和resize函数需要重点理解。">
+  <meta name="description" content="上一篇文章之Table的newkey.md)提到在设置一个新的键值时，当没有可用的空间时，会出发rehash操作，而上文也提到设置键值是关乎Lua在宿主语言中运行的性能最重要的操作,而当设置键值newkey操作触发rehash时，rehash的性能又关乎到newkey的性能，具体过程参看下列详细的分析过程，其中rehash函数中的computesizes和resize函数需要重点理解。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Lua源码笔记(3)--Table的rehash">
 <meta property="og:url" content="https://dengwenyi88.github.io/2021/08/08/Lua%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90(3)%E4%B9%8BTable%E7%9A%84rehash/index.html">
 <meta property="og:site_name" content="咖啡&#39;s blog">
-<meta property="og:description" content="上一篇文章之Table的newkey&#x2F;)提到在设置一个新的键值时，当没有可用的空间时，会出发rehash操作，而上文也提到设置键值是关乎Lua在宿主语言中运行的性能最重要的操作,而当设置键值newkey操作触发rehash时，rehash的性能又关乎到newkey的性能，具体过程参看下列详细的分析过程，其中rehash函数中的computesizes和resize函数需要重点理解。">
+<meta property="og:description" content="上一篇文章之Table的newkey.md)提到在设置一个新的键值时，当没有可用的空间时，会出发rehash操作，而上文也提到设置键值是关乎Lua在宿主语言中运行的性能最重要的操作,而当设置键值newkey操作触发rehash时，rehash的性能又关乎到newkey的性能，具体过程参看下列详细的分析过程，其中rehash函数中的computesizes和resize函数需要重点理解。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-08-08T04:40:00.000Z">
-<meta property="article:modified_time" content="2021-09-04T14:41:55.560Z">
+<meta property="article:modified_time" content="2022-04-15T01:15:51.740Z">
 <meta property="article:author" content="咖啡">
 <meta property="article:tag" content="lua">
 <meta property="article:tag" content="源码">
@@ -193,7 +193,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-09-04 22:41:55" itemprop="dateModified" datetime="2021-09-04T22:41:55+08:00">2021-09-04</time>
+                <time title="修改时间：2022-04-15 09:15:51" itemprop="dateModified" datetime="2022-04-15T09:15:51+08:00">2022-04-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -221,7 +221,7 @@
 
       
         <blockquote>
-<p><a href="/2021/08/06/Lua源码剖析(2">上一篇文章</a>之Table的newkey/)提到在设置一个新的键值时，当没有可用的空间时，会出发rehash操作，而上文也提到设置键值是关乎Lua在宿主语言中运行的性能最重要的操作,而当设置键值newkey操作触发rehash时，rehash的性能又关乎到newkey的性能，具体过程参看下列详细的分析过程，<strong>其中rehash函数中的computesizes和resize函数需要重点理解。</strong></p>
+<p><a href="Lua源码剖析(2">上一篇文章</a>之Table的newkey.md)提到在设置一个新的键值时，当没有可用的空间时，会出发rehash操作，而上文也提到设置键值是关乎Lua在宿主语言中运行的性能最重要的操作,而当设置键值newkey操作触发rehash时，rehash的性能又关乎到newkey的性能，具体过程参看下列详细的分析过程，<strong>其中rehash函数中的computesizes和resize函数需要重点理解。</strong></p>
 </blockquote>
 <span id="more"></span>
 <h4 id="rehash的目的"><a href="#rehash的目的" class="headerlink" title="rehash的目的"></a>rehash的目的</h4><p>触发rehash的原因就是哈希列表没有空闲节点供新的键值设置，说明要扩展哈希列表，那么存在的问题是扩展多长的哈希列表的长度是合适的呢？这个问题就是rehash函数主要解决的问题。</p>
