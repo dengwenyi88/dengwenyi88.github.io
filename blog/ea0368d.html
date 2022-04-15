@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="1. 2-3-4树的定义定义:  每个节点每个节点有 1、2 或 3 个 key ，分别称为 2- 节点，3- 节点，4- 节点。 所有叶子节点到根节点的长度一致（也就是说叶子节点都在同一层）。 每个节点的 key 从左到右保持了从小到大的顺序，两个 key 之间的子树中所有的 key 一定大于它的父节点的左 key ，小于父节点的右 key">
+<meta property="og:type" content="article">
+<meta property="og:title" content="红黑树算法推导过程">
+<meta property="og:url" content="https://dengwenyi88.github.io/blog/ea0368d.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="1. 2-3-4树的定义定义:  每个节点每个节点有 1、2 或 3 个 key ，分别称为 2- 节点，3- 节点，4- 节点。 所有叶子节点到根节点的长度一致（也就是说叶子节点都在同一层）。 每个节点的 key 从左到右保持了从小到大的顺序，两个 key 之间的子树中所有的 key 一定大于它的父节点的左 key ，小于父节点的右 key">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/01.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/02.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/03.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/04.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/05.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/06.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/07.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/08.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/12.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/10.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/11.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/09.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/13.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/14.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/15.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/ea0368d/16.jpg">
+<meta property="article:published_time" content="2020-02-29T12:00:00.000Z">
+<meta property="article:modified_time" content="2022-04-15T01:36:57.801Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="数据结构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dengwenyi88.github.io/blog/ea0368d/01.jpg">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/blog/ea0368d.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>红黑树算法推导过程 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/ea0368d.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          红黑树算法推导过程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-29 20:00:00" itemprop="dateCreated datePublished" datetime="2020-02-29T20:00:00+08:00">2020-02-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-15 09:36:57" itemprop="dateModified" datetime="2022-04-15T09:36:57+08:00">2022-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/C-C/" itemprop="url" rel="index"><span itemprop="name">C/C++</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="1-2-3-4树的定义"><a href="#1-2-3-4树的定义" class="headerlink" title="1. 2-3-4树的定义"></a>1. 2-3-4树的定义</h4><p><strong>定义:</strong></p>
+<ul>
+<li>每个节点每个节点有 1、2 或 3 个 key ，分别称为 2- 节点，3- 节点，4- 节点。</li>
+<li>所有叶子节点到根节点的长度一致（也就是说叶子节点都在同一层）。</li>
+<li>每个节点的 key 从左到右保持了从小到大的顺序，两个 key 之间的子树中所有的 key 一定大于它的父节点的左 key ，小于父节点的右 key<span id="more"></span>
+</li>
+</ul>
+<p>首先2-3-4树为什么要叫做2-3-4树?<br><strong>说明节点有3种:</strong></p>
+<ul>
+<li>第一种是有两个孩子的：</li>
+<li>第二种是有3个孩子的：这里的空节点就先省略了，可见这种节点10和20在一个节点中，但也是按照一定的顺序排列的，并且5连接在10的左边，15连接在10和20中间，25在20右边</li>
+<li>第三种是有4个孩子的，这种就和第二种很像了，只不过节点中存放了3个值</li>
+</ul>
+<img src="/blog/ea0368d/01.jpg" class="" title="2-3-4结点图">
+<p>图中每个值连接的位置依然是有序的,2-3-4树中的非叶子节点就是由这三类节点构成的,同时2-3-4树还有一个特性是所有的叶子节点的深度都是相同的。这个是什么意思呢？就是所有的空节点的祖先的个数都是相同的，也意味着所有的非叶子结点的孩子必须连满。<br>举个例子:</p>
+<img src="/blog/ea0368d/02.jpg" class="" title="2-3-4非结点图">
+<p>上面的三个图的虚线表示将被删除的结点，这些结点被删除以后，父节点没有连满，所以它就不是2-3-4树。这种情况会在节点删除的时候发生，之后就要做一些调整把它重新调整为2-3-4树。</p>
+<h4 id="2-2-3-4树的删除操作举例"><a href="#2-2-3-4树的删除操作举例" class="headerlink" title="2. 2-3-4树的删除操作举例"></a>2. 2-3-4树的删除操作举例</h4><p>删除结点伴随着对不满足2-3-4树的情况进行调整<br>如下：<br><img src="/blog/ea0368d/03.jpg" class="" title="删除13结点"><br>第一次删除13，当13没了的时候依然还是满足2-3-4树，所以不用调整</p>
+<img src="/blog/ea0368d/04.jpg" class="" title="删除4结点">
+<p>第二次删除4，当4没了的时候不满足2-3-4树的性质，于是找其兄弟节点是否有可以弥补的，所以找到了6上移，将5移下来，保持了叶子节点深度不变</p>
+<img src="/blog/ea0368d/05.jpg" class="" title="删除12结点">
+<p>这次删除12,12是根节点，所以选择左子树最右边 代替他，11移走以后，就需要从父节点中把10移下来保持叶子结点的深度，同时把8和10合并。</p>
+<img src="/blog/ea0368d/06.jpg" class="" title="删除12结点">
+<p>删除了14以后，要向父节点借结点,父节点再向兄弟结点借结点，以保持深度，但这个时候父节点和兄弟结点都为2-结点，所以合并；这时树的深度减一，所以要沿树向上调整高度，直到根结点结束，合并15，17结点后，当前结点的兄弟结点和父节点仍然为2-结点，这时6,11结点合并，调整完毕。</p>
+<h4 id="3-2-3-4树删除的算法推导"><a href="#3-2-3-4树删除的算法推导" class="headerlink" title="3. 2-3-4树删除的算法推导"></a>3. 2-3-4树删除的算法推导</h4><h5 id="3-1-删除非叶子结点"><a href="#3-1-删除非叶子结点" class="headerlink" title="3.1 删除非叶子结点"></a>3.1 删除非叶子结点</h5><p>当删除的节点是非叶子节点，无论待删除节点的 key 是多少个，先使用中序遍历找到待删除节点的后继节点，然后将后继节点与待删除节点位置互换，此时就将问题转化为删除节点为叶子节点</p>
+<h5 id="3-2-删除叶子结点"><a href="#3-2-删除叶子结点" class="headerlink" title="3.2 删除叶子结点"></a>3.2 删除叶子结点</h5><ul>
+<li>当前叶子结点多于1个key时，可以直接删除这个目标key</li>
+<li>当前叶子结点只有一个key时的处理转变成上一种情况，是需要向兄弟结点或者父亲结点借一个结点，以保证当前要删除的叶子结点多于1个key的情况，分为4种情况<br>  (1） 父节点为2结点，兄弟结点不为2结点，可借<br>  (2） 父节点为2结点，兄弟结点为2结点，父节点和兄弟结点合并(!!!需要调整树的高度)<br>  (3） 父节点不为2结点，兄弟结点不为2结点，可借<br>  (4） 父节点不为2结点，兄弟结点为2结点，可借(兄弟结点和一个父节点和当前结点合并为一个结点)</li>
+</ul>
+<h5 id="3-3-借结点"><a href="#3-3-借结点" class="headerlink" title="3.3 借结点"></a>3.3 借结点</h5><p>上面4种情况,只要父节点和兄弟结点不同时为2-结点的情况都可以借结点:<br><img src="/blog/ea0368d/07.png" class="" title="可借结点情况"></p>
+<p>上面借结点的情况可以简化为两种情况:</p>
+<ul>
+<li>当前待删除结点从父节点借结点，父节点再从兄弟结点借一个结点</li>
+<li>当前待删除结点从父节点，父节点从兄弟那里借不到结点(兄弟结点为2-结点)<img src="/blog/ea0368d/08.png" class="" title="可借结点情况">
+</li>
+</ul>
+<h5 id="3-4-调整树高度"><a href="#3-4-调整树高度" class="headerlink" title="3.4 调整树高度"></a>3.4 调整树高度</h5><p>父节点和兄弟结点同时为2-结点时，父节点和兄弟结点合并，需要调整树高度的，调整树高度分为增加高度和减少高度的情况</p>
+<ul>
+<li>增加高度，只要能向父节点借到结点时，便将借到的结点变成当前待删除结点的父节点，增加高度(因为合并的时候减少了高度)</li>
+<li>减少高度,从父节点那里借不到结点时，说明父节点只能和兄弟结点合并，便减少了当前子树的高度，需要根据增加高度或者当前减少高度的规则，递归调整高度，直到根结点。</li>
+</ul>
+<h5 id="3-5-算法推导"><a href="#3-5-算法推导" class="headerlink" title="3.5 算法推导"></a>3.5 算法推导</h5><blockquote>
+<p>我们如果要删除一个节点，把要删除的那个节点和这个结点的左子树的最大结点，或者这个结点的右子树的最小结点进行交换，那么删除任意结点就转换成删除叶子结点的情况。而删除叶子结点的情况，就是要保证叶子结点不是单独的key的结点(2结点),因为删除这个结点，将导致删除的结点的父节点不是一个2结点，或者说树的高度发生了变化。这个时候当带删除结点的key不为2结点时，直接删掉目标key；当带删除结点为2结点时，就需要向父节点借一个结点，父节点再向兄弟结点借一个结点，保证带删除结点为3结点或者4结点。借不到只有一种情况就是父节点和兄弟结点同时为2结点，这个时候合并向上调整整棵树的高度。</p>
+</blockquote>
+<h4 id="4-红黑树的定义"><a href="#4-红黑树的定义" class="headerlink" title="4. 红黑树的定义"></a>4. 红黑树的定义</h4><p>透彻理解2-3-4树的定义以及删除过程是了解对应红黑树删除算法的前提。<br><strong>定义:</strong></p>
+<ul>
+<li>每个结点或红或黑</li>
+<li>根结点是黑色</li>
+<li>每个叶子结点是黑的</li>
+<li>如果一个结点是红色则两个儿子都是黑色</li>
+<li>对每个结点，从该结点到子孙结点的所有路径包含相同数目的黑色结点</li>
+</ul>
+<h5 id="4-1-红黑树与2-3-4树的等价关系"><a href="#4-1-红黑树与2-3-4树的等价关系" class="headerlink" title="4.1 红黑树与2-3-4树的等价关系"></a>4.1 红黑树与2-3-4树的等价关系</h5><p>结点对应关系如下图:<br><img src="/blog/ea0368d/12.png" class="" title="红黑树结点"></p>
+<p>根据结点对应图就可以将2-3-4树对应的红黑树为下图:<br><img src="/blog/ea0368d/10.png" class="" title="红黑树结点"></p>
+<p>但是存在一个问题，就是对于一棵2-3-4树可能有多种不同的表示，这是在于对于3-node的表示，红色的边可以向左倾，也可以向右倾。<br><img src="/blog/ea0368d/11.png" class="" title="红黑树结点"></p>
+<p>所以对于任何一棵2-3-4树，我们都可以得到一棵唯一对应的左倾红黑树，去掉3-结点的右倾对应的结点对应关系：<br><img src="/blog/ea0368d/09.png" class="" title="红黑树结点"></p>
+<p>如果出现右倾的结点我们可以采取左旋的方法变成左倾，如图:<br><img src="/blog/ea0368d/13.png" class="" title="红黑树结点"></p>
+<h5 id="4-2-红黑树借结点与2-3-4树的借结点的等价"><a href="#4-2-红黑树借结点与2-3-4树的借结点的等价" class="headerlink" title="4.2 红黑树借结点与2-3-4树的借结点的等价"></a>4.2 红黑树借结点与2-3-4树的借结点的等价</h5><p>A结点的兄弟结点为2-结点的等价情况:<br><img src="/blog/ea0368d/14.jpg" class="" title="红黑树结点"></p>
+<p>A结点的兄弟不为2-结点，可以借到结点的通用情况：<br><img src="/blog/ea0368d/15.jpg" class="" title="红黑树结点"></p>
+<p>第一张图的color flip的本质是待删除结点A结点向父节点和兄弟结点借了一个结点，没有还结点给兄弟结点。<br>第二张图是借结点的通用过程，其中左旋和右旋的本质是用来统一保持结点的左倾红黑树，并将连续两个红结点分开掉。<br><strong>如果上述两张图还没有看懂，请回到3.3节做对比。</strong></p>
+<h5 id="4-3-算法导论中红黑树的算法推导"><a href="#4-3-算法导论中红黑树的算法推导" class="headerlink" title="4.3 算法导论中红黑树的算法推导"></a>4.3 <strong>算法导论</strong>中红黑树的算法推导</h5><p>上面两张图的再细分便是算法导论中，红黑树向上修复的四种情况，其中需要说明的是，算法导论中要修复的x结点为已经删除的y结点的唯一子结点，但还要补充一点的是，在算法中x结点还代表当结点出现合并需要调整树高度时,调整子树的根结点！所以上面一直在讲的算法是先给带删除的结点补充一个结点，使结点不为2-结点时，在删除目标结点；而算法导论中的算法是先删除结点，然后在删除结点指向的结点位置修复(补充一个结点或者合并以后调整树高度)，所以大部分人被x结点指向的结点的双重黑结点所迷惑，以致于算法就更云里雾里了。这里要说明是算法导论的算法是精炼且可以严格证明的，只是讲解方法太坑人了，这也是本文的初衷。<br>为了避免这种混淆，我们将删除的结点标记出来，然后给带删除的结点向父节点或者兄弟结点借结点的方式描述，下图和4.2的描述没有区别，只是对应到了算法中的四种情况，如下图所示：<br><img src="/blog/ea0368d/16.jpg" class="" title="红黑树结点"></p>
+<p><strong>对应算法导论中的四种情况:</strong></p>
+<ul>
+<li><strong>情况1,x的兄弟w是红色的。</strong>图一,x的兄弟结点是红结点，这种情况说明父节点有结点可借，另外红结点在右边，所以选择了左旋的方式，使红结点到左边来，也使图一的情况转变成了图三和图四的情况</li>
+<li><strong>情况3,x的兄弟w是黑色的,w的左孩子是红色。</strong>图三,x的兄弟结点的左结点是红结点，这种情况说明兄弟结点有结点可借，不过为了避免复杂，算法将他统一转为图四的情况，也就是将右倾的结点化为左倾的结点进行处理</li>
+<li><strong>情况4,x的兄弟w是黑色的,w的右孩子是红色。</strong>图四,x的兄弟结点的有结点是红结点，同样说明兄弟结点有结点可借，这里要注意的是一次color flip就表示从父节点借到结点，旋转只是将右倾的结点转成左倾的结点。</li>
+<li><strong>情况2,x的兄弟w是黑色的,w的两个孩子都是黑色。</strong>这种情况在2-3-4树除了借结点，还有合并结点并调整树高度的问题，算法导论中的方法是将x的兄弟结点的黑色设置为红色，然后将兄弟结点的这个黑色一直往上传递，直到可以所有子树都可以合并这个黑色。</li>
+</ul>
+<h4 id="5-红黑树算法实现"><a href="#5-红黑树算法实现" class="headerlink" title="5. 红黑树算法实现"></a>5. 红黑树算法实现</h4><h5 id="5-1-删除逻辑"><a href="#5-1-删除逻辑" class="headerlink" title="5.1 删除逻辑"></a>5.1 删除逻辑</h5><p>红黑树删除任意结点的算法，首先要判断结点是否是叶子结点，如果是叶子结点则可以直接删除，如果是非叶子结点，则需要找到中序遍历的后继结点作为替换结点；另外只有结点为黑色的情况才需要修正树的高度，红色的情况从2-3-4树的角度说就是不是2-结点。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">RBTree::Delete</span><span class="params">(RBNode* z)</span> </span>&#123;</span><br><span class="line">	RBNode* x;</span><br><span class="line">	RBNode* y;</span><br><span class="line">	<span class="keyword">if</span> (z == <span class="literal">NULL</span>) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	<span class="keyword">if</span> (z-&gt;left == <span class="literal">NULL</span> || z-&gt;right == <span class="literal">NULL</span>) &#123;</span><br><span class="line">		y = z;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		y = <span class="keyword">this</span>-&gt;<span class="built_in">SuccessOR</span>(z);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// get y&#x27;s only child</span></span><br><span class="line">	<span class="keyword">if</span> (y-&gt;left != <span class="literal">NULL</span>) &#123;</span><br><span class="line">		x = y-&gt;left;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		x = y-&gt;right;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// remove y node</span></span><br><span class="line">	<span class="keyword">if</span> (x != <span class="literal">NULL</span>) &#123;</span><br><span class="line">		x-&gt;parent = y-&gt;parent;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// fixed y&#x27;s parent</span></span><br><span class="line">	<span class="keyword">if</span> (y-&gt;parent == <span class="literal">NULL</span>) &#123;</span><br><span class="line">		m_root = x;</span><br><span class="line">	&#125; </span><br><span class="line">	<span class="keyword">else</span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (y = y-&gt;parent-&gt;left) &#123;</span><br><span class="line">			y-&gt;parent-&gt;left = x;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			y-&gt;parent-&gt;right = x;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (y != z) &#123;</span><br><span class="line">		z-&gt;key = y-&gt;key;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (y-&gt;color == BLACK) &#123;</span><br><span class="line">		<span class="keyword">this</span>-&gt;<span class="built_in">DeleteFixup</span>(x);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (y != <span class="literal">NULL</span>) &#123;</span><br><span class="line">		<span class="keyword">delete</span> y;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h5 id="5-2-中序后继结点查找"><a href="#5-2-中序后继结点查找" class="headerlink" title="5.2 中序后继结点查找"></a>5.2 中序后继结点查找</h5><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">RBNode* <span class="title">RBTree::SuccessOR</span><span class="params">(RBNode* x)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (x == <span class="literal">NULL</span>) <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="comment">// 找到右子树的最小值结点</span></span><br><span class="line">	<span class="keyword">if</span> (x-&gt;right != <span class="literal">NULL</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">this</span>-&gt;<span class="built_in">GetMini</span>(x-&gt;right);</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">// 也可以找到父结点的左儿子结点</span></span><br><span class="line">	RBNode* tmp = x;</span><br><span class="line">	RBNode* y = tmp-&gt;parent;</span><br><span class="line">	<span class="keyword">while</span> (y != <span class="literal">NULL</span> &amp;&amp; tmp == y-&gt;right) &#123;</span><br><span class="line">		x = y;</span><br><span class="line">		y = y-&gt;parent;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> y;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="5-3-修复删除结点后树的高度"><a href="#5-3-修复删除结点后树的高度" class="headerlink" title="5.3 修复删除结点后树的高度"></a>5.3 修复删除结点后树的高度</h5><p>这里需要说明的是沿着x结点向上修复有x结点是父节点的左子树和右子树两种对称情况需要处理，<br>也就是一直未说到的删除左结点需要右边兄弟结点来补充，删除右结点需要左边兄弟结点来补充。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">RBTree::DeleteFixup</span><span class="params">(RBNode* x)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (x == <span class="literal">NULL</span>) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	RBNode* w = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span> (x != m_root &amp;&amp; x-&gt;color == BLACK) &#123;</span><br><span class="line">		<span class="keyword">if</span> (x == x-&gt;parent-&gt;left) &#123;</span><br><span class="line">			w = x-&gt;parent-&gt;right;</span><br><span class="line">			<span class="keyword">if</span> (w-&gt;color == RED) &#123;</span><br><span class="line">				<span class="comment">// 1. case 1</span></span><br><span class="line">				x-&gt;parent-&gt;color = RED;</span><br><span class="line">				<span class="built_in">LRotate</span>(x-&gt;parent);</span><br><span class="line">				w = x-&gt;parent-&gt;right;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (w-&gt;left-&gt;color == BLACK &amp;&amp; w-&gt;right-&gt;color == BLACK) &#123;</span><br><span class="line">				<span class="comment">// 2. case 2</span></span><br><span class="line">				w-&gt;color = RED;</span><br><span class="line">				x = x-&gt;parent;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="keyword">if</span> (w-&gt;right-&gt;color == BLACK) &#123;</span><br><span class="line">					<span class="comment">// 3. case 3</span></span><br><span class="line">					w-&gt;left-&gt;color = BLACK;</span><br><span class="line">					w-&gt;color = RED;</span><br><span class="line">					<span class="built_in">RRotate</span>(w);</span><br><span class="line">					w = x-&gt;parent-&gt;right;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 4. case 4</span></span><br><span class="line">				w-&gt;color = x-&gt;parent-&gt;color;</span><br><span class="line">				x-&gt;parent-&gt;color = BLACK;</span><br><span class="line">				w-&gt;right-&gt;color = BLACK;</span><br><span class="line">				<span class="built_in">LRotate</span>(x-&gt;parent);</span><br><span class="line">				x = m_root;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// if (x == x-&gt;parent-&gt;right)</span></span><br><span class="line">			w = x-&gt;parent-&gt;left;</span><br><span class="line">			<span class="comment">// 1. case 1</span></span><br><span class="line">			<span class="keyword">if</span> (w-&gt;color == RED) &#123;</span><br><span class="line">				x-&gt;parent-&gt;color = RED;</span><br><span class="line">				<span class="built_in">RRotate</span>(x-&gt;parent);</span><br><span class="line">				w = x-&gt;parent-&gt;left;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 2. case 2</span></span><br><span class="line">			<span class="keyword">if</span> (w-&gt;left-&gt;color == BLACK &amp;&amp; w-&gt;right-&gt;color == BLACK) &#123;</span><br><span class="line">				w-&gt;color = RED;</span><br><span class="line">				x = x-&gt;parent;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="keyword">if</span> (w-&gt;left-&gt;color == BLACK) &#123;</span><br><span class="line">					<span class="comment">// 3. case </span></span><br><span class="line">					w-&gt;right-&gt;color = BLACK;</span><br><span class="line">					w-&gt;color = RED;</span><br><span class="line">					<span class="built_in">LRotate</span>(w);</span><br><span class="line">					w = x-&gt;parent-&gt;left;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 4. case 4</span></span><br><span class="line">				w-&gt;color = x-&gt;parent-&gt;color;</span><br><span class="line">				x-&gt;parent-&gt;color = BLACK;</span><br><span class="line">				x-&gt;left-&gt;color = BLACK;</span><br><span class="line">				<span class="built_in">RRotate</span>(x-&gt;parent);</span><br><span class="line">				x = m_root;</span><br><span class="line">			&#125;</span><br><span class="line">			</span><br><span class="line">		&#125;</span><br><span class="line">		x-&gt;color = BLACK;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<a href="/blog/ea0368d/rb_tree.cpp" title="点击下载完整代码">点击下载完整代码</a>
+<h4 id="6-参考文档"><a href="#6-参考文档" class="headerlink" title="6. 参考文档"></a>6. 参考文档</h4><ul>
+<li><a target="_blank" rel="noopener" href="http://www.cs.princeton.edu/~rs/talks/LLRB/RedBlack.pdf">特别感谢的红黑树原著论文</a></li>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1193097">一篇文章搞懂红黑树</a></li>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1497617">数据结构与算法——2-3-4树</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/sfencs-hcy/p/10363259.html">2-3-4树</a></li>
+<li><a target="_blank" rel="noopener" href="https://my.oschina.net/u/3123981/blog/3161466">动画 | 什么是2-3-4树？</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"># 数据结构</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/1acc8b6c.html" rel="prev" title="高频小信号调谐放大器快速入门">
+      <i class="fa fa-chevron-left"></i> 高频小信号调谐放大器快速入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/8f072458.html" rel="next" title="RSA和AES的golang和c++版本使用">
+      RSA和AES的golang和c++版本使用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-3-4%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-number">1.</span> <span class="nav-text">1. 2-3-4树的定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-3-4%E6%A0%91%E7%9A%84%E5%88%A0%E9%99%A4%E6%93%8D%E4%BD%9C%E4%B8%BE%E4%BE%8B"><span class="nav-number">2.</span> <span class="nav-text">2. 2-3-4树的删除操作举例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-3-4%E6%A0%91%E5%88%A0%E9%99%A4%E7%9A%84%E7%AE%97%E6%B3%95%E6%8E%A8%E5%AF%BC"><span class="nav-number">3.</span> <span class="nav-text">3. 2-3-4树删除的算法推导</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-%E5%88%A0%E9%99%A4%E9%9D%9E%E5%8F%B6%E5%AD%90%E7%BB%93%E7%82%B9"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 删除非叶子结点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-%E5%88%A0%E9%99%A4%E5%8F%B6%E5%AD%90%E7%BB%93%E7%82%B9"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 删除叶子结点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-%E5%80%9F%E7%BB%93%E7%82%B9"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 借结点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-4-%E8%B0%83%E6%95%B4%E6%A0%91%E9%AB%98%E5%BA%A6"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 调整树高度</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-5-%E7%AE%97%E6%B3%95%E6%8E%A8%E5%AF%BC"><span class="nav-number">3.5.</span> <span class="nav-text">3.5 算法推导</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E7%BA%A2%E9%BB%91%E6%A0%91%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-number">4.</span> <span class="nav-text">4. 红黑树的定义</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-1-%E7%BA%A2%E9%BB%91%E6%A0%91%E4%B8%8E2-3-4%E6%A0%91%E7%9A%84%E7%AD%89%E4%BB%B7%E5%85%B3%E7%B3%BB"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 红黑树与2-3-4树的等价关系</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-2-%E7%BA%A2%E9%BB%91%E6%A0%91%E5%80%9F%E7%BB%93%E7%82%B9%E4%B8%8E2-3-4%E6%A0%91%E7%9A%84%E5%80%9F%E7%BB%93%E7%82%B9%E7%9A%84%E7%AD%89%E4%BB%B7"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 红黑树借结点与2-3-4树的借结点的等价</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-3-%E7%AE%97%E6%B3%95%E5%AF%BC%E8%AE%BA%E4%B8%AD%E7%BA%A2%E9%BB%91%E6%A0%91%E7%9A%84%E7%AE%97%E6%B3%95%E6%8E%A8%E5%AF%BC"><span class="nav-number">4.3.</span> <span class="nav-text">4.3 算法导论中红黑树的算法推导</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E7%BA%A2%E9%BB%91%E6%A0%91%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0"><span class="nav-number">5.</span> <span class="nav-text">5. 红黑树算法实现</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#5-1-%E5%88%A0%E9%99%A4%E9%80%BB%E8%BE%91"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 删除逻辑</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-2-%E4%B8%AD%E5%BA%8F%E5%90%8E%E7%BB%A7%E7%BB%93%E7%82%B9%E6%9F%A5%E6%89%BE"><span class="nav-number">5.2.</span> <span class="nav-text">5.2 中序后继结点查找</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5-3-%E4%BF%AE%E5%A4%8D%E5%88%A0%E9%99%A4%E7%BB%93%E7%82%B9%E5%90%8E%E6%A0%91%E7%9A%84%E9%AB%98%E5%BA%A6"><span class="nav-number">5.3.</span> <span class="nav-text">5.3 修复删除结点后树的高度</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">6.</span> <span class="nav-text">6. 参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术的朝圣之旅</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

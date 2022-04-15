@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="笔记重点:  windows下编译mysql,主要是要注意编译过程中遇到的各种编码问题; 与类unix平台不同的是可以用wolfssl代替,windows下只能使用openssl; 本笔记编译的mysql版本为8.0.18,版本比较新，所涉及到的依赖库有对应的版本，如用其他版本代替可能会出现无法预料的问题.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql源码编译[windows版本]">
+<meta property="og:url" content="https://dengwenyi88.github.io/blog/80737cd1.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="笔记重点:  windows下编译mysql,主要是要注意编译过程中遇到的各种编码问题; 与类unix平台不同的是可以用wolfssl代替,windows下只能使用openssl; 本笔记编译的mysql版本为8.0.18,版本比较新，所涉及到的依赖库有对应的版本，如用其他版本代替可能会出现无法预料的问题.">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-11-07T05:45:05.000Z">
+<meta property="article:modified_time" content="2022-04-15T01:36:57.689Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/blog/80737cd1.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>mysql源码编译[windows版本] | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/80737cd1.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          mysql源码编译[windows版本]
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-07 13:45:05" itemprop="dateCreated datePublished" datetime="2019-11-07T13:45:05+08:00">2019-11-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-15 09:36:57" itemprop="dateModified" datetime="2022-04-15T09:36:57+08:00">2022-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>笔记重点:</p>
+<ul>
+<li>windows下编译mysql,主要是要注意编译过程中遇到的各种编码问题;</li>
+<li>与类unix平台不同的是可以用wolfssl代替,windows下只能使用openssl;</li>
+<li>本笔记编译的mysql版本为8.0.18,版本比较新，所涉及到的依赖库有对应的版本，如用其他版本代替可能会出现无法预料的问题.</li>
+</ul>
+</blockquote>
+<span id="more"></span>
+<h4 id="一-源码下载"><a href="#一-源码下载" class="headerlink" title="一. 源码下载"></a>一. 源码下载</h4><ul>
+<li>下载安装Visual Studio 2017</li>
+<li><a target="_blank" rel="noopener" href="https://dl.bintray.com/boostorg/release/1.70.0/source/">下载boost 1.70.0版本</a></li>
+<li>下载cmake 3.15.4</li>
+<li><a target="_blank" rel="noopener" href="https://www.openssl.org/source/openssl-1.0.2t.tar.gz">下载openssl-1.0.2t</a></li>
+<li><a target="_blank" rel="noopener" href="https://cdn.mysql.com//Downloads/MySQL-8.0/mysql-8.0.18.zip">下载mysql-8.0.18</a></li>
+<li><a target="_blank" rel="noopener" href="https://nchc.dl.sourceforge.net/project/gnuwin32/bison/2.4.1/bison-2.4.1-setup.exe">下载bison</a></li>
+</ul>
+<h4 id="二-编译前准备工作"><a href="#二-编译前准备工作" class="headerlink" title="二. 编译前准备工作"></a>二. 编译前准备工作</h4><ul>
+<li>boost_1_70_0文件夹解压到mysql-8.0.18\boost\下</li>
+<li>按照 <a href="/blog/8660b909.html" title="这个编译安装openssl库">这个编译安装openssl库</a>;添加OPENSSL_ROOT环境变量为openssl安装目录</li>
+<li>安装bison;这个是生成mysql的内部sql语句要用的解析器,增加bison目录到系统path中</li>
+<li><p>sql脚本更改:<br>mysql-8.0.18\scripts\fill_help_tables.sql中</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SET NAMES &#x27;utf8&#x27;;改成utf8mb4</span></span><br><span class="line"><span class="keyword">SET</span> NAMES <span class="string">&#x27;utf8mb4&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- ...</span></span><br><span class="line"><span class="comment">-- 搜索PI行注释掉</span></span><br><span class="line"><span class="comment">-- INSERT INTO help_topic (help_topic_id,help_category_id,name,description,example,url) VALUES (160,13,&#x27;PI&#x27;,</span></span><br><span class="line"><span class="comment">-- 搜索RADIANS注释掉这行</span></span><br><span class="line"><span class="comment">-- INSERT INTO help_topic (help_topic_id,help_category_id,name,description,example,url) VALUES (163,13,&#x27;RADIANS&#x27;,</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>mysql-8.0.18\scripts\mysql_system_tables.sql中</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">-- SET @cmd = &quot;CREATE TABLE IF NOT EXISTS help_topic 这一行的编码格式由utf8改成utf8mb4</span></span><br><span class="line"><span class="keyword">SET</span> <span class="variable">@cmd</span> <span class="operator">=</span> &quot;CREATE TABLE IF NOT EXISTS help_topic ( help_topic_id int unsigned not null, name char(64) not null, help_category_id smallint unsigned not null, description text not null, example text not null, url text not null, primary key (help_topic_id), unique index (name) ) engine=INNODB STATS_PERSISTENT=0 CHARACTER SET utf8mb4 COLLATE utf8mb4_bin comment=&#x27;help topics&#x27; ROW_FORMAT=DYNAMIC TABLESPACE=mysql&quot;;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="三-编译源码"><a href="#三-编译源码" class="headerlink" title="三. 编译源码"></a>三. 编译源码</h4><h5 id="3-1-建立源码外编译目录"><a href="#3-1-建立源码外编译目录" class="headerlink" title="3.1 建立源码外编译目录"></a>3.1 建立源码外编译目录</h5><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p mysql-8.0.18\build &amp;&amp; mysql-8.0.18\build</span><br></pre></td></tr></table></figure>
+<h5 id="3-2-使用cmake进行配置"><a href="#3-2-使用cmake进行配置" class="headerlink" title="3.2 使用cmake进行配置"></a>3.2 使用cmake进行配置</h5><p>在build目录生成MySQL.sln,以下用到的参数均可以在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/source-configuration-options.html">mysql的官方文档</a>中找到;另外在这里没有特别配置的比较重要的选项是<br>DEFAULT_CHARSET默认值是utf8mb4,DEFAULT_COLLATION默认值为utf8mb4_0900_ai_ci,另外CMAKE_BUILD_TYPE的默认选项不是release,而是RelWithDebInfo.</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">cmake .. -DCMAKE_INSTALL_PREFIX=F:\\mysql \</span><br><span class="line">-DENABLED_LOCAL_INFILE=<span class="keyword">ON</span> \</span><br><span class="line">-DWITH_INNODB_MEMCACHED=<span class="keyword">ON</span> \</span><br><span class="line">-DWITH_INNOBASE_STORAGE_ENGINE=<span class="number">1</span> \</span><br><span class="line">-DWITH_BOOST=F:\\mysql-<span class="number">8.0</span>.<span class="number">18</span>\\boost\\boost_1_70_0 \</span><br><span class="line">-G <span class="string">&quot;Visual Studio 15 2017 Win64&quot;</span> \</span><br><span class="line">-DWITH_SSL=f:\\openssl_dev \</span><br><span class="line">-DCMAKE_BUILD_TYPE=Debug</span><br></pre></td></tr></table></figure>
+<h5 id="3-3-命令行编译MySQL-sln"><a href="#3-3-命令行编译MySQL-sln" class="headerlink" title="3.3 命令行编译MySQL.sln"></a>3.3 命令行编译MySQL.sln</h5><p>这里需要说明的是，第一遍编译时会产生编译错误</p>
+<ul>
+<li>mysql-8.0.18\build\scripts\sql_commands_help_data.h</li>
+<li>mysql-8.0.18\sql\sql_local.cc<br>他们的代码页编码格式会导致编译错误;处理方式是先找出<strong><a target="_blank" rel="noopener" href="https://jingyan.baidu.com/article/9faa7231df5453473c28cbd9.html">高级保存选项</a></strong>;然后将代码页保存<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_36226393/article/details/77725493">Unicode 代码页 1200</a>;</li>
+<li>mysql-8.0.18\storage\innobase\api\api0api.cc的line 3309,line 3310的strtok_r改成strtok_s</li>
+</ul>
+<p>命令行编译命令如下,如果机器配置好编译时间会短点.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">devenv.com MySQL.sln /Build &quot;Debug|x64&quot;</span><br></pre></td></tr></table></figure>
+<h4 id="四-安装启动"><a href="#四-安装启动" class="headerlink" title="四. 安装启动"></a>四. 安装启动</h4><p>安装命令<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">devenv.com MySQL.sln /Build &quot;Debug|x64&quot; /project INSTALL</span><br></pre></td></tr></table></figure><br>安装完成以后可以通过命令初始化数据库实例,使用—initialize和—initialize-insecure的区别是后者的root密码为空.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqld --initialize-insecure --console</span><br></pre></td></tr></table></figure>
+<h4 id="结论"><a href="#结论" class="headerlink" title="结论:"></a>结论:</h4><p>可以参照<a target="_blank" rel="noopener" href="https://blog.csdn.net/slwang001/article/details/53769154">mysqld启动流程</a>也可以通过查看源码理解，mysql的系统表的初始化是通过内置的sql语句产生的.这个sql语句集中在build/scripts下.<br>比如文件sql_commands_help_data.h中,代码页中夹杂这sql语句,而sql语句又有编码格式问题,因此我不建议在windows平台下使用其他文本工具打开这个文件,通过上述提到的代码页保存方式为最保险的方式;目前mysql-8.0.18已经默认使用utf8mb4,如果使用原来的utf8(utf8mb3)，插入宽字符时有可能遇到’Incorrect string value’错误.这是个非常值得注意的地方。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/8660b909.html" rel="prev" title="openssl源码编译[windows版本]">
+      <i class="fa fa-chevron-left"></i> openssl源码编译[windows版本]
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/17a639f4.html" rel="next" title="golang读取dht11温湿度器有感">
+      golang读取dht11温湿度器有感 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80-%E6%BA%90%E7%A0%81%E4%B8%8B%E8%BD%BD"><span class="nav-number">1.</span> <span class="nav-text">一. 源码下载</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C-%E7%BC%96%E8%AF%91%E5%89%8D%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="nav-number">2.</span> <span class="nav-text">二. 编译前准备工作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89-%E7%BC%96%E8%AF%91%E6%BA%90%E7%A0%81"><span class="nav-number">3.</span> <span class="nav-text">三. 编译源码</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-%E5%BB%BA%E7%AB%8B%E6%BA%90%E7%A0%81%E5%A4%96%E7%BC%96%E8%AF%91%E7%9B%AE%E5%BD%95"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 建立源码外编译目录</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-%E4%BD%BF%E7%94%A8cmake%E8%BF%9B%E8%A1%8C%E9%85%8D%E7%BD%AE"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 使用cmake进行配置</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-%E5%91%BD%E4%BB%A4%E8%A1%8C%E7%BC%96%E8%AF%91MySQL-sln"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 命令行编译MySQL.sln</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B-%E5%AE%89%E8%A3%85%E5%90%AF%E5%8A%A8"><span class="nav-number">4.</span> <span class="nav-text">四. 安装启动</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">5.</span> <span class="nav-text">结论:</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术的朝圣之旅</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

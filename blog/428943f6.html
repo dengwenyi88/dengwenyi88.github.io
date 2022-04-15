@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="笔记重点：本来进程退出没有什么好谈的，但是进程退出都做了什么，可能会很模糊，比如进程退出会引发重新调度，比如资源的销毁对应进程创建的重新分配，进程的退出依赖于系统对信号的处理，所以应该先熟悉系统如何处理信号。  信号处理是在什么时候进行的 进程退出时要销毁哪些具体的资源">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《linux 0.12内核完全剖析》--进程退出分析">
+<meta property="og:url" content="https://dengwenyi88.github.io/blog/428943f6.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="笔记重点：本来进程退出没有什么好谈的，但是进程退出都做了什么，可能会很模糊，比如进程退出会引发重新调度，比如资源的销毁对应进程创建的重新分配，进程的退出依赖于系统对信号的处理，所以应该先熟悉系统如何处理信号。  信号处理是在什么时候进行的 进程退出时要销毁哪些具体的资源">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-01-12T12:00:00.000Z">
+<meta property="article:modified_time" content="2022-04-15T01:36:57.468Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="linux-0.12">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/blog/428943f6.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>《linux 0.12内核完全剖析》--进程退出分析 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/428943f6.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          《linux 0.12内核完全剖析》--进程退出分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-01-12 20:00:00" itemprop="dateCreated datePublished" datetime="2017-01-12T20:00:00+08:00">2017-01-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-15 09:36:57" itemprop="dateModified" datetime="2022-04-15T09:36:57+08:00">2022-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/Linux%E5%86%85%E6%A0%B8/" itemprop="url" rel="index"><span itemprop="name">Linux内核</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>笔记重点：<br>本来进程退出没有什么好谈的，但是进程退出都做了什么，可能会很模糊，比如进程退出会引发重新调度，比如资源的销毁对应进程创建的重新分配，进程的退出依赖于系统对信号的处理，所以应该先熟悉系统如何处理信号。</p>
+<ul>
+<li>信号处理是在什么时候进行的</li>
+<li>进程退出时要销毁哪些具体的资源</li>
+</ul>
+</blockquote>
+<span id="more"></span>
+<h4 id="1-从一个例子开始"><a href="#1-从一个例子开始" class="headerlink" title="1. 从一个例子开始"></a>1. 从一个例子开始</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">handle</span><span class="params">(<span class="keyword">int</span> sig)</span> </span>&#123;</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;the signal is %d\n&quot;</span>,sig);</span><br><span class="line">  (<span class="keyword">void</span>) signal(SIGINT,SIG_DFL);<span class="comment">//恢复默认处理函数</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  (<span class="keyword">void</span>) signal(SIGINT,handle); <span class="comment">//设置SIGINT信号的信号处理函数</span></span><br><span class="line">  <span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;signal test....\n&quot;</span>);</span><br><span class="line">    sleep(<span class="number">1</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>按ctrl-c时将会到handle函数处理，并将信号处理函数设置为SIG_DFL;</p>
+<h4 id="2-signal函数长什么样"><a href="#2-signal函数长什么样" class="headerlink" title="2. signal函数长什么样"></a>2. signal函数长什么样</h4><p>上面调用的signal函数在libc库函数中，是对系统调用的封装</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">void</span> ___sig_restore();</span><br><span class="line"><span class="built_in"><span class="keyword">void</span></span> (*<span class="built_in">signal</span>(<span class="keyword">int</span> sig,<span class="keyword">__sighandler_t</span> func))(<span class="keyword">int</span>) &#123;</span><br><span class="line">  <span class="built_in"><span class="keyword">void</span></span> (*res)();</span><br><span class="line">  <span class="keyword">register</span> <span class="keyword">int</span> __fooebx __asm__ (<span class="string">&quot;bx&quot;</span>) = sig;</span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">  eax 为系统调用号 __NR_signal</span></span><br><span class="line"><span class="comment">  ebx 为 sig</span></span><br><span class="line"><span class="comment">  ecx 为信号处理函数</span></span><br><span class="line"><span class="comment">  edx 为__sig_restore函数</span></span><br><span class="line"><span class="comment">  以下语句包裹__NR_signal系统调用</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  __asm__(<span class="string">&quot;int $0x80&quot;</span>:<span class="string">&quot;=a&quot;</span> (res):</span><br><span class="line">         <span class="string">&quot;0&quot;</span>(__NR_signal)，<span class="string">&quot;r&quot;</span>(__fooebx),<span class="string">&quot;c&quot;</span>(func),<span class="string">&quot;d&quot;</span>((<span class="keyword">long</span>)__sig_restore))</span><br><span class="line">	<span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="3-信号处理的分析过程"><a href="#3-信号处理的分析过程" class="headerlink" title="3. 信号处理的分析过程"></a>3. 信号处理的分析过程</h4><blockquote>
+<ul>
+<li>信号的处理是在每次系统调用时或者时钟中断时</li>
+<li>do_signal函数是内核在系统调用时对信号的预处理</li>
+</ul>
+</blockquote>
+<h5 id="3-1-每次系统调用完成后的处理-sys-calls-s-第107行"><a href="#3-1-每次系统调用完成后的处理-sys-calls-s-第107行" class="headerlink" title="3.1. 每次系统调用完成后的处理 sys_calls.s 第107行"></a>3.1. 每次系统调用完成后的处理 sys_calls.s 第107行</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">ret_from_sys_call:</span><br><span class="line">	...</span><br><span class="line">	movl signal(%eax),%ebx		#取信号位图</span><br><span class="line">	movl blocked(%eax),%ecx		#取屏蔽信号位图</span><br><span class="line">	notl %ecx</span><br><span class="line">	andl %ebx,%ecx</span><br><span class="line">	bsfl %ecx,%ecx				#从位0开始扫描有1的位</span><br><span class="line">	je 3f						#没有则退出</span><br><span class="line">	btrl %ecx,%ebx</span><br><span class="line">	movl %ebx,signal(%eax)</span><br><span class="line">	incl %ecx</span><br><span class="line">	pushl %ecx				    #信号值入栈</span><br><span class="line">	call _do_signal				#!!!调用do_signal函数</span><br><span class="line">	popl %ecx</span><br><span class="line">	testl %eax, %eax</span><br><span class="line">	jne 2b		# see if we need to switch tasks, or do more signals</span><br><span class="line">3:	popl %eax</span><br><span class="line">	popl %ebx</span><br><span class="line">	popl %ecx</span><br><span class="line">	popl %edx</span><br><span class="line">	addl $4, %esp	# skip orig_eax</span><br><span class="line">	pop %fs</span><br><span class="line">	pop %es</span><br><span class="line">	pop %ds</span><br><span class="line">	iret</span><br></pre></td></tr></table></figure>
+<h5 id="3-2-do-signal函数将信号处理句柄插入到用户程序堆栈"><a href="#3-2-do-signal函数将信号处理句柄插入到用户程序堆栈" class="headerlink" title="3.2. do_signal函数将信号处理句柄插入到用户程序堆栈"></a>3.2. do_signal函数将信号处理句柄插入到用户程序堆栈</h5><p>系统调用返回时有信号处理时，返回路径是执行信号的处理，没有则直接返回!!!</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">do_signal</span><span class="params">(<span class="keyword">long</span> signr,<span class="keyword">long</span> eax,<span class="keyword">long</span> ebx, <span class="keyword">long</span> ecx, <span class="keyword">long</span> edx, <span class="keyword">long</span> orig_eax,</span></span></span><br><span class="line"><span class="params"><span class="function">	<span class="keyword">long</span> fs, <span class="keyword">long</span> es, <span class="keyword">long</span> ds,</span></span></span><br><span class="line"><span class="params"><span class="function">	<span class="keyword">long</span> eip, <span class="keyword">long</span> cs, <span class="keyword">long</span> eflags,</span></span></span><br><span class="line"><span class="params"><span class="function">	<span class="keyword">unsigned</span> <span class="keyword">long</span> * esp, <span class="keyword">long</span> ss)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  	<span class="keyword">unsigned</span> <span class="keyword">long</span> sa_handler;</span><br><span class="line">	<span class="keyword">long</span> old_eip=eip;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sigaction</span> * <span class="title">sa</span> =</span> current-&gt;sigaction + signr - <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">int</span> longs;</span><br><span class="line">	......</span><br><span class="line">	sa_handler = (<span class="keyword">unsigned</span> <span class="keyword">long</span>) sa-&gt;sa_handler;</span><br><span class="line">	<span class="keyword">if</span> (sa_handler==<span class="number">1</span>)</span><br><span class="line">		<span class="keyword">return</span>(<span class="number">1</span>);   <span class="comment">/* Ignore, see if there are more signals... */</span></span><br><span class="line">  	<span class="comment">//信号的默认处理</span></span><br><span class="line">  	<span class="comment">//代码已略，基本上都是结束当前进程</span></span><br><span class="line">	......</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * OK, we&#x27;re invoking a handler </span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">if</span> (sa-&gt;sa_flags &amp; SA_ONESHOT)</span><br><span class="line">		sa-&gt;sa_handler = <span class="literal">NULL</span>;</span><br><span class="line">  	<span class="comment">//以下这段就是把信号处理函数插入到用户堆栈中</span></span><br><span class="line">  	<span class="comment">//插入用户堆栈的目的就是系统调用返回后，调用用户自定义的信号处理函数</span></span><br><span class="line">	*(&amp;eip) = sa_handler;</span><br><span class="line">	longs = (sa-&gt;sa_flags &amp; SA_NOMASK)?<span class="number">7</span>:<span class="number">8</span>;</span><br><span class="line">	*(&amp;esp) -= longs;</span><br><span class="line">	verify_area(esp,longs*<span class="number">4</span>);</span><br><span class="line">	tmp_esp=esp;</span><br><span class="line">  	<span class="comment">//处理完用户的信号处理函数后的清理函数 sa-&gt;sa_restorer，也就是上面第2点的__sig_restore函数</span></span><br><span class="line">	put_fs_long((<span class="keyword">long</span>) sa-&gt;sa_restorer,tmp_esp++);</span><br><span class="line">	put_fs_long(signr,tmp_esp++);</span><br><span class="line">	<span class="keyword">if</span> (!(sa-&gt;sa_flags &amp; SA_NOMASK))</span><br><span class="line">		put_fs_long(current-&gt;blocked,tmp_esp++);</span><br><span class="line">	put_fs_long(eax,tmp_esp++);</span><br><span class="line">	put_fs_long(ecx,tmp_esp++);</span><br><span class="line">	put_fs_long(edx,tmp_esp++);</span><br><span class="line">	put_fs_long(eflags,tmp_esp++);</span><br><span class="line">	put_fs_long(old_eip,tmp_esp++);</span><br><span class="line">	current-&gt;blocked |= sa-&gt;sa_mask;</span><br><span class="line">	<span class="keyword">return</span>(<span class="number">0</span>);		<span class="comment">/* Continue, execute handler */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="3-3-sig-restore函数做了什么"><a href="#3-3-sig-restore函数做了什么" class="headerlink" title="3.3. __sig_restore函数做了什么"></a>3.3. __sig_restore函数做了什么</h5><p>libc-2.2.2中实现了一下函数，信号处理函数完成以后，返回用户程序做一些处理，因为信号处理函数是插入的！</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">.global ____sig_restore</span><br><span class="line">____sig_restore:</span><br><span class="line">	addl $4,%esp	#丢弃信号值</span><br><span class="line">	popl %eax		#恢复系统调用返回值</span><br><span class="line">	popl %ecx</span><br><span class="line">	popl %edx</span><br><span class="line">	popfl			#恢复用户程序的标志寄存器</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+<h4 id="4-进程退出都做了什么"><a href="#4-进程退出都做了什么" class="headerlink" title="4. 进程退出都做了什么"></a>4. 进程退出都做了什么</h4><ul>
+<li>释放占用的内核中的内存(task_struct)和分配的物理内存</li>
+<li>当前进程的结束（状态的改变) 对当前进程的父进程和当前进程的子进程，以及兄弟进程的影响</li>
+<li>内核重新调度</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">volatile</span> <span class="keyword">void</span> <span class="title">do_exit</span><span class="params">(<span class="keyword">long</span> code)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">p</span>;</span></span><br><span class="line">	<span class="keyword">int</span> i;</span><br><span class="line">	<span class="comment">//释放分配的物理内存，0x0f和0x17都是选择子</span></span><br><span class="line">	free_page_tables(get_base(current-&gt;ldt[<span class="number">1</span>]),get_limit(<span class="number">0x0f</span>));</span><br><span class="line">	free_page_tables(get_base(current-&gt;ldt[<span class="number">2</span>]),get_limit(<span class="number">0x17</span>));</span><br><span class="line"></span><br><span class="line">	......</span><br><span class="line">    <span class="comment">//状态发生变化</span></span><br><span class="line">    current-&gt;state = TASK_ZOMBIE;</span><br><span class="line">	current-&gt;exit_code = code;</span><br><span class="line">  	......</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Check to see if any process groups have become orphaned</span></span><br><span class="line"><span class="comment">	 * as a result of our exiting, and if they have any stopped</span></span><br><span class="line"><span class="comment">	 * jobs, send them a SIGUP and then a SIGCONT.  (POSIX 3.2.2.2)</span></span><br><span class="line"><span class="comment">	 *</span></span><br><span class="line"><span class="comment">	 * Case i: Our father is in a different pgrp than we are</span></span><br><span class="line"><span class="comment">	 * and we were the only connection outside, so our pgrp</span></span><br><span class="line"><span class="comment">	 * is about to become orphaned.</span></span><br><span class="line"><span class="comment"> 	 */</span></span><br><span class="line">	<span class="keyword">if</span> ((current-&gt;p_pptr-&gt;pgrp != current-&gt;pgrp) &amp;&amp;</span><br><span class="line">	    (current-&gt;p_pptr-&gt;session == current-&gt;session) &amp;&amp;</span><br><span class="line">	    is_orphaned_pgrp(current-&gt;pgrp) &amp;&amp;</span><br><span class="line">	    has_stopped_jobs(current-&gt;pgrp)) &#123;</span><br><span class="line">		kill_pg(current-&gt;pgrp,SIGHUP,<span class="number">1</span>);</span><br><span class="line">		kill_pg(current-&gt;pgrp,SIGCONT,<span class="number">1</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">/* Let father know we died */</span></span><br><span class="line">  	<span class="comment">//告诉父进程，当前进程退出</span></span><br><span class="line">	current-&gt;p_pptr-&gt;signal |= (<span class="number">1</span>&lt;&lt;(SIGCHLD<span class="number">-1</span>));</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * This loop does two things:</span></span><br><span class="line"><span class="comment">	 * </span></span><br><span class="line"><span class="comment">  	 * A.  Make init inherit all the child processes</span></span><br><span class="line"><span class="comment">	 * B.  Check to see if any process groups have become orphaned</span></span><br><span class="line"><span class="comment">	 *	as a result of our exiting, and if they have any stopped</span></span><br><span class="line"><span class="comment">	 *	jons, send them a SIGUP and then a SIGCONT.  (POSIX 3.2.2.2)</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">if</span> (p = current-&gt;p_cptr) &#123;</span><br><span class="line">		<span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">          	<span class="comment">//让所有的子进程都继承在init进程task[1]</span></span><br><span class="line">			p-&gt;p_pptr = task[<span class="number">1</span>];</span><br><span class="line">			<span class="keyword">if</span> (p-&gt;state == TASK_ZOMBIE)</span><br><span class="line">				task[<span class="number">1</span>]-&gt;signal |= (<span class="number">1</span>&lt;&lt;(SIGCHLD<span class="number">-1</span>));</span><br><span class="line">			<span class="comment">/*</span></span><br><span class="line"><span class="comment">			 * process group orphan check</span></span><br><span class="line"><span class="comment">			 * Case ii: Our child is in a different pgrp </span></span><br><span class="line"><span class="comment">			 * than we are, and it was the only connection</span></span><br><span class="line"><span class="comment">			 * outside, so the child pgrp is now orphaned.</span></span><br><span class="line"><span class="comment">			 */</span></span><br><span class="line">			<span class="keyword">if</span> ((p-&gt;pgrp != current-&gt;pgrp) &amp;&amp;</span><br><span class="line">			    (p-&gt;session == current-&gt;session) &amp;&amp;</span><br><span class="line">			    is_orphaned_pgrp(p-&gt;pgrp) &amp;&amp;</span><br><span class="line">			    has_stopped_jobs(p-&gt;pgrp)) &#123;</span><br><span class="line">				kill_pg(p-&gt;pgrp,SIGHUP,<span class="number">1</span>);</span><br><span class="line">				kill_pg(p-&gt;pgrp,SIGCONT,<span class="number">1</span>);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">          	 ......</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	......</span><br><span class="line">     <span class="comment">//重新调度</span></span><br><span class="line">	schedule();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="5-任务的状态："><a href="#5-任务的状态：" class="headerlink" title="5. 任务的状态："></a>5. 任务的状态：</h4><blockquote>
+<ul>
+<li>就绪两种 ： 内核运行和用户运行</li>
+<li>睡眠两种： 不可中断和可中断,不可中断的进程要显示唤醒,可中断的可由调度程序唤醒</li>
+<li>退出两种： 暂停和僵死</li>
+</ul>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux-0-12/" rel="tag"># linux-0.12</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/a024be29.html" rel="prev" title="《linux 0.12内核完全剖析》--内存管理分析">
+      <i class="fa fa-chevron-left"></i> 《linux 0.12内核完全剖析》--内存管理分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/d8c3199e.html" rel="next" title="libevent笔记--定时事件分析">
+      libevent笔记--定时事件分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E4%BB%8E%E4%B8%80%E4%B8%AA%E4%BE%8B%E5%AD%90%E5%BC%80%E5%A7%8B"><span class="nav-number">1.</span> <span class="nav-text">1. 从一个例子开始</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-signal%E5%87%BD%E6%95%B0%E9%95%BF%E4%BB%80%E4%B9%88%E6%A0%B7"><span class="nav-number">2.</span> <span class="nav-text">2. signal函数长什么样</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E4%BF%A1%E5%8F%B7%E5%A4%84%E7%90%86%E7%9A%84%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">3. 信号处理的分析过程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-1-%E6%AF%8F%E6%AC%A1%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E5%AE%8C%E6%88%90%E5%90%8E%E7%9A%84%E5%A4%84%E7%90%86-sys-calls-s-%E7%AC%AC107%E8%A1%8C"><span class="nav-number">3.1.</span> <span class="nav-text">3.1. 每次系统调用完成后的处理 sys_calls.s 第107行</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-do-signal%E5%87%BD%E6%95%B0%E5%B0%86%E4%BF%A1%E5%8F%B7%E5%A4%84%E7%90%86%E5%8F%A5%E6%9F%84%E6%8F%92%E5%85%A5%E5%88%B0%E7%94%A8%E6%88%B7%E7%A8%8B%E5%BA%8F%E5%A0%86%E6%A0%88"><span class="nav-number">3.2.</span> <span class="nav-text">3.2. do_signal函数将信号处理句柄插入到用户程序堆栈</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-3-sig-restore%E5%87%BD%E6%95%B0%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88"><span class="nav-number">3.3.</span> <span class="nav-text">3.3. __sig_restore函数做了什么</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E8%BF%9B%E7%A8%8B%E9%80%80%E5%87%BA%E9%83%BD%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88"><span class="nav-number">4.</span> <span class="nav-text">4. 进程退出都做了什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E4%BB%BB%E5%8A%A1%E7%9A%84%E7%8A%B6%E6%80%81%EF%BC%9A"><span class="nav-number">5.</span> <span class="nav-text">5. 任务的状态：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术的朝圣之旅</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="本文从两个操作说明一个新的键值插入到table的哈希表中的过程；插入键值对Lua表的操作相当频繁,其函数的性能也关乎到Lua在宿主语言中的性能；一个操作是newkey函数，通过查找一个新的可用的哈希位置来插入键值，当没有可用位置时，引发另外一个操作就是rehash,这个操作会重新判定Lua表(Table)的数组长度和哈希表的长度，从而腾出新的位置插入当前节点；具体过程参见详细分析。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lua源码笔记(2)--Table的newkey">
+<meta property="og:url" content="https://dengwenyi88.github.io/blog/5d92f597.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="本文从两个操作说明一个新的键值插入到table的哈希表中的过程；插入键值对Lua表的操作相当频繁,其函数的性能也关乎到Lua在宿主语言中的性能；一个操作是newkey函数，通过查找一个新的可用的哈希位置来插入键值，当没有可用位置时，引发另外一个操作就是rehash,这个操作会重新判定Lua表(Table)的数组长度和哈希表的长度，从而腾出新的位置插入当前节点；具体过程参见详细分析。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-08-06T01:00:00.000Z">
+<meta property="article:modified_time" content="2022-04-15T01:36:57.527Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="lua">
+<meta property="article:tag" content="源码">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/blog/5d92f597.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Lua源码笔记(2)--Table的newkey | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/5d92f597.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Lua源码笔记(2)--Table的newkey
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-06 09:00:00" itemprop="dateCreated datePublished" datetime="2021-08-06T09:00:00+08:00">2021-08-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-15 09:36:57" itemprop="dateModified" datetime="2022-04-15T09:36:57+08:00">2022-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8/lua/" itemprop="url" rel="index"><span itemprop="name">lua</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>本文从两个操作说明一个新的键值插入到table的哈希表中的过程；插入键值对Lua表的操作相当频繁,其函数的性能也关乎到Lua在宿主语言中的性能；一个操作是newkey函数，通过查找一个新的可用的哈希位置来插入键值，当没有可用位置时，引发另外一个操作就是rehash,这个操作会重新判定Lua表(Table)的数组长度和哈希表的长度，从而腾出新的位置插入当前节点；具体过程参见详细分析。</p>
+</blockquote>
+<span id="more"></span>
+<h4 id="newkey函数分析"><a href="#newkey函数分析" class="headerlink" title="newkey函数分析"></a>newkey函数分析</h4><p>参看一下代码注释前请先参考<a target="_blank" rel="noopener" href="https://blog.csdn.net/fwb330198372/article/details/88579361">这篇文章</a><br>文章主要解释了Lua的Table表中包含两个部分,一部分是数组部分，一部分是哈希表部分，之所以使用这种存储方式，是考虑到Key的格式不仅仅是数字，若是数字则分情况设置到数组或者哈希表部分，其他类型依情况而定，另外一个情况是哈希到哈希列表部分，如果发生碰撞的情况处理，是先使用getfreepos找到空闲位置，然后主位置的节点链接过去，就像一个链表，这也就导致另外一个问题，就是当真正的节点要插入时，可能有其他节点已经占用了这个位置，这个时候的处理就是将这个节点移动到空闲位置上去，将真正的哈希节点设置进来，基本思路便是如此。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> TValue *<span class="title">newkey</span> <span class="params">(lua_State *L, Table *t, <span class="keyword">const</span> TValue *key)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 参见后面的mainposition函数的分析</span></span><br><span class="line">  <span class="comment">// 找到key的类型的哈希值所在哈希表中位置的节点mp</span></span><br><span class="line">  Node *mp = <span class="built_in">mainposition</span>(t, key);</span><br><span class="line">  <span class="comment">// 当mp的值不为nil或者节点mp不为dummynode</span></span><br><span class="line">  <span class="comment">// 注:dummynode是哈希表的初始节点</span></span><br><span class="line">  <span class="keyword">if</span> (!<span class="built_in">ttisnil</span>(<span class="built_in">gval</span>(mp)) || mp == dummynode) &#123;</span><br><span class="line">    Node *othern;</span><br><span class="line">    <span class="comment">// 参见getfreepos</span></span><br><span class="line">    <span class="comment">// 在哈希表中找到一个空闲位置</span></span><br><span class="line">    Node *n = <span class="built_in">getfreepos</span>(t);</span><br><span class="line">    <span class="keyword">if</span> (n == <span class="literal">NULL</span>) &#123;  </span><br><span class="line">      <span class="comment">// 没有找到空闲位置时重新哈希</span></span><br><span class="line">      <span class="comment">// 注:参见rehash函数保证有一个空闲节点可以设置键值</span></span><br><span class="line">      <span class="built_in">rehash</span>(L, t, key);  </span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">luaH_set</span>(L, t, key); </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">lua_assert</span>(n != dummynode);</span><br><span class="line">    <span class="comment">// 重新计算以mp的键值为哈希值的节点othern</span></span><br><span class="line">    othern = <span class="built_in">mainposition</span>(t, <span class="built_in">key2tval</span>(mp));</span><br><span class="line">    <span class="comment">// 注:othern才是这个哈希表中这个位置上的节点</span></span><br><span class="line">    <span class="keyword">if</span> (othern != mp) &#123;  </span><br><span class="line">      <span class="comment">// 当othern不等于mp时，说明mp只是暂住借用这个节点的空间</span></span><br><span class="line">      <span class="comment">// 这个时候将指向mp的节点指向n</span></span><br><span class="line">      <span class="comment">// 然后将mp迁移到n位置</span></span><br><span class="line">      <span class="keyword">while</span> (<span class="built_in">gnext</span>(othern) != mp) othern = <span class="built_in">gnext</span>(othern); </span><br><span class="line">      <span class="built_in">gnext</span>(othern) = n;  </span><br><span class="line">      *n = *mp; </span><br><span class="line">      <span class="comment">// 迁移到n以后mp就是空闲位置了</span></span><br><span class="line">      <span class="comment">// 要记住一点的是mp是key哈希后得到的哈希表中的位置</span></span><br><span class="line">      <span class="built_in">gnext</span>(mp) = <span class="literal">NULL</span>;  </span><br><span class="line">      <span class="built_in">setnilvalue</span>(<span class="built_in">gval</span>(mp));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;  </span><br><span class="line">      <span class="comment">// 如果othern和mp相等，那就将n挂到mp下面</span></span><br><span class="line">      <span class="comment">// n是哈希表中的一个空闲位置</span></span><br><span class="line">      <span class="built_in">gnext</span>(n) = <span class="built_in">gnext</span>(mp);  </span><br><span class="line">      <span class="built_in">gnext</span>(mp) = n;</span><br><span class="line">      mp = n;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 这里是这是这个哈希节点的key值</span></span><br><span class="line">  <span class="comment">// 返回的是这个哈希节点的val的指针供后续赋值</span></span><br><span class="line">  <span class="built_in">gkey</span>(mp)-&gt;value = key-&gt;value; <span class="built_in">gkey</span>(mp)-&gt;tt = key-&gt;tt;</span><br><span class="line">  <span class="built_in">luaC_barriert</span>(L, t, key);</span><br><span class="line">  <span class="built_in">lua_assert</span>(<span class="built_in">ttisnil</span>(<span class="built_in">gval</span>(mp)));</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">gval</span>(mp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="mainposition函数分析"><a href="#mainposition函数分析" class="headerlink" title="mainposition函数分析"></a>mainposition函数分析</h4><p>这个函数的主要作用就是将根据key的类型得到哈希值生成索引位置，从Table表中哈希列表所在索引位置得到节点。</p>
+<ul>
+<li><p>hashnum注释</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 能使用hashnum的情况说明不能设置到Table的数组中了</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Node *<span class="title">hashnum</span> <span class="params">(<span class="keyword">const</span> Table *t, lua_Number n)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> a[numints];</span><br><span class="line">  <span class="keyword">int</span> i;</span><br><span class="line">  <span class="comment">// 如果是数字0就直接返回0位置的节点(特殊处理)</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">luai_numeq</span>(n, <span class="number">0</span>))  <span class="comment">/* avoid problems with -0 */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">gnode</span>(t, <span class="number">0</span>);</span><br><span class="line">  <span class="comment">// lua_Number在这里是double类型，做一次拷贝</span></span><br><span class="line">  <span class="built_in">memcpy</span>(a, &amp;n, <span class="built_in"><span class="keyword">sizeof</span></span>(a));</span><br><span class="line">  <span class="comment">// 逐个数字进行累加到a[0]</span></span><br><span class="line">  <span class="keyword">for</span> (i = <span class="number">1</span>; i &lt; numints; i++) a[<span class="number">0</span>] += a[i];</span><br><span class="line">  <span class="comment">// #define hashmod(t,n)	(gnode(t, ((n) % ((sizenode(t)-1)|1))))</span></span><br><span class="line">  <span class="comment">// 将n mod 哈希表长度范围得到的索引,通过gnode得到节点</span></span><br><span class="line">  <span class="comment">// 或1与加1的情况不同,加1是末尾为时加1为0,这里或1是保证索引落在2的倍数索引内</span></span><br><span class="line">  <span class="comment">// 依次展开sizenode宏</span></span><br><span class="line">  <span class="comment">// #define twoto(x)	(1&lt;&lt;(x)) </span></span><br><span class="line">  <span class="comment">// #define sizenode(t)	(twoto((t)-&gt;lsizenode))</span></span><br><span class="line">  <span class="comment">// 以上两句就计算Table的哈希表的长度,lszienode记录的是以2为基的次数</span></span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">hashmod</span>(t, a[<span class="number">0</span>]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>hashstr注释</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里使用String的hash值直接根据哈希列表的长度求模得出索引</span></span><br><span class="line"><span class="comment">// gnode根据索引得到节点</span></span><br><span class="line"><span class="comment">// 这里需要注意的第一地方是使用了&amp;代替求模，这个可以自行科普一下</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> lmod(s,size) \</span></span><br><span class="line"><span class="meta">	(check_exp((size&amp;(size-1))==0, (cast(int, (s) &amp; ((size)-1)))))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> hashpow2(t,n)      (gnode(t, lmod((n), sizenode(t))))</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> hashstr(t,str)  hashpow2(t, (str)-&gt;tsv.hash)</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>mainposition注释</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里需要注意的是TValue包含了Lua中表示的所有类型</span></span><br><span class="line"><span class="comment">// 这里返回的是Node的指针,也就是哈希列表中的节点地址</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Node *<span class="title">mainposition</span> <span class="params">(<span class="keyword">const</span> Table *t, <span class="keyword">const</span> TValue *key)</span> </span>&#123;</span><br><span class="line">  <span class="built_in"><span class="keyword">switch</span></span> (<span class="built_in">ttype</span>(key)) &#123;</span><br><span class="line">    <span class="keyword">case</span> LUA_TNUMBER:</span><br><span class="line">      <span class="comment">// 参见上面的注释</span></span><br><span class="line">      <span class="comment">// #define nvalue(o)	check_exp(ttisnumber(o), (o)-&gt;value.n)</span></span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashnum</span>(t, <span class="built_in">nvalue</span>(key));</span><br><span class="line">    <span class="keyword">case</span> LUA_TSTRING:</span><br><span class="line">      <span class="comment">// 参见上面注释</span></span><br><span class="line">      <span class="comment">// #define rawtsvalue(o)	check_exp(ttisstring(o), &amp;(o)-&gt;value.gc-&gt;ts)</span></span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashstr</span>(t, <span class="built_in">rawtsvalue</span>(key));</span><br><span class="line">    <span class="keyword">case</span> LUA_TBOOLEAN:</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashboolean</span>(t, <span class="built_in">bvalue</span>(key));</span><br><span class="line">    <span class="keyword">case</span> LUA_TLIGHTUSERDATA:</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashpointer</span>(t, <span class="built_in">pvalue</span>(key));</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashpointer</span>(t, <span class="built_in">gcvalue</span>(key));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="newkey的使用"><a href="#newkey的使用" class="headerlink" title="newkey的使用"></a>newkey的使用</h4><ul>
+<li>我们以luaH_setnum函数为例来看看newkey函数的使用</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">TValue *<span class="title">luaH_setnum</span> <span class="params">(lua_State *L, Table *t, <span class="keyword">int</span> key)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 先去查询一下这个key的节点是否存在(重点)</span></span><br><span class="line">  <span class="keyword">const</span> TValue *p = <span class="built_in">luaH_getnum</span>(t, key);</span><br><span class="line">  <span class="keyword">if</span> (p != luaO_nilobject)</span><br><span class="line">    <span class="comment">// 存在则直接返回这个节点,cast是去const</span></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">cast</span>(TValue *, p);</span><br><span class="line">  <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 这里将int的key转换成Lua内部使用TValue</span></span><br><span class="line">    <span class="comment">// #define setnvalue(obj,x) \</span></span><br><span class="line"><span class="comment">    //     &#123; TValue *i_o=(obj); i_o-&gt;value.n=(x); i_o-&gt;tt=LUA_TNUMBER; &#125;</span></span><br><span class="line">    TValue k;</span><br><span class="line">    <span class="built_in">setnvalue</span>(&amp;k, <span class="built_in">cast_num</span>(key));</span><br><span class="line">    <span class="comment">// 进行一次newkey的操作</span></span><br><span class="line">    <span class="comment">// 这里要注意的是有可能引发rehash操作，对数组和哈希列表进行扩容</span></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">newkey</span>(L, t, &amp;k);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>luaH_getnum函数得到节点(数组部分或者哈希列表部分)<br>有人问如何使用Table的数组部分或者哈希部分，主要是通过luaH_getnum函数决定是使用数组部分还是哈希列表部分</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">const</span> TValue *<span class="title">luaH_getnum</span> <span class="params">(Table *t, <span class="keyword">int</span> key)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 先查找数组部分如果是直接返回数组部分</span></span><br><span class="line">  <span class="comment">// 所以在使用lua时优先使用数组</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">cast</span>(<span class="keyword">unsigned</span> <span class="keyword">int</span>, key<span class="number">-1</span>) &lt; <span class="built_in">cast</span>(<span class="keyword">unsigned</span> <span class="keyword">int</span>, t-&gt;sizearray))</span><br><span class="line">    <span class="keyword">return</span> &amp;t-&gt;array[key<span class="number">-1</span>];</span><br><span class="line">  <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 转换成Lua内部内省lua_Number</span></span><br><span class="line">    lua_Number nk = <span class="built_in">cast_num</span>(key);</span><br><span class="line">    Node *n = <span class="built_in">hashnum</span>(t, nk);</span><br><span class="line">    <span class="keyword">do</span> &#123;  </span><br><span class="line">      <span class="comment">// 首先做类型判断然后判断Key的值是否相等</span></span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">ttisnumber</span>(<span class="built_in">gkey</span>(n)) &amp;&amp; <span class="built_in">luai_numeq</span>(<span class="built_in">nvalue</span>(<span class="built_in">gkey</span>(n)), nk))</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">gval</span>(n);</span><br><span class="line">      <span class="keyword">else</span> n = <span class="built_in">gnext</span>(n);</span><br><span class="line">    &#125; <span class="keyword">while</span> (n);</span><br><span class="line">    <span class="keyword">return</span> luaO_nilobject;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/lua/" rel="tag"># lua</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81/" rel="tag"># 源码</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/197173b7.html" rel="prev" title="Lua源码笔记(1)--对数计算">
+      <i class="fa fa-chevron-left"></i> Lua源码笔记(1)--对数计算
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/b511d6ac.html" rel="next" title="Lua源码笔记(3)--Table的rehash">
+      Lua源码笔记(3)--Table的rehash <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#newkey%E5%87%BD%E6%95%B0%E5%88%86%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">newkey函数分析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#mainposition%E5%87%BD%E6%95%B0%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">mainposition函数分析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#newkey%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">newkey的使用</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术的朝圣之旅</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
