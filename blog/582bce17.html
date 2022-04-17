@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="模拟电路的基本组件之一就是RLC,对RLC的特性总结有利于对后续分析电路中涉及RLC的部分都基础性的认识,但这又是难点,后续看不懂的电路的时候又要回过头来看这一部分的笔记,因此这一部分的内容是根据我自己的理解进行记录的;这个笔记内容开场时从认识信号开始,讲述电容和电感的特性,然后在总结电阻,电容和电感的各种组合电路的基本特征。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="电子02-RLC从简单到复杂">
+<meta property="og:url" content="https://dengwenyi88.github.io/blog/582bce17.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="模拟电路的基本组件之一就是RLC,对RLC的特性总结有利于对后续分析电路中涉及RLC的部分都基础性的认识,但这又是难点,后续看不懂的电路的时候又要回过头来看这一部分的笔记,因此这一部分的内容是根据我自己的理解进行记录的;这个笔记内容开场时从认识信号开始,讲述电容和电感的特性,然后在总结电阻,电容和电感的各种组合电路的基本特征。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/%E4%BF%A1%E5%8F%B7%E7%9A%84%E5%90%88%E6%88%90.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/%E4%BF%A1%E5%8F%B7%E7%9A%84%E8%BF%87%E6%BB%A4.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/%E7%94%B5%E5%AE%B9%E7%9A%84%E4%B8%B2%E8%81%94%E5%92%8C%E5%B9%B6%E8%81%94.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/%E6%97%A0%E6%BA%90%E9%AB%98%E9%80%9A%E6%BB%A4%E6%B3%A2%E5%99%A8.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/%E6%97%A0%E6%BA%90%E4%BD%8E%E9%80%9A%E6%BB%A4%E6%B3%A2%E5%99%A8.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/RL%E4%BD%8E%E9%80%9A%E6%BB%A4%E6%B3%A2%E5%99%A8.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/RL%E9%AB%98%E9%80%9A%E6%BB%A4%E6%B3%A2%E5%99%A8.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/LC%E5%B9%B6%E8%81%94%E7%94%B5%E8%B7%AF.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/LC%E4%B8%B2%E8%81%94%E7%94%B5%E8%B7%AF.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/RLC%E7%94%B5%E8%B7%AF.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/%E7%94%B5%E9%98%BB%E8%AF%86%E5%88%AB.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/%E7%94%B5%E5%AE%B9%E8%AF%86%E5%88%AB.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/582bce17/%E7%94%B5%E6%84%9F%E8%AF%86%E5%88%AB.png">
+<meta property="article:published_time" content="2022-04-16T11:50:00.000Z">
+<meta property="article:modified_time" content="2022-04-17T04:36:41.116Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="高频">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dengwenyi88.github.io/blog/582bce17/%E4%BF%A1%E5%8F%B7%E7%9A%84%E5%90%88%E6%88%90.png">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/blog/582bce17.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>电子02-RLC从简单到复杂 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/582bce17.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          电子02-RLC从简单到复杂
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-04-16 19:50:00" itemprop="dateCreated datePublished" datetime="2022-04-16T19:50:00+08:00">2022-04-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-17 12:36:41" itemprop="dateModified" datetime="2022-04-17T12:36:41+08:00">2022-04-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8/%E7%94%B5%E5%AD%90%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">电子技术</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>模拟电路的基本组件之一就是RLC,对RLC的特性总结有利于对后续分析电路中涉及RLC的部分都基础性的认识,但这又是难点,后续看不懂的电路的时候又要回过头来看这一部分的笔记,因此这一部分的内容是根据我自己的理解进行记录的;这个笔记内容开场时从认识信号开始,讲述电容和电感的特性,然后在总结电阻,电容和电感的各种组合电路的基本特征。<span id="more"></span>在实际电路中,高频电路部分的组合会更加复杂;最后附录对实际识别电阻的方法以及电容电感的一些特殊重点进行记录。</p>
+</blockquote>
+<h4 id="1-信号的组成"><a href="#1-信号的组成" class="headerlink" title="1. 信号的组成"></a>1. 信号的组成</h4><p>说起低频电子线路和高频电子线路,刚开始接触的时候不知道放大的是什么,一直说电流放大或者电压放大的时候,忘记了电信号的本质,我个人理解的电信号包括两个方面的内容,一个是信号电压的幅值,一个是信号的频率,我们讲信号的加法或者减法就是从这个信号特征中去处理。如下图所示就一目了然了:</p>
+<ul>
+<li>信号的合成,就是一个电压V1,频率200Hz和一个电压V2,频率2000Hz的两个信号合成.<img src="/blog/582bce17/%E4%BF%A1%E5%8F%B7%E7%9A%84%E5%90%88%E6%88%90.png" class="" title="信号的合成"></li>
+<li>信号的过滤,就是一个信号包含电压幅度和频率,通过一个高通过滤器,允许2000Hz的频率通过,过滤掉低的频率:<img src="/blog/582bce17/%E4%BF%A1%E5%8F%B7%E7%9A%84%E8%BF%87%E6%BB%A4.png" class="" title="信号的过滤">
+</li>
+</ul>
+<h4 id="2-RLC特性总结"><a href="#2-RLC特性总结" class="headerlink" title="2. RLC特性总结"></a>2. RLC特性总结</h4><p>电阻,电容和电感的阻值统称为阻抗</p>
+<ul>
+<li><p>电容(C)<br>本质公式是 $ I = C\frac{dV}{dt} $(就是一个电压对时间的求导)<br>阻抗计算公式 $ X_c = \frac{1}{2{\pi}fC} $;根据公式可知阻抗值是随频率变化而变化的,频率变化越快,阻抗越小,所以隔直流通交流(直流几乎没有频率)<br><strong>电容的单位是F(法)</strong><br>电容的串联和并联计算是和电阻相反的:</p>
+<img src="/blog/582bce17/%E7%94%B5%E5%AE%B9%E7%9A%84%E4%B8%B2%E8%81%94%E5%92%8C%E5%B9%B6%E8%81%94.png" class="" title="电容的串联和并联">
+</li>
+<li><p>电感(L)<br>本质公式是 $V = L\frac{dI}{dt} $,<br>阻抗计算公式 $X_L = 2{\pi}fL $;根据公式可知频率越高阻抗越高,所以本质上隔交流通直流.<br><strong>电感的单位是H(亨利)</strong></p>
+</li>
+<li><p>电阻<br>电阻中最大的一个应用就是有一种可变电阻,附录中将说明认识电阻和贴片电阻的方法,以备查阅。</p>
+</li>
+</ul>
+<h4 id="3-RLC的各种组合"><a href="#3-RLC的各种组合" class="headerlink" title="3. RLC的各种组合"></a>3. RLC的各种组合</h4><h5 id="RC的两种组合"><a href="#RC的两种组合" class="headerlink" title="RC的两种组合"></a>RC的两种组合</h5><ul>
+<li><p>无源高通滤波器<br>这种滤波器的截止频率计算公式是 $f_c = \frac{1}{2{\pi}RC}$;也就是低于这个频率的信号将被过滤。<br>注意下图中的的 $A_v = \frac{V_o}{V_i} $ 是电压放大倍数,这就是我在第一节信号讲的将信号的电压放大一定的倍数,在电路分析中常用分贝来表示,我觉得不直观。</p>
+<img src="/blog/582bce17/%E6%97%A0%E6%BA%90%E9%AB%98%E9%80%9A%E6%BB%A4%E6%B3%A2%E5%99%A8.png" class="" title="无源高通滤波器"></li>
+<li><p>无源低通滤波器<br>这个滤波器和高通滤波器就是电阻和电容的位置互换,导致高于某个频率的信号被过滤.</p>
+<img src="/blog/582bce17/%E6%97%A0%E6%BA%90%E4%BD%8E%E9%80%9A%E6%BB%A4%E6%B3%A2%E5%99%A8.png" class="" title="无源低通滤波器">
+<h5 id="RL的两种组合"><a href="#RL的两种组合" class="headerlink" title="RL的两种组合"></a>RL的两种组合</h5><ul>
+<li>RL低通滤波器<br>这种低通滤波器就是让低的频率通过,高于截止频率的信号过滤掉,公式 $f_c = \frac{R}{2{\pi}L}$,结合RC高通滤波器看,L的位置和RC的低通滤波器中电容的位置一样,但功能相反<img src="/blog/582bce17/RL%E4%BD%8E%E9%80%9A%E6%BB%A4%E6%B3%A2%E5%99%A8.png" class="" title="RL低通滤波器"></li>
+<li>RL高通滤波器<br>电感的特性就是频率越高,在电路中近似开路<img src="/blog/582bce17/RL%E9%AB%98%E9%80%9A%E6%BB%A4%E6%B3%A2%E5%99%A8.png" class="" title="RL高通滤波器">
+</li>
+</ul>
+<h5 id="LC的两种组合"><a href="#LC的两种组合" class="headerlink" title="LC的两种组合"></a>LC的两种组合</h5><ul>
+<li>LC并联电路<br>LC并联电路允许频率等于谐振频率$f_0$的信号通过,而衰减频率不等于谐振频率$f_0$的信号。<br>截止频率的计算公式是 $f_0 = \frac{1}{2{\pi}\sqrt{LC}}$<img src="/blog/582bce17/LC%E5%B9%B6%E8%81%94%E7%94%B5%E8%B7%AF.png" class="" title="LC并联电路"></li>
+<li>LC串联电路<br>LC串联电路正好和并联电路相反，起到过滤谐振频率$f_0$的作用<img src="/blog/582bce17/LC%E4%B8%B2%E8%81%94%E7%94%B5%E8%B7%AF.png" class="" title="LC串联电路">
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="4-RLC电路总结"><a href="#4-RLC电路总结" class="headerlink" title="4. RLC电路总结"></a>4. RLC电路总结</h4><p>总的来说RLC电路因为电容和电感的阻抗都跟频率有关,所以这个是RLC电路最本质的特征,阻抗变化导致电压和电流的关系不是直接的线性关系;所以有两个特征表明RLC的一些特征,一个是品质因数(Q),Q是阻抗和电阻的比值,Q值越高,阻抗可以达到的值越高，频率的选择性越好;但有一个相反的指标就是带宽(BW),公式是 $BW = \frac{f_0}{Q} $;这个公式说明谐振频率固定的情况,Q值越大带宽越小,我以前并不清楚这个BW导致有什么作用,不过结合第一节信号的理解,能得出一个结论就是调制和解调信号时,信号必须具备一点的范围,但跟频率的选择性成反比,如下图做一个总结:<br>    <img src="/blog/582bce17/RLC%E7%94%B5%E8%B7%AF.png" class="" title="RLC电路"></p>
+<h4 id="5-附录识别RLC"><a href="#5-附录识别RLC" class="headerlink" title="5. 附录识别RLC"></a>5. 附录识别RLC</h4><ul>
+<li>5色环的电阻识别方式摘录一下已备查询<img src="/blog/582bce17/%E7%94%B5%E9%98%BB%E8%AF%86%E5%88%AB.png" class="" title="电阻识别"></li>
+<li>电容是直接标注容量<img src="/blog/582bce17/%E7%94%B5%E5%AE%B9%E8%AF%86%E5%88%AB.png" class="" title="电容识别"></li>
+<li>电感类似电阻的识别方法<img src="/blog/582bce17/%E7%94%B5%E6%84%9F%E8%AF%86%E5%88%AB.png" class="" title="电感识别">
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%AB%98%E9%A2%91/" rel="tag"># 高频</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/1aa41b55.html" rel="prev" title="电子01-复数数学基础">
+      <i class="fa fa-chevron-left"></i> 电子01-复数数学基础
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E4%BF%A1%E5%8F%B7%E7%9A%84%E7%BB%84%E6%88%90"><span class="nav-number">1.</span> <span class="nav-text">1. 信号的组成</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-RLC%E7%89%B9%E6%80%A7%E6%80%BB%E7%BB%93"><span class="nav-number">2.</span> <span class="nav-text">2. RLC特性总结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-RLC%E7%9A%84%E5%90%84%E7%A7%8D%E7%BB%84%E5%90%88"><span class="nav-number">3.</span> <span class="nav-text">3. RLC的各种组合</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#RC%E7%9A%84%E4%B8%A4%E7%A7%8D%E7%BB%84%E5%90%88"><span class="nav-number">3.1.</span> <span class="nav-text">RC的两种组合</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#RL%E7%9A%84%E4%B8%A4%E7%A7%8D%E7%BB%84%E5%90%88"><span class="nav-number">3.2.</span> <span class="nav-text">RL的两种组合</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#LC%E7%9A%84%E4%B8%A4%E7%A7%8D%E7%BB%84%E5%90%88"><span class="nav-number">3.3.</span> <span class="nav-text">LC的两种组合</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-RLC%E7%94%B5%E8%B7%AF%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">4. RLC电路总结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E9%99%84%E5%BD%95%E8%AF%86%E5%88%ABRLC"><span class="nav-number">5.</span> <span class="nav-text">5. 附录识别RLC</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术的朝圣之旅</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

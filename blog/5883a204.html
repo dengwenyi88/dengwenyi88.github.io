@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="本文剖析Table的实现(ltable.c),对Lua中Table的创建做了详细的注释;首先说明Table的定义以及创建过程;然后在Table创建一个新的键值;重点阐述了table的数组部分和哈希部分的扩容。这里重点分析table表的新键值的插入以及table的空间扩展.这里的空间扩展势必导致重新哈希;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lua5.4.3源码剖析02-Table的实现">
+<meta property="og:url" content="https://dengwenyi88.github.io/blog/5883a204.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="本文剖析Table的实现(ltable.c),对Lua中Table的创建做了详细的注释;首先说明Table的定义以及创建过程;然后在Table创建一个新的键值;重点阐述了table的数组部分和哈希部分的扩容。这里重点分析table表的新键值的插入以及table的空间扩展.这里的空间扩展势必导致重新哈希;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-04-12T11:30:00.000Z">
+<meta property="article:modified_time" content="2022-04-16T11:44:46.167Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="lua">
+<meta property="article:tag" content="源码">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/blog/5883a204.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Lua5.4.3源码剖析02-Table的实现 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/5883a204.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Lua5.4.3源码剖析02-Table的实现
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-04-12 19:30:00" itemprop="dateCreated datePublished" datetime="2022-04-12T19:30:00+08:00">2022-04-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-16 19:44:46" itemprop="dateModified" datetime="2022-04-16T19:44:46+08:00">2022-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%9F%BA%E7%A1%80/Lua/" itemprop="url" rel="index"><span itemprop="name">Lua</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>本文剖析Table的实现(ltable.c),对Lua中Table的创建做了详细的注释;首先说明Table的定义以及创建过程;然后在Table创建一个新的键值;重点阐述了table的数组部分和哈希部分的扩容。这里重点分析table表的新键值的插入以及table的空间扩展.这里的空间扩展势必导致重新哈希;<span id="more"></span>这里与前一个版本相比,针对不同的类型键值哈希的分类更加详细;参见mainposition函数的分析;以此引发了设置键值和获得键值对的修改。</p>
+</blockquote>
+<h4 id="1-Table的定义"><a href="#1-Table的定义" class="headerlink" title="1. Table的定义"></a>1. Table的定义</h4><ul>
+<li>表结构定义注释<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">Table</span> &#123;</span></span><br><span class="line">  CommonHeader;</span><br><span class="line">  lu_byte flags;        <span class="comment">// metatable的元方法是否存在的标记</span></span><br><span class="line">  lu_byte lsizenode;    <span class="comment">// 哈希表的对数底长度(node成员)</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> alimit;  <span class="comment">// 下面array数组的长度  </span></span><br><span class="line">  TValue *array;        <span class="comment">// 这里是Table的数组部分</span></span><br><span class="line">  Node *node;           <span class="comment">// 哈希部分的首元素</span></span><br><span class="line">  Node *lastfree;       <span class="comment">// 哈希部分的最后一个元素</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">Table</span> *<span class="title">metatable</span>;</span>  <span class="comment">// 表的元方法</span></span><br><span class="line">  GCObject *gclist;</span><br><span class="line">&#125; Table;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Node结构说明</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">union</span> <span class="title">Node</span> &#123;</span></span><br><span class="line">  <span class="comment">// 这个结构主要是给哈希表部分使用的</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">NodeKey</span> &#123;</span></span><br><span class="line">    TValuefields;  <span class="comment">/* fields for value */</span></span><br><span class="line">    lu_byte key_tt;  <span class="comment">/* key type */</span></span><br><span class="line">    <span class="keyword">int</span> next;       <span class="comment">//前一个元素到当前节点的距离</span></span><br><span class="line">    Value key_val;  <span class="comment">/* key value */</span></span><br><span class="line">  &#125; u;</span><br><span class="line">  <span class="comment">// 给数组部分使用的</span></span><br><span class="line">  TValue i_val;  </span><br><span class="line">&#125; Node;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h5 id="Tabel的创建"><a href="#Tabel的创建" class="headerlink" title="* Tabel的创建"></a>* Tabel的创建</h5><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Table *<span class="title">luaH_new</span> <span class="params">(lua_State *L)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// #define LUA_VTABLE	makevariant(LUA_TTABLE, 0)</span></span><br><span class="line">  <span class="comment">// 就是Table的基础类型LUA_TTABLE</span></span><br><span class="line">  GCObject *o = <span class="built_in">luaC_newobj</span>(L, LUA_VTABLE, <span class="built_in"><span class="keyword">sizeof</span></span>(Table));</span><br><span class="line">  Table *t = <span class="built_in">gco2t</span>(o);</span><br><span class="line">  t-&gt;metatable = <span class="literal">NULL</span>;</span><br><span class="line">  t-&gt;flags = <span class="built_in">cast_byte</span>(maskflags);  <span class="comment">/* table has no metamethod fields */</span></span><br><span class="line">  t-&gt;array = <span class="literal">NULL</span>;</span><br><span class="line">  t-&gt;alimit = <span class="number">0</span>;</span><br><span class="line">  <span class="comment">// setnodevector函数将哈希部分的初始化</span></span><br><span class="line">  <span class="comment">// t-&gt;node = cast(Node *, dummynode); node初始化为dummynode</span></span><br><span class="line">  <span class="comment">// t-&gt;lsizenode = 0; 哈希部分长度为0</span></span><br><span class="line">  <span class="built_in">setnodevector</span>(L, t, <span class="number">0</span>);</span><br><span class="line">  <span class="keyword">return</span> t;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="创建新KEY"><a href="#创建新KEY" class="headerlink" title="* 创建新KEY"></a>* 创建新KEY</h5><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">luaH_newkey</span> <span class="params">(lua_State *L, Table *t, <span class="keyword">const</span> TValue *key, TValue *value)</span> </span>&#123;</span><br><span class="line">  Node *mp;</span><br><span class="line">  TValue aux;</span><br><span class="line">  <span class="comment">// ... </span></span><br><span class="line">  <span class="comment">// 省略一些代码</span></span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// 找到这个key的哈希位置</span></span><br><span class="line">  mp = <span class="built_in">mainpositionTV</span>(t, key);</span><br><span class="line">  <span class="keyword">if</span> (!<span class="built_in">isempty</span>(<span class="built_in">gval</span>(mp)) || <span class="built_in">isdummy</span>(t)) &#123;  <span class="comment">/* main position is taken? */</span></span><br><span class="line">    Node *othern;</span><br><span class="line">    <span class="comment">// 找到一个空闲位置</span></span><br><span class="line">    <span class="comment">// 参见下一节(新KEY的位置)</span></span><br><span class="line">    Node *f = <span class="built_in">getfreepos</span>(t);  <span class="comment">/* get a free place */</span></span><br><span class="line">    <span class="keyword">if</span> (f == <span class="literal">NULL</span>) &#123;  <span class="comment">/* cannot find a free place? */</span></span><br><span class="line">      <span class="comment">// 没有空闲位置时则扩展Table表的空间</span></span><br><span class="line">      <span class="built_in">rehash</span>(L, t, key);  <span class="comment">/* grow table */</span></span><br><span class="line">      <span class="comment">/* whatever called &#x27;newkey&#x27; takes care of TM cache */</span></span><br><span class="line">      <span class="built_in">luaH_set</span>(L, t, key, value);  <span class="comment">/* insert key into grown table */</span></span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 空闲位置不为空的情况</span></span><br><span class="line">    <span class="built_in">lua_assert</span>(!<span class="built_in">isdummy</span>(t));</span><br><span class="line">    <span class="comment">// 找到这个mp节点实际的哈希位置(mp节点实际是借用这个位置)</span></span><br><span class="line">    <span class="comment">// 参见下一节(新KEY的位置)</span></span><br><span class="line">    othern = <span class="built_in">mainposition</span>(t, <span class="built_in">keytt</span>(mp), &amp;<span class="built_in">keyval</span>(mp));</span><br><span class="line">    <span class="comment">// 两个节点不相同时那么mp是借用了othern节点的位置</span></span><br><span class="line">    <span class="comment">// 所以mp必须要搬到空闲位置f上去</span></span><br><span class="line">    <span class="comment">// mp节点就是需要设置的最终节点</span></span><br><span class="line">    <span class="keyword">if</span> (othern != mp) &#123;  <span class="comment">/* is colliding node out of its main position? */</span></span><br><span class="line">      <span class="comment">/* yes; move colliding node into free position */</span></span><br><span class="line">      <span class="comment">// 找到mp的前一个节点</span></span><br><span class="line">      <span class="keyword">while</span> (othern + <span class="built_in">gnext</span>(othern) != mp)  <span class="comment">/* find previous */</span></span><br><span class="line">        othern += <span class="built_in">gnext</span>(othern);</span><br><span class="line">      <span class="comment">// mp的前一个节点现在是othern了</span></span><br><span class="line">      <span class="comment">// 重新将f设置为othern的下一个节点</span></span><br><span class="line">      <span class="built_in">gnext</span>(othern) = <span class="built_in">cast_int</span>(f - othern);  <span class="comment">/* rechain to point to &#x27;f&#x27; */</span></span><br><span class="line">      <span class="comment">// 将原来mp的内容赋予f节点,让出mp节点</span></span><br><span class="line">      *f = *mp;  <span class="comment">/* copy colliding node into free pos. (mp-&gt;next also goes) */</span></span><br><span class="line">      <span class="comment">// mp节点的下一个节点链接到f上</span></span><br><span class="line">      <span class="comment">// cast_int(mp - f)</span></span><br><span class="line">      <span class="comment">// 意思是f的next在上面已经赋值为mp的next(*f = *mp)</span></span><br><span class="line">      <span class="comment">// 但是mp地址和f地址还有一些差额要增加到f的next上</span></span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">gnext</span>(mp) != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">gnext</span>(f) += <span class="built_in">cast_int</span>(mp - f);  <span class="comment">/* correct &#x27;next&#x27; */</span></span><br><span class="line">        <span class="built_in">gnext</span>(mp) = <span class="number">0</span>;  <span class="comment">/* now &#x27;mp&#x27; is free */</span></span><br><span class="line">      &#125;</span><br><span class="line">      <span class="built_in">setempty</span>(<span class="built_in">gval</span>(mp));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;  <span class="comment">/* colliding node is in its own main position */</span></span><br><span class="line">      <span class="comment">/* new node will go into free position */</span></span><br><span class="line">      <span class="comment">// othern和mp是同一个节点</span></span><br><span class="line">      <span class="comment">// 所以只要把mp链接到f节点上</span></span><br><span class="line">      <span class="comment">// 将mp设置为f节点</span></span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">gnext</span>(mp) != <span class="number">0</span>)</span><br><span class="line">        <span class="built_in">gnext</span>(f) = <span class="built_in">cast_int</span>((mp + <span class="built_in">gnext</span>(mp)) - f);  <span class="comment">/* chain new position */</span></span><br><span class="line">      <span class="keyword">else</span> <span class="built_in">lua_assert</span>(<span class="built_in">gnext</span>(f) == <span class="number">0</span>);</span><br><span class="line">      <span class="comment">// 补上f节点到mp节点的差额</span></span><br><span class="line">      <span class="built_in">gnext</span>(mp) = <span class="built_in">cast_int</span>(f - mp);</span><br><span class="line">      mp = f;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">setnodekey</span>(L, mp, key);</span><br><span class="line">  <span class="built_in">luaC_barrierback</span>(L, <span class="built_in">obj2gco</span>(t), key);</span><br><span class="line">  <span class="built_in">lua_assert</span>(<span class="built_in">isempty</span>(<span class="built_in">gval</span>(mp)));</span><br><span class="line">  <span class="built_in">setobj2t</span>(L, <span class="built_in">gval</span>(mp), value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="新KEY的位置"><a href="#新KEY的位置" class="headerlink" title="* 新KEY的位置"></a>* 新KEY的位置</h5><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获得一个空间位置</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Node *<span class="title">getfreepos</span> <span class="params">(Table *t)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (!<span class="built_in">isdummy</span>(t)) &#123;</span><br><span class="line">    <span class="comment">// t-&gt;node是一个数组</span></span><br><span class="line">    <span class="keyword">while</span> (t-&gt;lastfree &gt; t-&gt;node) &#123;</span><br><span class="line">      t-&gt;lastfree--;</span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">keyisnil</span>(t-&gt;lastfree))</span><br><span class="line">        <span class="keyword">return</span> t-&gt;lastfree;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">NULL</span>;  <span class="comment">/* could not find a free place */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 计算key的哈希值</span></span><br><span class="line"><span class="comment">// ktt是键的类型</span></span><br><span class="line"><span class="comment">// kvl是键的值</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Node *<span class="title">mainposition</span> <span class="params">(<span class="keyword">const</span> Table *t, <span class="keyword">int</span> ktt, <span class="keyword">const</span> Value *kvl)</span> </span>&#123;</span><br><span class="line">  <span class="built_in"><span class="keyword">switch</span></span> (<span class="built_in">withvariant</span>(ktt)) &#123;</span><br><span class="line">    <span class="keyword">case</span> LUA_VNUMINT: &#123;</span><br><span class="line">      lua_Integer key = <span class="built_in">ivalueraw</span>(*kvl);</span><br><span class="line">      <span class="comment">// int类型的hash算法</span></span><br><span class="line">      <span class="comment">// key % lsizenode</span></span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashint</span>(t, key);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">case</span> LUA_VNUMFLT: &#123;</span><br><span class="line">      lua_Number n = <span class="built_in">fltvalueraw</span>(*kvl);</span><br><span class="line">      <span class="comment">// 参见l_hashfloat实现</span></span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashmod</span>(t, <span class="built_in">l_hashfloat</span>(n));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">case</span> LUA_VSHRSTR: &#123;</span><br><span class="line">      TString *ts = <span class="built_in">tsvalueraw</span>(*kvl);</span><br><span class="line">      <span class="comment">// 利用ts-&gt;hash作为key</span></span><br><span class="line">      <span class="comment">// ts-&gt;hash % lszienode</span></span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashstr</span>(t, ts);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">case</span> LUA_VLNGSTR: &#123;</span><br><span class="line">      TString *ts = <span class="built_in">tsvalueraw</span>(*kvl);</span><br><span class="line">      <span class="comment">// ts-&gt;hash % lszienode</span></span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashpow2</span>(t, <span class="built_in">luaS_hashlongstr</span>(ts));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">case</span> LUA_VFALSE:</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashboolean</span>(t, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">case</span> LUA_VTRUE:</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashboolean</span>(t, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">case</span> LUA_VLIGHTUSERDATA: &#123;</span><br><span class="line">      <span class="keyword">void</span> *p = <span class="built_in">pvalueraw</span>(*kvl);</span><br><span class="line">      <span class="comment">// #define hashpointer(t,p)	hashmod(t, point2uint(p))</span></span><br><span class="line">      <span class="comment">// p地址转换成int值</span></span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashpointer</span>(t, p);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">case</span> LUA_VLCF: &#123;</span><br><span class="line">      lua_CFunction f = <span class="built_in">fvalueraw</span>(*kvl);</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashpointer</span>(t, f);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">default</span>: &#123;</span><br><span class="line">      GCObject *o = <span class="built_in">gcvalueraw</span>(*kvl);</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">hashpointer</span>(t, o);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="2-Table的空间扩展"><a href="#2-Table的空间扩展" class="headerlink" title="2. Table的空间扩展"></a>2. Table的空间扩展</h4><h5 id="重新哈希"><a href="#重新哈希" class="headerlink" title="* 重新哈希"></a>* 重新哈希</h5><blockquote>
+<p>在luaH_newkey函数中,当没有可用节点时将会调用rehash函数;rehash函数将重新分配数组部分和哈希部分的长度</p>
+</blockquote>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">rehash</span> <span class="params">(lua_State *L, Table *t, <span class="keyword">const</span> TValue *ek)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> asize;  <span class="comment">/* optimal size for array part */</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> na;  <span class="comment">/* number of keys in the array part */</span></span><br><span class="line">  <span class="comment">// MAXABITS这里的值设定为系统的int值宽度*8 -1</span></span><br><span class="line">  <span class="comment">// #define MAXABITS	cast_int(sizeof(int) * CHAR_BIT - 1)</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> nums[MAXABITS + <span class="number">1</span>];</span><br><span class="line">  <span class="keyword">int</span> i;</span><br><span class="line">  <span class="keyword">int</span> totaluse;</span><br><span class="line">  <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt;= MAXABITS; i++) nums[i] = <span class="number">0</span>;  <span class="comment">/* reset counts */</span></span><br><span class="line">  <span class="built_in">setlimittosize</span>(t);</span><br><span class="line">  <span class="comment">// totaluse 是数组已用节点数量和哈希列表已用节点数量之和</span></span><br><span class="line">  <span class="comment">// na是数组的节点数量统计;在computesizes函数中会重新计算</span></span><br><span class="line">  <span class="comment">// nums是分片统计的节点数量</span></span><br><span class="line">  <span class="comment">// 计算数组部分的key数量</span></span><br><span class="line">  na = <span class="built_in">numusearray</span>(t, nums);  <span class="comment">/* count keys in array part */</span></span><br><span class="line">  totaluse = na;  <span class="comment">/* all those keys are integer keys */</span></span><br><span class="line">  <span class="comment">// 计算哈希部分的key数量</span></span><br><span class="line">  totaluse += <span class="built_in">numusehash</span>(t, nums, &amp;na);  <span class="comment">/* count keys in hash part */</span></span><br><span class="line">  <span class="comment">/* count extra key */</span></span><br><span class="line">  <span class="comment">// 当前未加入的节点ek也要计算进去</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">ttisinteger</span>(ek))</span><br><span class="line">    na += <span class="built_in">countint</span>(<span class="built_in">ivalue</span>(ek), nums);</span><br><span class="line">  totaluse++;</span><br><span class="line">  <span class="comment">/* compute new size for array part */</span></span><br><span class="line">  <span class="comment">// asize是重新计算的数组节点数量(需要的节点长度,大于na)</span></span><br><span class="line">  <span class="comment">// na是重新计算后的实际节点数量</span></span><br><span class="line">  <span class="comment">// 重新计算依赖分片统计值(nums)以及原先的数组已用节点数量(na);算法参见computesizes</span></span><br><span class="line">  asize = <span class="built_in">computesizes</span>(nums, &amp;na);</span><br><span class="line">  <span class="comment">/* resize the table to new computed sizes */</span></span><br><span class="line">  <span class="comment">// 根据新计算的数组长度asize和哈希列表长度(totoaluse -na)重新调整表的节点分布</span></span><br><span class="line">  <span class="comment">// 具体算法参见后续luaH_resize注释</span></span><br><span class="line">  <span class="built_in">luaH_resize</span>(L, t, asize, totaluse - na);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="重新哈希核心算法"><a href="#重新哈希核心算法" class="headerlink" title="* 重新哈希核心算法"></a>* 重新哈希核心算法</h5><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">** Compute the optimal size for the array part of table &#x27;t&#x27;. &#x27;nums&#x27; is a</span></span><br><span class="line"><span class="comment">** &quot;count array&quot; where &#x27;nums[i]&#x27; is the number of integers in the table</span></span><br><span class="line"><span class="comment">** between 2^(i - 1) + 1 and 2^i. &#x27;pna&#x27; enters with the total number of</span></span><br><span class="line"><span class="comment">** integer keys in the table and leaves with the number of keys that</span></span><br><span class="line"><span class="comment">** will go to the array part; return the optimal size.  (The condition</span></span><br><span class="line"><span class="comment">** &#x27;twotoi &gt; 0&#x27; in the for loop stops the loop if &#x27;twotoi&#x27; overflows.)</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">computesizes</span> <span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> nums[], <span class="keyword">unsigned</span> <span class="keyword">int</span> *pna)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> i;</span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> twotoi;  <span class="comment">/* 2^i (candidate for optimal size) */</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> a = <span class="number">0</span>;  <span class="comment">/* number of elements smaller than 2^i */</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> na = <span class="number">0</span>;  <span class="comment">/* number of elements to go to array part */</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> optimal = <span class="number">0</span>;  <span class="comment">/* optimal size for array part */</span></span><br><span class="line">  <span class="comment">/* loop while keys can fill more than half of total size */</span></span><br><span class="line">  <span class="comment">// 我带上了代码的英文注释,需要注意的点</span></span><br><span class="line">  <span class="comment">// twotoi &gt; 0 的判断是为了防止twotoi的溢出</span></span><br><span class="line">  <span class="comment">// i从0开始;0表示区间[2^0 ~ 2^1]</span></span><br><span class="line">  <span class="keyword">for</span> (i = <span class="number">0</span>, twotoi = <span class="number">1</span>;twotoi &gt; <span class="number">0</span> &amp;&amp; *pna &gt; twotoi / <span class="number">2</span>;i++, twotoi *= <span class="number">2</span>) &#123;</span><br><span class="line">    a += nums[i];</span><br><span class="line">    <span class="comment">// a &gt; twotoi/2 表示的是节点数量只要大于总空间的一半</span></span><br><span class="line">    <span class="comment">// 也就是利用率能达到50%就记录一下</span></span><br><span class="line">    <span class="keyword">if</span> (a &gt; twotoi/<span class="number">2</span>) &#123;  <span class="comment">/* more than half elements present? */</span></span><br><span class="line">      optimal = twotoi;  <span class="comment">/* optimal size (till now) */</span></span><br><span class="line">      na = a;  <span class="comment">/* all elements up to &#x27;optimal&#x27; will go to array part */</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">lua_assert</span>((optimal == <span class="number">0</span> || optimal / <span class="number">2</span> &lt; na) &amp;&amp; na &lt;= optimal);</span><br><span class="line">  <span class="comment">// pna重新调整为实际统计的数组节点数量</span></span><br><span class="line">  <span class="comment">// 数组长度为optimal时数组节点数量</span></span><br><span class="line">  *pna = na;</span><br><span class="line">  <span class="keyword">return</span> optimal;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="扩展Table核心算法"><a href="#扩展Table核心算法" class="headerlink" title="* 扩展Table核心算法"></a>* 扩展Table核心算法</h5><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">** Resize table &#x27;t&#x27; for the new given sizes. Both allocations (for</span></span><br><span class="line"><span class="comment">** the hash part and for the array part) can fail, which creates some</span></span><br><span class="line"><span class="comment">** subtleties. If the first allocation, for the hash part, fails, an</span></span><br><span class="line"><span class="comment">** error is raised and that is it. Otherwise, it copies the elements from</span></span><br><span class="line"><span class="comment">** the shrinking part of the array (if it is shrinking) into the new</span></span><br><span class="line"><span class="comment">** hash. Then it reallocates the array part.  If that fails, the table</span></span><br><span class="line"><span class="comment">** is in its original state; the function frees the new hash part and then</span></span><br><span class="line"><span class="comment">** raises the allocation error. Otherwise, it sets the new hash part</span></span><br><span class="line"><span class="comment">** into the table, initializes the new part of the array (if any) with</span></span><br><span class="line"><span class="comment">** nils and reinserts the elements of the old hash back into the new</span></span><br><span class="line"><span class="comment">** parts of the table.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="comment">// newasize数组部分的长度</span></span><br><span class="line"><span class="comment">// nhsize哈希部分的长度</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">luaH_resize</span> <span class="params">(lua_State *L, Table *t, <span class="keyword">unsigned</span> <span class="keyword">int</span> newasize,</span></span></span><br><span class="line"><span class="params"><span class="function">                                          <span class="keyword">unsigned</span> <span class="keyword">int</span> nhsize)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> i;</span><br><span class="line">  Table newt;  <span class="comment">/* to keep the new hash part */</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">int</span> oldasize = <span class="built_in">setlimittosize</span>(t);</span><br><span class="line">  TValue *newarray;</span><br><span class="line">  <span class="comment">/* create new hash part with appropriate size into &#x27;newt&#x27; */</span></span><br><span class="line">  <span class="comment">// 重新创建哈希部分的长度</span></span><br><span class="line">  <span class="comment">// 参见下一节(扩展哈希表核心算法)</span></span><br><span class="line">  <span class="built_in">setnodevector</span>(L, &amp;newt, nhsize);</span><br><span class="line">  <span class="comment">// 数组新长度小于原有长度(缩小)</span></span><br><span class="line">  <span class="keyword">if</span> (newasize &lt; oldasize) &#123;  <span class="comment">/* will array shrink? */</span></span><br><span class="line">    t-&gt;alimit = newasize;  <span class="comment">/* pretend array has new size... */</span></span><br><span class="line">    <span class="comment">// 把t的hash信息保存到newt中</span></span><br><span class="line">    <span class="built_in">exchangehashpart</span>(t, &amp;newt);  <span class="comment">/* and new hash */</span></span><br><span class="line">    <span class="comment">/* re-insert into the new hash the elements from vanishing slice */</span></span><br><span class="line">    <span class="comment">// 如果是缩小的话;把原有的数组多余节点添加到t中</span></span><br><span class="line">    <span class="keyword">for</span> (i = newasize; i &lt; oldasize; i++) &#123;</span><br><span class="line">      <span class="keyword">if</span> (!<span class="built_in">isempty</span>(&amp;t-&gt;array[i]))</span><br><span class="line">        <span class="built_in">luaH_setint</span>(L, t, i + <span class="number">1</span>, &amp;t-&gt;array[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 然后再恢复newt中的哈希列表信息到t中</span></span><br><span class="line">    t-&gt;alimit = oldasize;  <span class="comment">/* restore current size... */</span></span><br><span class="line">    <span class="built_in">exchangehashpart</span>(t, &amp;newt);  <span class="comment">/* and hash (in case of errors) */</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">/* allocate new array */</span></span><br><span class="line">  <span class="comment">// 创建新的数组部分(newarray)</span></span><br><span class="line">  newarray = <span class="built_in">luaM_reallocvector</span>(L, t-&gt;array, oldasize, newasize, TValue);</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">l_unlikely</span>(newarray == <span class="literal">NULL</span> &amp;&amp; newasize &gt; <span class="number">0</span>)) &#123;  <span class="comment">/* allocation failed? */</span></span><br><span class="line">    <span class="built_in">freehash</span>(L, &amp;newt);  <span class="comment">/* release new hash part */</span></span><br><span class="line">    <span class="built_in">luaM_error</span>(L);  <span class="comment">/* raise error (with array unchanged) */</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">/* allocation ok; initialize new part of the array */</span></span><br><span class="line">  <span class="comment">// 把哈希列表部分保存到newt中</span></span><br><span class="line">  <span class="built_in">exchangehashpart</span>(t, &amp;newt);  <span class="comment">/* &#x27;t&#x27; has the new hash (&#x27;newt&#x27; has the old) */</span></span><br><span class="line">  <span class="comment">// t设置新的数组部分</span></span><br><span class="line">  t-&gt;array = newarray;  <span class="comment">/* set new array part */</span></span><br><span class="line">  t-&gt;alimit = newasize;</span><br><span class="line">  <span class="comment">// 数组新扩展的部分县设置为空</span></span><br><span class="line">  <span class="keyword">for</span> (i = oldasize; i &lt; newasize; i++)  <span class="comment">/* clear new slice of the array */</span></span><br><span class="line">     <span class="built_in">setempty</span>(&amp;t-&gt;array[i]);</span><br><span class="line">  <span class="comment">/* re-insert elements from old hash part into new parts */</span></span><br><span class="line">  <span class="comment">// 重新把newt的哈希列表部分的节点插入到t中</span></span><br><span class="line">  <span class="built_in">reinsert</span>(L, &amp;newt, t);  <span class="comment">/* &#x27;newt&#x27; now has the old hash */</span></span><br><span class="line">  <span class="comment">// 释放newt</span></span><br><span class="line">  <span class="built_in">freehash</span>(L, &amp;newt);  <span class="comment">/* free old hash part */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="扩展哈希表核心算法"><a href="#扩展哈希表核心算法" class="headerlink" title="* 扩展哈希表核心算法"></a>* 扩展哈希表核心算法</h5><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// size是哈希表的长度</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setnodevector</span> <span class="params">(lua_State *L, Table *t, <span class="keyword">unsigned</span> <span class="keyword">int</span> size)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 为0时时初始化Table的哈希列表部分</span></span><br><span class="line">  <span class="keyword">if</span> (size == <span class="number">0</span>) &#123;  <span class="comment">/* no elements to hash part? */</span></span><br><span class="line">    <span class="comment">// 初始节点设置为dummynode</span></span><br><span class="line">    <span class="comment">// lsizenode 为 0</span></span><br><span class="line">    t-&gt;node = <span class="built_in">cast</span>(Node *, dummynode);  <span class="comment">/* use common &#x27;dummynode&#x27; */</span></span><br><span class="line">    t-&gt;lsizenode = <span class="number">0</span>;</span><br><span class="line">    t-&gt;lastfree = <span class="literal">NULL</span>;  <span class="comment">/* signal that it is using dummy node */</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="comment">// 先计算size的以2为底的对数值</span></span><br><span class="line">    <span class="keyword">int</span> lsize = <span class="built_in">luaO_ceillog2</span>(size);</span><br><span class="line">    <span class="keyword">if</span> (lsize &gt; MAXHBITS || (<span class="number">1u</span> &lt;&lt; lsize) &gt; MAXHSIZE)</span><br><span class="line">      <span class="built_in">luaG_runerror</span>(L, <span class="string">&quot;table overflow&quot;</span>);</span><br><span class="line">    <span class="comment">// 再计算实际的长度 2^lsize</span></span><br><span class="line">    size = <span class="built_in">twoto</span>(lsize);</span><br><span class="line">    <span class="comment">// node 扩展到size长度(哈希数组)</span></span><br><span class="line">    t-&gt;node = <span class="built_in">luaM_newvector</span>(L, size, Node);</span><br><span class="line">    <span class="comment">// 初始化所有节点 next = 0</span></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; (<span class="keyword">int</span>)size; i++) &#123;</span><br><span class="line">      Node *n = <span class="built_in">gnode</span>(t, i);</span><br><span class="line">      <span class="built_in">gnext</span>(n) = <span class="number">0</span>;</span><br><span class="line">      <span class="built_in">setnilkey</span>(n);</span><br><span class="line">      <span class="built_in">setempty</span>(<span class="built_in">gval</span>(n));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// lsizenode 值为哈希列表长度的对数值</span></span><br><span class="line">    t-&gt;lsizenode = <span class="built_in">cast_byte</span>(lsize);</span><br><span class="line">    <span class="comment">// lastfree为最后一个节点</span></span><br><span class="line">    t-&gt;lastfree = <span class="built_in">gnode</span>(t, size);  <span class="comment">/* all positions are free */</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="用到的辅助函数"><a href="#用到的辅助函数" class="headerlink" title="* 用到的辅助函数"></a>* 用到的辅助函数</h5><p>上述扩展空间的函数用到两个关键的函数,一个是备份还原哈希列表信息函数(exchangehashpart);一个是重新将哈希节点信息插入另外一张Table中(reinsert)</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">** Exchange the hash part of &#x27;t1&#x27; and &#x27;t2&#x27;.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">exchangehashpart</span> <span class="params">(Table *t1, Table *t2)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// t1的哈希列表信息临时保存</span></span><br><span class="line">  lu_byte lsizenode = t1-&gt;lsizenode;</span><br><span class="line">  Node *node = t1-&gt;node;</span><br><span class="line">  Node *lastfree = t1-&gt;lastfree;</span><br><span class="line">  <span class="comment">// t2的哈希列表信息设置给t1</span></span><br><span class="line">  t1-&gt;lsizenode = t2-&gt;lsizenode;</span><br><span class="line">  t1-&gt;node = t2-&gt;node;</span><br><span class="line">  t1-&gt;lastfree = t2-&gt;lastfree;</span><br><span class="line">  <span class="comment">// t1的哈希信息设置给t2</span></span><br><span class="line">  t2-&gt;lsizenode = lsizenode;</span><br><span class="line">  t2-&gt;node = node;</span><br><span class="line">  t2-&gt;lastfree = lastfree;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">reinsert</span> <span class="params">(lua_State *L, Table *ot, Table *t)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> j;</span><br><span class="line">  <span class="comment">// 重新将ot表中的哈希节点插入到t表中</span></span><br><span class="line">  <span class="comment">// 这里需要注意一个细节就是哈希列表也是一个数组</span></span><br><span class="line">  <span class="comment">// 平坦的数组设计;这是一个优化的地方,而不是用链表进行链接</span></span><br><span class="line">  <span class="keyword">int</span> size = <span class="built_in">sizenode</span>(ot);</span><br><span class="line">  <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; size; j++) &#123;</span><br><span class="line">    Node *old = <span class="built_in">gnode</span>(ot, j);</span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">isempty</span>(<span class="built_in">gval</span>(old))) &#123;</span><br><span class="line">      <span class="comment">/* doesn&#x27;t need barrier/invalidate cache, as entry was</span></span><br><span class="line"><span class="comment">         already present in the table */</span></span><br><span class="line">      TValue k;</span><br><span class="line">      <span class="built_in">getnodekey</span>(L, &amp;k, old);</span><br><span class="line">      <span class="built_in">luaH_set</span>(L, t, &amp;k, <span class="built_in">gval</span>(old));</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="3-Table的其他"><a href="#3-Table的其他" class="headerlink" title="3. Table的其他"></a>3. Table的其他</h4><h5 id="Table的销毁"><a href="#Table的销毁" class="headerlink" title="* Table的销毁"></a>* Table的销毁</h5><p>创建也难销毁更难<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">luaH_free</span> <span class="params">(lua_State *L, Table *t)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// freehash 释放掉哈希列表的数组</span></span><br><span class="line">  <span class="built_in">freehash</span>(L, t);</span><br><span class="line">  <span class="comment">// 释放数组部分</span></span><br><span class="line">  <span class="built_in">luaM_freearray</span>(L, t-&gt;array, <span class="built_in">luaH_realasize</span>(t));</span><br><span class="line">  <span class="comment">// 释放t</span></span><br><span class="line">  <span class="built_in">luaM_free</span>(L, t);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h5 id="其他函数说明"><a href="#其他函数说明" class="headerlink" title="* 其他函数说明"></a>* 其他函数说明</h5><blockquote>
+<p>luaH_getn函数是计算table的大小;luaH_set设置一个键值对;luaH_get获得一个键值信息</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/lua/" rel="tag"># lua</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81/" rel="tag"># 源码</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/dae65d49.html" rel="prev" title="Lua5.4.3源码剖析01-字符串实现">
+      <i class="fa fa-chevron-left"></i> Lua5.4.3源码剖析01-字符串实现
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/1aa41b55.html" rel="next" title="电子01-复数数学基础">
+      电子01-复数数学基础 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-Table%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-number">1.</span> <span class="nav-text">1. Table的定义</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Tabel%E7%9A%84%E5%88%9B%E5%BB%BA"><span class="nav-number">1.1.</span> <span class="nav-text">* Tabel的创建</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%96%B0KEY"><span class="nav-number">1.2.</span> <span class="nav-text">* 创建新KEY</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%96%B0KEY%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="nav-number">1.3.</span> <span class="nav-text">* 新KEY的位置</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Table%E7%9A%84%E7%A9%BA%E9%97%B4%E6%89%A9%E5%B1%95"><span class="nav-number">2.</span> <span class="nav-text">2. Table的空间扩展</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%87%8D%E6%96%B0%E5%93%88%E5%B8%8C"><span class="nav-number">2.1.</span> <span class="nav-text">* 重新哈希</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%87%8D%E6%96%B0%E5%93%88%E5%B8%8C%E6%A0%B8%E5%BF%83%E7%AE%97%E6%B3%95"><span class="nav-number">2.2.</span> <span class="nav-text">* 重新哈希核心算法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%89%A9%E5%B1%95Table%E6%A0%B8%E5%BF%83%E7%AE%97%E6%B3%95"><span class="nav-number">2.3.</span> <span class="nav-text">* 扩展Table核心算法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%89%A9%E5%B1%95%E5%93%88%E5%B8%8C%E8%A1%A8%E6%A0%B8%E5%BF%83%E7%AE%97%E6%B3%95"><span class="nav-number">2.4.</span> <span class="nav-text">* 扩展哈希表核心算法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%94%A8%E5%88%B0%E7%9A%84%E8%BE%85%E5%8A%A9%E5%87%BD%E6%95%B0"><span class="nav-number">2.5.</span> <span class="nav-text">* 用到的辅助函数</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-Table%E7%9A%84%E5%85%B6%E4%BB%96"><span class="nav-number">3.</span> <span class="nav-text">3. Table的其他</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Table%E7%9A%84%E9%94%80%E6%AF%81"><span class="nav-number">3.1.</span> <span class="nav-text">* Table的销毁</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E5%87%BD%E6%95%B0%E8%AF%B4%E6%98%8E"><span class="nav-number">3.2.</span> <span class="nav-text">* 其他函数说明</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术的朝圣之旅</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
