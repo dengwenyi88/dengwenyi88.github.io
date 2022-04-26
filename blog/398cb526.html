@@ -20,21 +20,25 @@
     var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="撰写本文以解释为什么要分析Lua源码,以及从分析Lua源码中可以学习到的知识体系。众所周知学习Lua源码包括两个方面的内容,一方面如何将Lua源文件如何解释”编译”成字节码,另一个方面Lua的VM加载已经编译的字节码进行解释运行；由此两方面的内容可以构成一个完整的知识体系，进而在学习的过程中扩展相关的知识。">
+  <meta name="description" content="本文是记录总线仲裁器verilog实现的开发调试和测试过程;其中测试代码是我自己写的。下面描述波形是电路的理想情况,要考虑电路的延迟情况,以及保证电路的可靠性方面,实现的硬件电路会稍微复杂,不过作为程序员的角度理解硬件,verilog的路径正好合适。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Lua源码笔记(5)--Lua源码分析的必要性">
-<meta property="og:url" content="https://dengwenyi88.github.io/blog/99f6800d.html">
+<meta property="og:title" content="CPU设计04-总线仲裁器代码实现">
+<meta property="og:url" content="https://dengwenyi88.github.io/blog/398cb526.html">
 <meta property="og:site_name" content="咖啡&#39;s blog">
-<meta property="og:description" content="撰写本文以解释为什么要分析Lua源码,以及从分析Lua源码中可以学习到的知识体系。众所周知学习Lua源码包括两个方面的内容,一方面如何将Lua源文件如何解释”编译”成字节码,另一个方面Lua的VM加载已经编译的字节码进行解释运行；由此两方面的内容可以构成一个完整的知识体系，进而在学习的过程中扩展相关的知识。">
+<meta property="og:description" content="本文是记录总线仲裁器verilog实现的开发调试和测试过程;其中测试代码是我自己写的。下面描述波形是电路的理想情况,要考虑电路的延迟情况,以及保证电路的可靠性方面,实现的硬件电路会稍微复杂,不过作为程序员的角度理解硬件,verilog的路径正好合适。">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2021-09-01T14:27:00.000Z">
-<meta property="article:modified_time" content="2022-04-24T07:08:54.807Z">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/398cb526/%E5%B7%A5%E7%A8%8B%E7%9B%AE%E5%BD%95%E5%8F%98%E5%8A%A8.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/398cb526/%E6%B3%A2%E5%BD%A21.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/398cb526/%E6%B3%A2%E5%BD%A22.png">
+<meta property="article:published_time" content="2022-04-26T02:30:00.000Z">
+<meta property="article:modified_time" content="2022-04-26T04:28:51.874Z">
 <meta property="article:author" content="咖啡">
-<meta property="article:tag" content="lua">
-<meta property="article:tag" content="源码">
+<meta property="article:tag" content="数字电路">
+<meta property="article:tag" content="CPU">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dengwenyi88.github.io/blog/398cb526/%E5%B7%A5%E7%A8%8B%E7%9B%AE%E5%BD%95%E5%8F%98%E5%8A%A8.png">
 
-<link rel="canonical" href="https://dengwenyi88.github.io/blog/99f6800d.html">
+<link rel="canonical" href="https://dengwenyi88.github.io/blog/398cb526.html">
 
 
 <script id="page-configurations">
@@ -47,7 +51,7 @@
   };
 </script>
 
-  <title>Lua源码笔记(5)--Lua源码分析的必要性 | 咖啡's blog</title>
+  <title>CPU设计04-总线仲裁器代码实现 | 咖啡's blog</title>
   
 
 
@@ -163,7 +167,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/99f6800d.html">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/398cb526.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/sherlock.png">
@@ -176,7 +180,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Lua源码笔记(5)--Lua源码分析的必要性
+          CPU设计04-总线仲裁器代码实现
         </h1>
 
         <div class="post-meta">
@@ -185,27 +189,21 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2021-09-01 22:27:00" itemprop="dateCreated datePublished" datetime="2021-09-01T22:27:00+08:00">2021-09-01</time>
+              <time title="创建时间：2022-04-26 10:30:00 / 修改时间：12:28:51" itemprop="dateCreated datePublished" datetime="2022-04-26T10:30:00+08:00">2022-04-26</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-04-24 15:08:54" itemprop="dateModified" datetime="2022-04-24T15:08:54+08:00">2022-04-24</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/3-%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">3-应用</span></a>
+                  <a href="/categories/2-%E7%A1%AC%E4%BB%B6/" itemprop="url" rel="index"><span itemprop="name">2-硬件</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/3-%E5%BA%94%E7%94%A8/Lua/" itemprop="url" rel="index"><span itemprop="name">Lua</span></a>
+                  <a href="/categories/2-%E7%A1%AC%E4%BB%B6/CPU%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index"><span itemprop="name">CPU设计</span></a>
                 </span>
             </span>
 
@@ -218,8 +216,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/blog/99f6800d.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/99f6800d.html" itemprop="commentCount"></span>
+    <a title="valine" href="/blog/398cb526.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/398cb526.html" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -235,14 +233,20 @@
 
       
         <blockquote>
-<p>撰写本文以解释为什么要分析Lua源码,以及从分析Lua源码中可以学习到的知识体系。<br>众所周知学习Lua源码包括两个方面的内容,一方面如何将Lua源文件如何解释”编译”成字节码,另一个方面Lua的VM加载已经编译的字节码进行解释运行；由此两方面的内容可以构成一个完整的知识体系，进而在学习的过程中扩展相关的知识。</p>
+<p>本文是记录总线仲裁器verilog实现的开发调试和测试过程;其中测试代码是我自己写的。下面描述波形是电路的理想情况,要考虑电路的延迟情况,以及保证电路的可靠性方面,实现的硬件电路会稍微复杂,不过作为程序员的角度理解硬件,verilog的路径正好合适。<br><span id="more"></span></p>
 </blockquote>
-<span id="more"></span>
+<h4 id="1-工程目录说明"><a href="#1-工程目录说明" class="headerlink" title="1. 工程目录说明"></a>1. 工程目录说明</h4><img src="/blog/398cb526/%E5%B7%A5%E7%A8%8B%E7%9B%AE%E5%BD%95%E5%8F%98%E5%8A%A8.png" class="" title="工程目录变动">
 <ul>
-<li>编译成字节码<br>扫描Lua源文件编译成字节码的过程，从实现角度来看，仅仅是一次扫描包含了词法分析，语法分析而进生成虚拟机的可执行的字节码；从而延伸到其他脚本语言解释成字节码的常规流程，比如java相对于jvm,c#相对于.net runtime;在到静态语言中比如c的词法分析和语法分析,最后链接成为能够在特定架构机器中执行的可执行文件,这里包含了编译的基本流程。这里需要注意一个重要问题，就是在解析Lua源码生成字节码前，是需要先了解Lua虚拟机的指令集，这个指令集是最终语法树能够产生的最终结果；所以上升到学习编译原理，很多人并不清楚如何开始，上升到理论高度时讲解起从上至下的分析和从下往上推导时会不知所措，这个时候学习Lua源码编译成字节码将会是一个很好的开端，这也是我多年以前精读gcc源码分析后,认真理清c语言编译过程，从预处理到词法分析，再到生成语法树从而生成汇编，然后链接成机器码的每个步骤后，得到的一点感悟,理解Lua源码编译成字节码就可以了解很多编译原理理论的现实版本；现如今编译器设计领域已经是一个复杂而庞大的工程。</li>
-<li>Lua虚拟机原理<br>学习Lua虚拟机的原理能学习到什么呢,我个人理解是能够对Lua虚拟机的栈帧的理解，也就是函数调用过程的理解，其次是虚拟机所能够提供的指令集。函数执行是有一个自己的环境，这个环境就是函数的执行环境，而栈帧就是保护这个函数的执行环境；从而延伸到一些虚拟机的共性上来，你可以将虚拟机想象成实际执行程序的一台计算机，而函数执行也类似操作系统中的一个任务，任务有自己单独的执行环境，以及有自己的栈帧，为什么需要栈帧呢，其中一个重要的原因是保持当前执行环境，当遇到一个中断怎么处理呢，就需要保护现场，实际就是保护这个栈帧，保存这个栈帧的内容就是保存这个任务执行的上下文，当中断执行完毕以后，要切换回这个任务继续执行时，实际是恢复这个任务的栈帧，当然实际的实现可能更为复杂，操作系统在任务之间切换上下文，为了效率可能有硬件来支持这个上下文的切换，现在linux为了兼顾大部分的硬件使用了软切换，通过对lua函数的执行的切换过程的理解，可以一次了解虚拟机执行的过程以及大部分计算机执行流的基本过程，这里顺便说一句利用栈溢出获取计算机的控制执行权，其大部分的思路就是在函数切换中将执行流导向到自己程序的执行中来，这里主要是说虚拟机的执行过程所能学习到的运行时的一些理论。其次学习Lua虚拟机也可以第一次窥见gc回收算法，在大部分的虚拟机中都有gc回收，比如jvm的，c#的，或者golang的，这些gc回收算法的高效性关乎一个语言利用内存的高效性。最后是一个关于虚拟机的指令集的学习。</li>
+<li>根目录增加include目录,这个是后续需要的全局定义</li>
+<li>在src增加include目录,这个是总线需要的定义</li>
+<li>bus_arbiter_tb.v是我写的,其余文件皆来自《CPU自制入门》作者</li>
 </ul>
-<p><strong> 总结 </strong><br>总而言之学习Lua源码可以从中学习计算机领域众多知识的精妙运用，是将计算机的各个方面的理论知识付诸实践的经典实例。最重要的是代码量是个人可以承受的,<strong>源代码才是最好的老师</strong>，花时间精力是值得的。</p>
+<h4 id="2-测试用例注释"><a href="#2-测试用例注释" class="headerlink" title="2. 测试用例注释"></a>2. 测试用例注释</h4><figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">module</span> bus_arbiter_tb;</span><br><span class="line">    <span class="comment">// 时钟,重置信号</span></span><br><span class="line">    <span class="keyword">reg</span> clk, reset,m0_req_,m1_req_,m2_req_,m3_req_; </span><br><span class="line">    <span class="keyword">wire</span> m0_grnt_,m1_grnt_,m2_grnt_,m3_grnt_;</span><br><span class="line"></span><br><span class="line">    bus_arbiter ba1(<span class="variable">.clk</span>(clk),<span class="variable">.reset</span>(reset)</span><br><span class="line">        ,<span class="variable">.m0_req_</span>(m0_req_),<span class="variable">.m0_grnt_</span>(m0_grnt_)</span><br><span class="line">        ,<span class="variable">.m1_req_</span>(m1_req_),<span class="variable">.m1_grnt_</span>(m1_grnt_)</span><br><span class="line">        ,<span class="variable">.m2_req_</span>(m2_req_),<span class="variable">.m2_grnt_</span>(m2_grnt_)</span><br><span class="line">        ,<span class="variable">.m3_req_</span>(m3_req_),<span class="variable">.m3_grnt_</span>(m3_grnt_)</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">    <span class="keyword">initial</span> <span class="keyword">begin</span></span><br><span class="line">        <span class="comment">// 初始化所有请求信号</span></span><br><span class="line">        m0_req_ = <span class="meta">`DISABLE_;</span></span><br><span class="line">        m1_req_ = <span class="meta">`DISABLE_;</span></span><br><span class="line">        m2_req_ = <span class="meta">`DISABLE_;</span></span><br><span class="line">        m3_req_ = <span class="meta">`DISABLE_;</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">initial</span> <span class="keyword">begin</span></span><br><span class="line">        <span class="comment">// 时钟信号每10ns翻转一次</span></span><br><span class="line">        clk             = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">forever</span> #<span class="number">10</span> clk = ~clk;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">initial</span> <span class="keyword">begin</span></span><br><span class="line">        <span class="comment">// 重置信号15ns后关闭</span></span><br><span class="line">        <span class="comment">// 35ns秒后m1_req_请求使用总线</span></span><br><span class="line">        <span class="comment">// 过260ns后请求使用总线</span></span><br><span class="line">        reset = <span class="meta">`RESET_ENABLE;</span></span><br><span class="line">        #<span class="number">15</span> reset = <span class="meta">`RESET_DISABLE;</span></span><br><span class="line">        #<span class="number">20</span> m1_req_ = <span class="meta">`ENABLE_;</span></span><br><span class="line">        #<span class="number">260</span> m1_req_ = <span class="meta">`DISABLE_;</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">initial</span> <span class="keyword">begin</span></span><br><span class="line">        <span class="comment">// 和上面并行运行</span></span><br><span class="line">        <span class="comment">// 60ns后m2_req_请求使用总线</span></span><br><span class="line">        <span class="comment">// 请求460ns后停止</span></span><br><span class="line">        #<span class="number">60</span> m2_req_ = <span class="meta">`ENABLE_;</span></span><br><span class="line">        #<span class="number">460</span> m2_req_ = <span class="meta">`DISABLE_;</span></span><br><span class="line">        #<span class="number">200</span> <span class="built_in">$finish</span>;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">initial</span></span><br><span class="line">    <span class="keyword">begin</span>            </span><br><span class="line">        <span class="built_in">$dumpfile</span>(<span class="string">&quot;bus_arbiter_tb.vcd&quot;</span>);        <span class="comment">//生成的vcd文件名称</span></span><br><span class="line">        <span class="built_in">$dumpvars</span>(<span class="number">0</span>, bus_arbiter_tb);    <span class="comment">//tb模块名称</span></span><br><span class="line">    <span class="keyword">end</span> </span><br><span class="line"><span class="keyword">endmodule</span></span><br></pre></td></tr></table></figure>
+<h4 id="3-波形分析"><a href="#3-波形分析" class="headerlink" title="3. 波形分析"></a>3. 波形分析</h4><img src="/blog/398cb526/%E6%B3%A2%E5%BD%A21.png" class="" title="波形1">
+<p>结合上面的代码来看波形,在第15ns秒时reset信号变为DISABLE<em>(高电平),接着在35ns秒时m1_req</em>请求使用总线,直到第50ns时(也就是在35ns后clk的第一个上升沿),允许m1使用总线,m1<em>grnt</em>变成ENABLE_(低电平)。</p>
+<img src="/blog/398cb526/%E6%B3%A2%E5%BD%A22.png" class="" title="波形2">
+<p>上图是增加了m2请求的情况,在第60ns时m2就已经请求使用总线,但这个时候优先级最高的m1正在使用,直到m1使用完毕,也就是在第300ns的时候结束了总线的请求使用,m1<em>grnt</em>在稍后的下一个上升沿变成DISABLE<em>(高电平),同时m2被允许使用总线,m2_grnt</em>变为ENABLE_(低电平)。</p>
+<p><strong> <a href="/blog/398cb526/verilog.zip" title="项目工程文件点击下载">项目工程文件点击下载</a> </strong></p>
 
     </div>
 
@@ -252,8 +256,8 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/lua/" rel="tag"># lua</a>
-              <a href="/tags/%E6%BA%90%E7%A0%81/" rel="tag"># 源码</a>
+              <a href="/tags/%E6%95%B0%E5%AD%97%E7%94%B5%E8%B7%AF/" rel="tag"># 数字电路</a>
+              <a href="/tags/CPU/" rel="tag"># CPU</a>
           </div>
 
         
@@ -262,13 +266,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/blog/3c118ed6.html" rel="prev" title="Lua源码笔记(4)--Table的元表实现细节">
-      <i class="fa fa-chevron-left"></i> Lua源码笔记(4)--Table的元表实现细节
+    <a href="/blog/92c1275e.html" rel="prev" title="CPU设计03-总线设计实现">
+      <i class="fa fa-chevron-left"></i> CPU设计03-总线设计实现
     </a></div>
-      <div class="post-nav-item">
-    <a href="/blog/b47e0f2a.html" rel="next" title="Lua源码笔记(6)--函数定义以及使用">
-      Lua源码笔记(6)--函数定义以及使用 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -328,6 +329,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%B7%A5%E7%A8%8B%E7%9B%AE%E5%BD%95%E8%AF%B4%E6%98%8E"><span class="nav-number">1.</span> <span class="nav-text">1. 工程目录说明</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E6%B3%A8%E9%87%8A"><span class="nav-number">2.</span> <span class="nav-text">2. 测试用例注释</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E6%B3%A2%E5%BD%A2%E5%88%86%E6%9E%90"><span class="nav-number">3.</span> <span class="nav-text">3. 波形分析</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
