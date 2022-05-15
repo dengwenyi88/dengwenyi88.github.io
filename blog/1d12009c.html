@@ -27,15 +27,15 @@
 <meta property="og:site_name" content="咖啡&#39;s blog">
 <meta property="og:description" content="本文旨在分析FreeBSD系统调用的amd64平台相关部分的代码,系统调用作为系统内核与外界交互的接口,了解其原理对如何扩展以及如何使用有很大的帮助,不同于x86平台的系统调用路径,amd64的平台调用依赖于syscall指令,接下来我记录一下.">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://dengwenyi88.github.io/blog/undefined/EFER%E5%AF%84%E5%AD%98%E5%99%A8.png">
-<meta property="og:image" content="https://dengwenyi88.github.io/blog/undefined/syscall%E7%9A%84MSR.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/1d12009c/EFER%E5%AF%84%E5%AD%98%E5%99%A8.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/1d12009c/syscall%E7%9A%84MSR.png">
 <meta property="article:published_time" content="2022-05-15T06:18:00.000Z">
-<meta property="article:modified_time" content="2022-05-15T07:24:01.254Z">
+<meta property="article:modified_time" content="2022-05-15T07:24:20.162Z">
 <meta property="article:author" content="咖啡">
 <meta property="article:tag" content="源码">
 <meta property="article:tag" content="FreeBSD">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://dengwenyi88.github.io/blog/undefined/EFER%E5%AF%84%E5%AD%98%E5%99%A8.png">
+<meta name="twitter:image" content="https://dengwenyi88.github.io/blog/1d12009c/EFER%E5%AF%84%E5%AD%98%E5%99%A8.png">
 
 <link rel="canonical" href="https://dengwenyi88.github.io/blog/1d12009c.html">
 
@@ -190,7 +190,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-05-15 14:18:00 / 修改时间：15:24:01" itemprop="dateCreated datePublished" datetime="2022-05-15T14:18:00+08:00">2022-05-15</time>
+              <time title="创建时间：2022-05-15 14:18:00 / 修改时间：15:24:20" itemprop="dateCreated datePublished" datetime="2022-05-15T14:18:00+08:00">2022-05-15</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -236,8 +236,8 @@
 </blockquote>
 <h4 id="1-系统调用硬件知识-MSR"><a href="#1-系统调用硬件知识-MSR" class="headerlink" title="1. 系统调用硬件知识(MSR)"></a>1. 系统调用硬件知识(MSR)</h4><p>MSR是(Model-Specific Register)的缩写,是x86_64平台上CPU实现的一类寄存器，提供了对硬件或者软件相关功能的一些控制.具体内容参考《x86_64体系探索及编程》一书的详细介绍.这里介绍几个重点</p>
 <h5 id="1-1-使用MSR"><a href="#1-1-使用MSR" class="headerlink" title="1.1 使用MSR"></a>1.1 使用MSR</h5><p> 读取MSR指令的汇编指令分别是rdmsr和wrmsr指令.</p>
-<h5 id="1-2-EFER扩展功能寄存器的使用"><a href="#1-2-EFER扩展功能寄存器的使用" class="headerlink" title="1.2 EFER扩展功能寄存器的使用"></a>1.2 EFER扩展功能寄存器的使用</h5><p> 因为读取这个寄存器的某些位表示CPU是否支持MSR的syscal指令,x64下long-mode模式也是通过这个寄存器来开启和激活的.<br><img src="/blog/undefined/EFER%E5%AF%84%E5%AD%98%E5%99%A8.png" class="" title="EFER寄存器"><br> 如上图所示,第0位SCE位是syscall Enable的缩写,此位置1表示syscall指令可用.LME置1表示long-mode模式开启。EFER寄存器的地址为0xC0000080H,这个地址是固定的.</p>
-<h5 id="1-3-支持syscall的MSR寄存器"><a href="#1-3-支持syscall的MSR寄存器" class="headerlink" title="1.3 支持syscall的MSR寄存器"></a>1.3 支持syscall的MSR寄存器</h5><img src="/blog/undefined/syscall%E7%9A%84MSR.png" class="" title="syscall的MSR">
+<h5 id="1-2-EFER扩展功能寄存器的使用"><a href="#1-2-EFER扩展功能寄存器的使用" class="headerlink" title="1.2 EFER扩展功能寄存器的使用"></a>1.2 EFER扩展功能寄存器的使用</h5><p> 因为读取这个寄存器的某些位表示CPU是否支持MSR的syscal指令,x64下long-mode模式也是通过这个寄存器来开启和激活的.<br><img src="/blog/1d12009c/EFER%E5%AF%84%E5%AD%98%E5%99%A8.png" class="" title="EFER寄存器"><br> 如上图所示,第0位SCE位是syscall Enable的缩写,此位置1表示syscall指令可用.LME置1表示long-mode模式开启。EFER寄存器的地址为0xC0000080H,这个地址是固定的.</p>
+<h5 id="1-3-支持syscall的MSR寄存器"><a href="#1-3-支持syscall的MSR寄存器" class="headerlink" title="1.3 支持syscall的MSR寄存器"></a>1.3 支持syscall的MSR寄存器</h5><img src="/blog/1d12009c/syscall%E7%9A%84MSR.png" class="" title="syscall的MSR">
 <p>这里主要说明一下LSTSTR寄存器是64位CPU的入口点.</p>
 <h4 id="2-系统调用辅助指令"><a href="#2-系统调用辅助指令" class="headerlink" title="2. 系统调用辅助指令"></a>2. 系统调用辅助指令</h4><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这段代码是对rdmsr汇编指令的封装</span></span><br><span class="line"><span class="comment">// freebsd/amd64.amd64/sys/MYKERNEL/machine/cpufunc.h</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> __inline <span class="keyword">uint64_t</span></span></span><br><span class="line"><span class="function"><span class="title">rdmsr</span><span class="params">(u_int msr)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">uint32_t</span> low, high;</span><br><span class="line"></span><br><span class="line">	__asm __volatile(<span class="string">&quot;rdmsr&quot;</span> : <span class="string">&quot;=a&quot;</span> (low), <span class="string">&quot;=d&quot;</span> (high) : <span class="string">&quot;c&quot;</span> (msr));</span><br><span class="line">	<span class="keyword">return</span> (low | ((<span class="keyword">uint64_t</span>)high &lt;&lt; <span class="number">32</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// line:495</span></span><br><span class="line"><span class="comment">// 这一段是对wrmsr汇编指令的封装</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> __inline <span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">wrmsr</span><span class="params">(u_int msr, <span class="keyword">uint64_t</span> newval)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">uint32_t</span> low, high;</span><br><span class="line"></span><br><span class="line">	low = newval;</span><br><span class="line">	high = newval &gt;&gt; <span class="number">32</span>;</span><br><span class="line">	__asm __volatile(<span class="string">&quot;wrmsr&quot;</span> : : <span class="string">&quot;a&quot;</span> (low), <span class="string">&quot;d&quot;</span> (high), <span class="string">&quot;c&quot;</span> (msr));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h4 id="3-系统调用配置"><a href="#3-系统调用配置" class="headerlink" title="3. 系统调用配置"></a>3. 系统调用配置</h4><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// amd64/amd64/machdep.c[line:1536]</span></span><br><span class="line"><span class="comment">/* Set up the fast syscall stuff */</span></span><br><span class="line"><span class="comment">// 这一段代码是初始化时设置系统调用处理函数</span></span><br><span class="line"><span class="comment">// 系统调用处理函数是fast_syscall_pti或者fast_syscall</span></span><br><span class="line"><span class="function"><span class="keyword">void</span></span></span><br><span class="line"><span class="function"><span class="title">amd64_conf_fast_syscall</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">uint64_t</span> msr;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 参看1.2节的说明这是EFER寄存器地址</span></span><br><span class="line">    <span class="comment">// #define	MSR_EFER	0xc0000080	/* extended features */</span></span><br><span class="line">    <span class="comment">// #define	EFER_SCE 0x000000001	/* System Call Extensions (R/W) */</span></span><br><span class="line">	msr = <span class="built_in">rdmsr</span>(MSR_EFER) | EFER_SCE;</span><br><span class="line">    <span class="comment">// 允许CPU使用syscall指令(这是扩展指令)</span></span><br><span class="line">	<span class="built_in">wrmsr</span>(MSR_EFER, msr);</span><br><span class="line">    <span class="comment">// #define	MSR_LSTAR	0xc0000082	/* long mode SYSCALL target rip */</span></span><br><span class="line">    <span class="comment">// 参看1.3节的内容</span></span><br><span class="line">    <span class="comment">// 将fast_syscall_pti或者fast_syscall的调用地址放入到MSR_LSTAR寄存器.</span></span><br><span class="line">	<span class="built_in">wrmsr</span>(MSR_LSTAR, pti ? (<span class="keyword">u_int64_t</span>)<span class="built_in">IDTVEC</span>(fast_syscall_pti) :</span><br><span class="line">	    (<span class="keyword">u_int64_t</span>)<span class="built_in">IDTVEC</span>(fast_syscall));</span><br><span class="line">    <span class="comment">// MSR_CSTAR是兼容模式下的系统调用</span></span><br><span class="line">	<span class="built_in">wrmsr</span>(MSR_CSTAR, (<span class="keyword">u_int64_t</span>)<span class="built_in">IDTVEC</span>(fast_syscall32));</span><br><span class="line">    <span class="comment">// MSR_STAR这里主要是执行syscall或者sysret指令时的CS和SS的值</span></span><br><span class="line">	msr = ((<span class="keyword">u_int64_t</span>)<span class="built_in">GSEL</span>(GCODE_SEL, SEL_KPL) &lt;&lt; <span class="number">32</span>) |</span><br><span class="line">	    ((<span class="keyword">u_int64_t</span>)<span class="built_in">GSEL</span>(GUCODE32_SEL, SEL_UPL) &lt;&lt; <span class="number">48</span>);</span><br><span class="line">	<span class="built_in">wrmsr</span>(MSR_STAR, msr);</span><br><span class="line">    <span class="comment">// 设置SFMSSK主要是用来屏蔽rflags寄存器的一些标志位</span></span><br><span class="line">	<span class="built_in">wrmsr</span>(MSR_SF_MASK, PSL_NT | PSL_T | PSL_I | PSL_C | PSL_D | PSL_AC);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -270,7 +270,10 @@
     <a href="/blog/60efa0b7.html" rel="prev" title="FreeBSD源码笔记03-上下文硬件切换">
       <i class="fa fa-chevron-left"></i> FreeBSD源码笔记03-上下文硬件切换
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/blog/1d12009c.html" rel="next" title="FreeBSD源码笔记04-系统调用过程解析">
+      FreeBSD源码笔记04-系统调用过程解析 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -346,7 +349,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">46</span>
+          <span class="site-state-item-count">47</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
