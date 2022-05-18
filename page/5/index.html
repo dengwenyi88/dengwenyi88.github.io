@@ -158,6 +158,109 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/c097f163.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/c097f163.html" class="post-title-link" itemprop="url">mysql之InnoDB 文件系统之文件物理结构新解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-01 20:46:25" itemprop="dateCreated datePublished" datetime="2019-11-01T20:46:25+08:00">2019-11-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-02 18:16:27" itemprop="dateModified" datetime="2022-05-02T18:16:27+08:00">2022-05-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/c097f163.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/c097f163.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>以自己能快速理解的方式重新梳理了innodb引擎的物理文件结构，从静态和动态的两种视角去<br>理解文件结构，增强对innodb引擎的运行的了解。</p>
+<ul>
+<li>静态视角,首先从文件读取的角度考虑整个文件的组织形式和存储结构，以便于能够顺利的解析innodb的ibd文件</li>
+<li>动态视角,数据库文件是为数据库管理系统和数据库实例运行而服务的，在了解B+树原理的01基础上，深刻理解数据在数据库中增加以后，是如何在数据库中存储，以及数据是如何落地的，既要保证数据存储的灵活性，又要保证数据库查询的性能。</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/blog/c097f163.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/9b402272.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -402,11 +505,11 @@
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/libevent/" itemprop="url" rel="index"><span itemprop="name">libevent</span></a>
+                  <a href="/categories/3-%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">3-应用</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/3-%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">3-应用</span></a>
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/libevent/" itemprop="url" rel="index"><span itemprop="name">libevent</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
@@ -1168,7 +1271,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">49</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
