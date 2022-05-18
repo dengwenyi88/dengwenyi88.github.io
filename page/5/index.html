@@ -158,6 +158,207 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/9b402272.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/9b402272.html" class="post-title-link" itemprop="url">mysql 8.0.16 源码编译[Mac os x版本]</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-13 15:00:00" itemprop="dateCreated datePublished" datetime="2019-10-13T15:00:00+08:00">2019-10-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-02 18:16:27" itemprop="dateModified" datetime="2022-05-02T18:16:27+08:00">2022-05-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/9b402272.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/9b402272.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>笔记重点:</p>
+<ul>
+<li>Mac os x下编译mysql,主要是处理要wolfssl依赖库,下载wolfssl库以后需要打上与mysql相关的补丁,然后执行do.sh,拷贝CMakeFiles.txt到wolfssl库的根目录，这样mysql编译时会连同wolfssl库一起编译;</li>
+<li>Mysql编译完成后,mysql的启动工作，主要涉及到配置文件的配置以及相关目录文件的权限问题，所以mysql可以安装在/usr/local/mysql中,而数据文件以及日志之类的文件，放在用户的home目录下</li>
+<li>遇到非8.0.16版本编译或者其他版本编译时出现的错误，尽量通过log_error文件提示信息来排错</li>
+</ul>
+</blockquote>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/blog/9b402272.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/d6a5b42f.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/d6a5b42f.html" class="post-title-link" itemprop="url">Mac OS X中安装universal-ctags</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-06-10 20:00:00" itemprop="dateCreated datePublished" datetime="2019-06-10T20:00:00+08:00">2019-06-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-02 18:16:27" itemprop="dateModified" datetime="2022-05-02T18:16:27+08:00">2022-05-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/d6a5b42f.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/d6a5b42f.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h4 id="1-首先需要安装autotools"><a href="#1-首先需要安装autotools" class="headerlink" title="1. 首先需要安装autotools"></a>1. 首先需要安装autotools</h4><h5 id="1-安装m4"><a href="#1-安装m4" class="headerlink" title="1)  安装m4"></a>1)  安装m4</h5><p>curl -O <a target="_blank" rel="noopener" href="http://mirrors.kernel.org/gnu/m4/m4-1.4.13.tar.gz">http://mirrors.kernel.org/gnu/m4/m4-1.4.13.tar.gz</a><br>tar -xzvf m4-1.4.13.tar.gz<br>cd m4-1.4.13<br>./configure —prefix=/usr/local<br>make<br>sudo make install<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/blog/d6a5b42f.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/d8c3199e.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -201,11 +402,11 @@
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/libevent/" itemprop="url" rel="index"><span itemprop="name">libevent</span></a>
+                  <a href="/categories/3-%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">3-应用</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/3-%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">3-应用</span></a>
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/libevent/" itemprop="url" rel="index"><span itemprop="name">libevent</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
@@ -249,105 +450,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/blog/d8c3199e.html#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/a024be29.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/sherlock.png">
-      <meta itemprop="name" content="咖啡">
-      <meta itemprop="description" content="技术的朝圣之旅">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="咖啡's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/a024be29.html" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--内存管理分析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2017-01-12 20:00:00" itemprop="dateCreated datePublished" datetime="2017-01-12T20:00:00+08:00">2017-01-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-04-21 18:43:32" itemprop="dateModified" datetime="2022-04-21T18:43:32+08:00">2022-04-21</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">1-基础</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/Linux%E5%86%85%E6%A0%B8/" itemprop="url" rel="index"><span itemprop="name">Linux内核</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/blog/a024be29.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/a024be29.html" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          内存管理分析哦
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/blog/a024be29.html#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -453,6 +555,105 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/blog/428943f6.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/a024be29.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术的朝圣之旅">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/a024be29.html" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--内存管理分析</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-01-12 20:00:00" itemprop="dateCreated datePublished" datetime="2017-01-12T20:00:00+08:00">2017-01-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-21 18:43:32" itemprop="dateModified" datetime="2022-04-21T18:43:32+08:00">2022-04-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">1-基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/Linux%E5%86%85%E6%A0%B8/" itemprop="url" rel="index"><span itemprop="name">Linux内核</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/a024be29.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/a024be29.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          内存管理分析哦
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/blog/a024be29.html#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -582,7 +783,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/1ba9fa78.html">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/b0bd698d.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/sherlock.png">
@@ -596,7 +797,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/blog/1ba9fa78.html" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--中断处理分析</a>
+            <a href="/blog/b0bd698d.html" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--启动代码分析</a>
         </h2>
 
         <div class="post-meta">
@@ -638,8 +839,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/blog/1ba9fa78.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/1ba9fa78.html" itemprop="commentCount"></span>
+    <a title="valine" href="/blog/b0bd698d.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/b0bd698d.html" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -655,16 +856,16 @@
 
       
           <blockquote>
-<p>笔记重点:<br>尽管时代在变化,中断系统的基本原理却是变化不大，对新版linux的中断系统的分析和理解起到指引作用,中断系统的细节包括，中断发生前的上下文保存以及中断处理完成后的上下文恢复;中断的统一调用过程中CPU的异常处理是，当CPU响应异常或者中断时，处理器使用异常或者中断的向量作为IDT表的索引，引用索引中的门描述符指向的中断程序，进行处理。硬件对中断的支持表现在CPU中有专门的中断向量表寄存器IDTR,并使用专门的指令在设置和读取这个寄存器的内容(LIDT和SIDT),以及8259A这样的中断控制器处理外部中断的优先级;中断系统的中断来源三个方面,分析linux中的中断系统的原理是从以下三个方面的透彻理解入手的:</p>
+<p>笔记重点：<br>linux 0.12的启动代码能够给我们分析最新的linux代码给予一定的启示，启动代码虽然只有三个文件，但是对读者分析能力的要求比较高，主要是在对汇编语言以及x86编程体系的理解,以下是对linux 0.12启动代码的简要说明，对分析很重要</p>
 <ul>
-<li>一个方面是来自CPU执行流中的内部中断和异常</li>
-<li>一方面有外部设备通过8259A中断控制器向CPU的INTR脚请求中断</li>
-<li>还有一个方面被称为软中断的系统调用</li>
+<li>bootsect.S文件主要的目的是加载setup.S和内核模块</li>
+<li>setup.S 主要目的是通过biso中断读取机器的系统数据</li>
+<li>head.s 主要目的是内核初始化之前的环境配置，也就是32位保护模式运行做准备</li>
 </ul>
 </blockquote>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/blog/1ba9fa78.html#more" rel="contents">
+              <a class="btn" href="/blog/b0bd698d.html#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -794,7 +995,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/b0bd698d.html">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/1ba9fa78.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/sherlock.png">
@@ -808,7 +1009,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/blog/b0bd698d.html" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--启动代码分析</a>
+            <a href="/blog/1ba9fa78.html" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--中断处理分析</a>
         </h2>
 
         <div class="post-meta">
@@ -850,8 +1051,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/blog/b0bd698d.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/b0bd698d.html" itemprop="commentCount"></span>
+    <a title="valine" href="/blog/1ba9fa78.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/1ba9fa78.html" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -867,16 +1068,16 @@
 
       
           <blockquote>
-<p>笔记重点：<br>linux 0.12的启动代码能够给我们分析最新的linux代码给予一定的启示，启动代码虽然只有三个文件，但是对读者分析能力的要求比较高，主要是在对汇编语言以及x86编程体系的理解,以下是对linux 0.12启动代码的简要说明，对分析很重要</p>
+<p>笔记重点:<br>尽管时代在变化,中断系统的基本原理却是变化不大，对新版linux的中断系统的分析和理解起到指引作用,中断系统的细节包括，中断发生前的上下文保存以及中断处理完成后的上下文恢复;中断的统一调用过程中CPU的异常处理是，当CPU响应异常或者中断时，处理器使用异常或者中断的向量作为IDT表的索引，引用索引中的门描述符指向的中断程序，进行处理。硬件对中断的支持表现在CPU中有专门的中断向量表寄存器IDTR,并使用专门的指令在设置和读取这个寄存器的内容(LIDT和SIDT),以及8259A这样的中断控制器处理外部中断的优先级;中断系统的中断来源三个方面,分析linux中的中断系统的原理是从以下三个方面的透彻理解入手的:</p>
 <ul>
-<li>bootsect.S文件主要的目的是加载setup.S和内核模块</li>
-<li>setup.S 主要目的是通过biso中断读取机器的系统数据</li>
-<li>head.s 主要目的是内核初始化之前的环境配置，也就是32位保护模式运行做准备</li>
+<li>一个方面是来自CPU执行流中的内部中断和异常</li>
+<li>一方面有外部设备通过8259A中断控制器向CPU的INTR脚请求中断</li>
+<li>还有一个方面被称为软中断的系统调用</li>
 </ul>
 </blockquote>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/blog/b0bd698d.html#more" rel="contents">
+              <a class="btn" href="/blog/1ba9fa78.html#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -967,7 +1168,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-count">49</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
