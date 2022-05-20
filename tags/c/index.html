@@ -23,14 +23,14 @@
   <meta name="description" content="技术的朝圣之旅">
 <meta property="og:type" content="website">
 <meta property="og:title" content="咖啡&#39;s blog">
-<meta property="og:url" content="https://dengwenyi88.github.io/tags/C/index.html">
+<meta property="og:url" content="https://dengwenyi88.github.io/tags/c/index.html">
 <meta property="og:site_name" content="咖啡&#39;s blog">
 <meta property="og:description" content="技术的朝圣之旅">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:author" content="咖啡">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="https://dengwenyi88.github.io/tags/C/">
+<link rel="canonical" href="https://dengwenyi88.github.io/tags/c/">
 
 
 <script id="page-configurations">
@@ -43,7 +43,7 @@
   };
 </script>
 
-  <title>标签: C++ | 咖啡's blog</title>
+  <title>标签: c++ | 咖啡's blog</title>
   
 
 
@@ -161,95 +161,12 @@
   <div class="post-block">
     <div class="posts-collapse">
       <div class="collection-title">
-        <h2 class="collection-header">C++
+        <h2 class="collection-header">c++
           <small>标签</small>
         </h2>
       </div>
 
       
-    <div class="collection-year">
-      <span class="collection-header">2022</span>
-    </div>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-05-20T19:16:00+08:00"
-              content="2022-05-20">
-          05-20
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/blog/4b40d18.html" itemprop="url">
-            <span itemprop="name">AES加密算法7-加密模式</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-05-20T13:16:00+08:00"
-              content="2022-05-20">
-          05-20
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/blog/eb90d291.html" itemprop="url">
-            <span itemprop="name">AES加密算法6-C语言实现</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-05-02T22:30:00+08:00"
-              content="2022-05-02">
-          05-02
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/blog/cc9a6126.html" itemprop="url">
-            <span itemprop="name">客户端开发-知识体系总结</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-05-02T21:30:00+08:00"
-              content="2022-05-02">
-          05-02
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/blog/cc63b19c.html" itemprop="url">
-            <span itemprop="name">服务器开发-游戏配置管理</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
     <div class="collection-year">
       <span class="collection-header">2020</span>
     </div>
@@ -259,15 +176,15 @@
 
       <div class="post-meta">
         <time itemprop="dateCreated"
-              datetime="2020-02-29T20:00:00+08:00"
-              content="2020-02-29">
-          02-29
+              datetime="2020-02-18T20:00:00+08:00"
+              content="2020-02-18">
+          02-18
         </time>
       </div>
 
       <div class="post-title">
-          <a class="post-title-link" href="/blog/ea0368d.html" itemprop="url">
-            <span itemprop="name">红黑树算法推导过程</span>
+          <a class="post-title-link" href="/blog/cb572b25.html" itemprop="url">
+            <span itemprop="name">c++11的新特性(一）--让程序更简洁</span>
           </a>
       </div>
 
@@ -490,6 +407,80 @@
       tex: {
         inlineMath: {'[+]': [['$', '$']]},
         tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'mail';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'bzp0CwMQschttuGek2pUcDtq-gzGzoHsz',
+      appKey     : 'SkCmikADMPFqRHPPU8KuSaDH',
+      placeholder: "欢迎交流讨论...",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
+
       },
       options: {
         renderActions: {
