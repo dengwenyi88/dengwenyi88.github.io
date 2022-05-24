@@ -158,6 +158,288 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/1c78dfd6.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术通过产品影响世界">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/1c78dfd6.html" class="post-title-link" itemprop="url">SHA-512算法3-完整流程</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-05-24 15:37:00 / 修改时间：14:38:10" itemprop="dateCreated datePublished" datetime="2022-05-24T15:37:00+08:00">2022-05-24</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/1c78dfd6.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/1c78dfd6.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>SHA-512的完整实现我总结下来,总共分三步,一是填充补充位和长度;二是初始化8个变量;三是循环计算这8个变量最终输出.
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/blog/1c78dfd6.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/55caff1e.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术通过产品影响世界">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/55caff1e.html" class="post-title-link" itemprop="url">SHA-512算法2-轮函数计算</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-05-24 13:37:00 / 修改时间：14:38:19" itemprop="dateCreated datePublished" datetime="2022-05-24T13:37:00+08:00">2022-05-24</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/55caff1e.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/55caff1e.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>SHA-512的轮函数计算，哈希函数是支撑单向性最重要的步骤,80轮计算是否可逆我不是很清楚，因为在我的脑子里所有关系式最终可以变成y=f(x),只不过有可能是离散的，有可能是连续的.
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/blog/55caff1e.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/532fff05.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术通过产品影响世界">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/532fff05.html" class="post-title-link" itemprop="url">SHA-512算法1-$W_t$字的计算</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-05-24 11:37:00 / 修改时间：14:38:25" itemprop="dateCreated datePublished" datetime="2022-05-24T11:37:00+08:00">2022-05-24</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/532fff05.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/532fff05.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>构成比特币的三个核心技术是非对称加密,P2P网络以及哈希算法,我对哈希算法的单向性很感兴趣,这些笔记是对实现SHA-512期间的笔记做一下记录；$W_t$字的计算是轮函数一次要计算80次,每次都要用到的。
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/blog/532fff05.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/c55d8398.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -183,7 +465,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-05-21 22:50:00 / 修改时间：23:03:14" itemprop="dateCreated datePublished" datetime="2022-05-21T22:50:00+08:00">2022-05-21</time>
+              <time title="创建时间：2022-05-21 22:50:00 / 修改时间：23:05:05" itemprop="dateCreated datePublished" datetime="2022-05-21T22:50:00+08:00">2022-05-21</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -283,10 +565,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-05-21 10:50:00 / 修改时间：11:28:19" itemprop="dateCreated datePublished" datetime="2022-05-21T10:50:00+08:00">2022-05-21</time>
+              <time title="创建时间：2022-05-21 10:50:00" itemprop="dateCreated datePublished" datetime="2022-05-21T10:50:00+08:00">2022-05-21</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-24 14:38:44" itemprop="dateModified" datetime="2022-05-24T14:38:44+08:00">2022-05-24</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -297,7 +585,7 @@
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/AES/" itemprop="url" rel="index"><span itemprop="name">AES</span></a>
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
                 </span>
             </span>
 
@@ -377,10 +665,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-05-20 19:16:00 / 修改时间：20:44:53" itemprop="dateCreated datePublished" datetime="2022-05-20T19:16:00+08:00">2022-05-20</time>
+              <time title="创建时间：2022-05-20 19:16:00" itemprop="dateCreated datePublished" datetime="2022-05-20T19:16:00+08:00">2022-05-20</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-24 14:38:53" itemprop="dateModified" datetime="2022-05-24T14:38:53+08:00">2022-05-24</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -391,7 +685,7 @@
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/AES/" itemprop="url" rel="index"><span itemprop="name">AES</span></a>
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
                 </span>
             </span>
 
@@ -471,10 +765,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-05-20 13:16:00 / 修改时间：16:12:32" itemprop="dateCreated datePublished" datetime="2022-05-20T13:16:00+08:00">2022-05-20</time>
+              <time title="创建时间：2022-05-20 13:16:00" itemprop="dateCreated datePublished" datetime="2022-05-20T13:16:00+08:00">2022-05-20</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-24 14:38:49" itemprop="dateModified" datetime="2022-05-24T14:38:49+08:00">2022-05-24</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -485,7 +785,7 @@
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/AES/" itemprop="url" rel="index"><span itemprop="name">AES</span></a>
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
                 </span>
             </span>
 
@@ -565,10 +865,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-05-19 09:16:00 / 修改时间：10:42:41" itemprop="dateCreated datePublished" datetime="2022-05-19T09:16:00+08:00">2022-05-19</time>
+              <time title="创建时间：2022-05-19 09:16:00" itemprop="dateCreated datePublished" datetime="2022-05-19T09:16:00+08:00">2022-05-19</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-24 14:38:57" itemprop="dateModified" datetime="2022-05-24T14:38:57+08:00">2022-05-24</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -579,7 +885,7 @@
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/AES/" itemprop="url" rel="index"><span itemprop="name">AES</span></a>
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
                 </span>
             </span>
 
@@ -659,10 +965,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-05-18 20:16:00 / 修改时间：23:00:52" itemprop="dateCreated datePublished" datetime="2022-05-18T20:16:00+08:00">2022-05-18</time>
+              <time title="创建时间：2022-05-18 20:16:00" itemprop="dateCreated datePublished" datetime="2022-05-18T20:16:00+08:00">2022-05-18</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-24 14:38:40" itemprop="dateModified" datetime="2022-05-24T14:38:40+08:00">2022-05-24</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -673,7 +985,7 @@
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/AES/" itemprop="url" rel="index"><span itemprop="name">AES</span></a>
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
                 </span>
             </span>
 
@@ -753,10 +1065,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-05-18 18:16:00 / 修改时间：18:23:05" itemprop="dateCreated datePublished" datetime="2022-05-18T18:16:00+08:00">2022-05-18</time>
+              <time title="创建时间：2022-05-18 18:16:00" itemprop="dateCreated datePublished" datetime="2022-05-18T18:16:00+08:00">2022-05-18</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-24 14:39:13" itemprop="dateModified" datetime="2022-05-24T14:39:13+08:00">2022-05-24</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -767,7 +1085,7 @@
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/AES/" itemprop="url" rel="index"><span itemprop="name">AES</span></a>
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
                 </span>
             </span>
 
@@ -801,294 +1119,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/blog/24dd58b.html#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/16f5a2fa.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/sherlock.png">
-      <meta itemprop="name" content="咖啡">
-      <meta itemprop="description" content="技术通过产品影响世界">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="咖啡's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/16f5a2fa.html" class="post-title-link" itemprop="url">AES加密算法2-乘法逆元推导</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-05-18 10:16:00 / 修改时间：18:53:23" itemprop="dateCreated datePublished" datetime="2022-05-18T10:16:00+08:00">2022-05-18</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/AES/" itemprop="url" rel="index"><span itemprop="name">AES</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/blog/16f5a2fa.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/16f5a2fa.html" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>AES加密里有一个S盒,构造这个S盒中需要使用到有限域$GF(2^8)$的乘法逆元的计算,推导乘法逆元的计算首先是从求最大公约数开始的,然后讨论了模运算的性质,利用模运算的性质证明可以使用欧几里得算法求最大公约数,然后将欧几里得算法推广到有限域上;
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/blog/16f5a2fa.html#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/8a719895.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/sherlock.png">
-      <meta itemprop="name" content="咖啡">
-      <meta itemprop="description" content="技术通过产品影响世界">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="咖啡's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/8a719895.html" class="post-title-link" itemprop="url">AES加密算法1-轮常量计算</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-05-17 18:14:00 / 修改时间：19:33:28" itemprop="dateCreated datePublished" datetime="2022-05-17T18:14:00+08:00">2022-05-17</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/AES/" itemprop="url" rel="index"><span itemprop="name">AES</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/blog/8a719895.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/8a719895.html" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>AES中的加密过程用到了一个轮常量的计算过程,之前对有限域的理解不是很深,也是经过长时间的积累以后,重新又对近世代数的东西有新的理解,特别是这个有限域的乘法,根据资料和笔记整理一下,以备后续参考.<br>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/blog/8a719895.html#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/def5f8a2.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/sherlock.png">
-      <meta itemprop="name" content="咖啡">
-      <meta itemprop="description" content="技术通过产品影响世界">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="咖啡's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/def5f8a2.html" class="post-title-link" itemprop="url">FreeBSD源码笔记04-系统调用解析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-05-15 14:18:00" itemprop="dateCreated datePublished" datetime="2022-05-15T14:18:00+08:00">2022-05-15</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-05-19 11:05:35" itemprop="dateModified" datetime="2022-05-19T11:05:35+08:00">2022-05-19</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">1-基础</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/FreeBSD/" itemprop="url" rel="index"><span itemprop="name">FreeBSD</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/blog/def5f8a2.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/def5f8a2.html" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>本文旨在分析FreeBSD系统调用的amd64平台相关部分的代码,系统调用作为系统内核与外界交互的接口,了解其原理对如何扩展以及如何使用有很大的帮助,不同于x86平台的系统调用路径,amd64的平台调用依赖于syscall指令,接下来我记录一下.
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/blog/def5f8a2.html#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1179,14 +1209,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">55</span>
+          <span class="site-state-item-count">58</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-count">21</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
