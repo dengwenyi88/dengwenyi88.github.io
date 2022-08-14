@@ -29,7 +29,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://dengwenyi88.github.io/blog/532fff05/%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B.jpg">
 <meta property="article:published_time" content="2022-05-24T03:37:00.000Z">
-<meta property="article:modified_time" content="2022-05-24T06:38:25.944Z">
+<meta property="article:modified_time" content="2022-05-24T08:12:21.487Z">
 <meta property="article:author" content="咖啡">
 <meta property="article:tag" content="C++">
 <meta name="twitter:card" content="summary">
@@ -188,7 +188,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-05-24 11:37:00 / 修改时间：14:38:25" itemprop="dateCreated datePublished" datetime="2022-05-24T11:37:00+08:00">2022-05-24</time>
+              <time title="创建时间：2022-05-24 11:37:00 / 修改时间：16:12:21" itemprop="dateCreated datePublished" datetime="2022-05-24T11:37:00+08:00">2022-05-24</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -237,7 +237,7 @@
 <li><p>2.1 简单的移位操作</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 循环右移动n位</span></span><br><span class="line"><span class="comment">/* ROTate Right (cirular right shift) */</span></span><br><span class="line"><span class="function"><span class="keyword">uint64_t</span> <span class="title">ROTR</span><span class="params">(<span class="keyword">uint64_t</span> x, <span class="keyword">uint8_t</span> shift)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (x &gt;&gt; shift) | (x &lt;&lt; (<span class="number">64</span> - shift));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 循环右移空出来的部分用0补充.</span></span><br><span class="line"><span class="comment">/* Right SHift */</span></span><br><span class="line"><span class="function"><span class="keyword">uint64_t</span> <span class="title">SHR</span><span class="params">(<span class="keyword">uint64_t</span> x, <span class="keyword">uint8_t</span> shift)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (x &gt;&gt; shift);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 </li>
-<li><p>$\sigma_0(x)^{512}$的实现</p>
+<li><p>$\sigma_0^{512}(x)$的实现</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* sigma0, different from SIGMA0 */</span></span><br><span class="line"><span class="function"><span class="keyword">uint64_t</span> <span class="title">sigma0</span><span class="params">(<span class="keyword">uint64_t</span> x)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">ROTR</span>(x, <span class="number">1</span>) ^ <span class="built_in">ROTR</span>(x, <span class="number">8</span>) ^ <span class="built_in">SHR</span>(x, <span class="number">7</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>$\sigma_1^{512}(x)$的实现</p>
@@ -345,7 +345,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">59</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -358,7 +358,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-count">33</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
