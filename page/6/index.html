@@ -158,6 +158,109 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/c097f163.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术通过产品影响世界">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/c097f163.html" class="post-title-link" itemprop="url">mysql之InnoDB 文件系统之文件物理结构新解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-01 20:46:25" itemprop="dateCreated datePublished" datetime="2019-11-01T20:46:25+08:00">2019-11-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-05-02 18:16:27" itemprop="dateModified" datetime="2022-05-02T18:16:27+08:00">2022-05-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/c097f163.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/c097f163.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>以自己能快速理解的方式重新梳理了innodb引擎的物理文件结构，从静态和动态的两种视角去<br>理解文件结构，增强对innodb引擎的运行的了解。</p>
+<ul>
+<li>静态视角,首先从文件读取的角度考虑整个文件的组织形式和存储结构，以便于能够顺利的解析innodb的ibd文件</li>
+<li>动态视角,数据库文件是为数据库管理系统和数据库实例运行而服务的，在了解B+树原理的01基础上，深刻理解数据在数据库中增加以后，是如何在数据库中存储，以及数据是如何落地的，既要保证数据存储的灵活性，又要保证数据库查询的性能。</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/blog/c097f163.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/9b402272.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -889,112 +992,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/1ba9fa78.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/sherlock.png">
-      <meta itemprop="name" content="咖啡">
-      <meta itemprop="description" content="技术通过产品影响世界">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="咖啡's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/1ba9fa78.html" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--中断处理分析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2017-01-09 15:00:00" itemprop="dateCreated datePublished" datetime="2017-01-09T15:00:00+08:00">2017-01-09</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-04-21 18:43:32" itemprop="dateModified" datetime="2022-04-21T18:43:32+08:00">2022-04-21</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">1-基础</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/Linux%E5%86%85%E6%A0%B8/" itemprop="url" rel="index"><span itemprop="name">Linux内核</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/blog/1ba9fa78.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/1ba9fa78.html" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>笔记重点:<br>尽管时代在变化,中断系统的基本原理却是变化不大，对新版linux的中断系统的分析和理解起到指引作用,中断系统的细节包括，中断发生前的上下文保存以及中断处理完成后的上下文恢复;中断的统一调用过程中CPU的异常处理是，当CPU响应异常或者中断时，处理器使用异常或者中断的向量作为IDT表的索引，引用索引中的门描述符指向的中断程序，进行处理。硬件对中断的支持表现在CPU中有专门的中断向量表寄存器IDTR,并使用专门的指令在设置和读取这个寄存器的内容(LIDT和SIDT),以及8259A这样的中断控制器处理外部中断的优先级;中断系统的中断来源三个方面,分析linux中的中断系统的原理是从以下三个方面的透彻理解入手的:</p>
-<ul>
-<li>一个方面是来自CPU执行流中的内部中断和异常</li>
-<li>一方面有外部设备通过8259A中断控制器向CPU的INTR脚请求中断</li>
-<li>还有一个方面被称为软中断的系统调用</li>
-</ul>
-</blockquote>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/blog/1ba9fa78.html#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/f06cd31f.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1097,6 +1094,112 @@
   
   
 
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/1ba9fa78.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术通过产品影响世界">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/1ba9fa78.html" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--中断处理分析</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-01-09 15:00:00" itemprop="dateCreated datePublished" datetime="2017-01-09T15:00:00+08:00">2017-01-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-21 18:43:32" itemprop="dateModified" datetime="2022-04-21T18:43:32+08:00">2022-04-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">1-基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/Linux%E5%86%85%E6%A0%B8/" itemprop="url" rel="index"><span itemprop="name">Linux内核</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/1ba9fa78.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/1ba9fa78.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>笔记重点:<br>尽管时代在变化,中断系统的基本原理却是变化不大，对新版linux的中断系统的分析和理解起到指引作用,中断系统的细节包括，中断发生前的上下文保存以及中断处理完成后的上下文恢复;中断的统一调用过程中CPU的异常处理是，当CPU响应异常或者中断时，处理器使用异常或者中断的向量作为IDT表的索引，引用索引中的门描述符指向的中断程序，进行处理。硬件对中断的支持表现在CPU中有专门的中断向量表寄存器IDTR,并使用专门的指令在设置和读取这个寄存器的内容(LIDT和SIDT),以及8259A这样的中断控制器处理外部中断的优先级;中断系统的中断来源三个方面,分析linux中的中断系统的原理是从以下三个方面的透彻理解入手的:</p>
+<ul>
+<li>一个方面是来自CPU执行流中的内部中断和异常</li>
+<li>一方面有外部设备通过8259A中断控制器向CPU的INTR脚请求中断</li>
+<li>还有一个方面被称为软中断的系统调用</li>
+</ul>
+</blockquote>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/blog/1ba9fa78.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
 
   
   <nav class="pagination">
@@ -1168,7 +1271,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-count">60</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
