@@ -31,8 +31,9 @@
 <meta property="og:image" content="https://dengwenyi88.github.io/blog/3d255ad4/2.png">
 <meta property="og:image" content="https://dengwenyi88.github.io/blog/3d255ad4/3.png">
 <meta property="og:image" content="https://dengwenyi88.github.io/blog/3d255ad4/4.png">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/3d255ad4/result.gif">
 <meta property="article:published_time" content="2022-08-14T02:16:00.000Z">
-<meta property="article:modified_time" content="2022-08-14T06:18:03.800Z">
+<meta property="article:modified_time" content="2022-08-15T04:01:38.122Z">
 <meta property="article:author" content="咖啡">
 <meta property="article:tag" content="AI">
 <meta property="article:tag" content="Swift">
@@ -191,10 +192,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-08-14 10:16:00 / 修改时间：14:18:03" itemprop="dateCreated datePublished" datetime="2022-08-14T10:16:00+08:00">2022-08-14</time>
+              <time title="创建时间：2022-08-14 10:16:00" itemprop="dateCreated datePublished" datetime="2022-08-14T10:16:00+08:00">2022-08-14</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-08-15 12:01:38" itemprop="dateModified" datetime="2022-08-15T12:01:38+08:00">2022-08-15</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -240,7 +247,10 @@
 <p>结果如下图:<br><img src="/blog/3d255ad4/3.png" class="" title="围棋03"></p>
 <h4 id="3-得到2号块所有气的标记"><a href="#3-得到2号块所有气的标记" class="headerlink" title="3. 得到2号块所有气的标记"></a>3. 得到2号块所有气的标记</h4><p>将第一步的所有空闲点与第二步相邻交叉点的相乘得到这块棋子的气的数量<br>代码如下:<br><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 标记气的交叉点</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">do_cal_alive</span>()</span> &#123;</span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="keyword">for</span> x <span class="keyword">in</span> <span class="number">1</span><span class="operator">...</span><span class="number">13</span> &#123;</span><br><span class="line">        <span class="keyword">for</span> y <span class="keyword">in</span> <span class="number">1</span><span class="operator">...</span><span class="number">13</span> &#123;</span><br><span class="line">            aliveNodes[x,y] <span class="operator">=</span> emptiesNodes[x,y] <span class="operator">*</span> dilationNodes[x,y]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>结果如下图,这块棋子一共3口气:<br><img src="/blog/3d255ad4/4.png" class="" title="围棋04"></p>
-
+<p>这里有一张动图,这里需要注意白棋的分块的序号变化<br>因为吃子的变化导致分块序号重新计算:</p>
+<div style="width:40%;margin:auto">
+<img src="/blog/3d255ad4/result.gif" class="" title="围棋气的动图">
+</div>
     </div>
 
     
