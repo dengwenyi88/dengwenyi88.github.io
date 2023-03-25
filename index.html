@@ -158,6 +158,103 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/c379e926.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术通过产品影响世界">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/c379e926.html" class="post-title-link" itemprop="url">FreeBSD源码笔记06-内核调试指南</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-03-25 16:30:00 / 修改时间：17:02:55" itemprop="dateCreated datePublished" datetime="2023-03-25T16:30:00+08:00">2023-03-25</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">1-基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/FreeBSD/" itemprop="url" rel="index"><span itemprop="name">FreeBSD</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/c379e926.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/c379e926.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>本文结合上文交叉编译内核后,记录内核调试方法的整个过程,只有通过修改源码,才能真正理解代码,真正理解代码背后的设计思想,所以要多动手尝试,慢则是快.</p>
+</blockquote>
+<h4 id="1-内核编译选项"><a href="#1-内核编译选项" class="headerlink" title="1. 内核编译选项"></a>1. 内核编译选项</h4><p>在你还没有打算定制内核以前,可以在内核文件中增加以下选项来增加内核调试功能<br><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># freebsd_src/src/sys/amd64/conf/GENERIC</span></span><br><span class="line">options     DDB</span><br><span class="line">options     GDB</span><br><span class="line">options     KDB</span><br></pre></td></tr></table></figure></p>
+<h4 id="2-内核的调试符号"><a href="#2-内核的调试符号" class="headerlink" title="2. 内核的调试符号"></a>2. 内核的调试符号</h4><p>在调试内核以前可以想一个问题,一个系统还没有完全加载完全,可以也就不存在系统调用准备好这么一说,那么ptrace功能就不可能使用,所以只能开启qemu内置的GDB功能。<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> -S  freeze CPU at startup (use <span class="string">&#x27;c&#x27;</span> to start execution)</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> -s  shorthand <span class="keyword">for</span> -gdb tcp::1234</span></span><br><span class="line">qemu-system-x86_64 -smp 2 -hda freebsd.qcow2 -m 2048M -boot cd \</span><br><span class="line">    -net user,hostfwd=tcp::2222-:22 -net nic -S -s</span><br></pre></td></tr></table></figure><br>这里qemu开启gdbserver端口监听在1234端口.如果出现以下画面,请不要慌,这个是-S选项,开启虚拟机后cpu停顿的缘故.<br><img src="/blog/undefined/qemu.jpg" class="" title="虚拟机开启"></p>
+<h4 id="3-VScode的调试"><a href="#3-VScode的调试" class="headerlink" title="3. VScode的调试"></a>3. VScode的调试</h4><p>vscode打开文件夹src,编译内核的时候也是相对src目录的,参考<a href="4a62f164.html">FreeBSD源码笔记-内核交叉编译</a>,另外打包的kernel目录里生成两个kernel文件夹：</p>
+<ul>
+<li>kernel/boot/kernel/kernel文件是部署在qemu虚拟机上的.</li>
+<li>kernel/usr/lib/debug/boot/kernel/kernel.debug是vscode要用到的文件</li>
+</ul>
+<p>vscode的调试配置文件:<br><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;version&quot;</span>: <span class="string">&quot;0.2.0&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;configurations&quot;</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;kernel debug&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;cppdbg&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;request&quot;</span>: <span class="string">&quot;launch&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;program&quot;</span>: <span class="string">&quot;$&#123;workspaceFolder&#125;/../kernel/usr/lib/debug/boot/kernel/kernel.debug&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;cwd&quot;</span>: <span class="string">&quot;$&#123;workspaceFolder&#125;&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;MIMode&quot;</span>: <span class="string">&quot;gdb&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;miDebuggerPath&quot;</span>:<span class="string">&quot;/usr/local/bin/gdb&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;miDebuggerServerAddress&quot;</span>: <span class="string">&quot;127.0.0.1:1234&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>开启调试后界面如下:<br><img src="/blog/undefined/vscode.jpg" class="" title="调试界面"></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/4a62f164.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1037,106 +1134,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/eb90d291.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/sherlock.png">
-      <meta itemprop="name" content="咖啡">
-      <meta itemprop="description" content="技术通过产品影响世界">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="咖啡's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/eb90d291.html" class="post-title-link" itemprop="url">AES加密算法6-C语言实现</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-05-20 13:16:00" itemprop="dateCreated datePublished" datetime="2022-05-20T13:16:00+08:00">2022-05-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-05-24 14:38:49" itemprop="dateModified" datetime="2022-05-24T14:38:49+08:00">2022-05-24</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/blog/eb90d291.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/eb90d291.html" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>网上实现AES的例子很多,但是错误的和遗漏的也很多,大概是一知半解的人和转载的人很多导致的,所以我打算自己撸一遍算法,以保证后续使用的时候既能保证正确又能开箱即用,也仅供其他人参考。
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/blog/eb90d291.html#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1208,7 +1205,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">61</span>
+          <span class="site-state-item-count">62</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
