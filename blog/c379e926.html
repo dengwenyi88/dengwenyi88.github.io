@@ -20,22 +20,22 @@
     var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="本文结合上文交叉编译内核后,记录内核调试方法的整个过程,只有通过修改源码,才能真正理解代码,真正理解代码背后的设计思想,所以要多动手尝试,慢则是快.  1. 内核编译选项在你还没有打算定制内核以前,可以在内核文件中增加以下选项来增加内核调试功能1234# freebsd_src&#x2F;src&#x2F;sys&#x2F;amd64&#x2F;conf&#x2F;GENERICoptions     DDBoptions     GDBopt">
+  <meta name="description" content="本文结合上文交叉编译内核后,记录内核调试方法的整个过程,分三步,编译可调试内核,部署调试符号,使用vscode调试.只有通过修改源码,才能真正理解代码,真正理解代码背后的设计思想,所以要多动手尝试,慢则是快.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="FreeBSD源码笔记06-内核调试指南">
 <meta property="og:url" content="https://dengwenyi88.github.io/blog/c379e926.html">
 <meta property="og:site_name" content="咖啡&#39;s blog">
-<meta property="og:description" content="本文结合上文交叉编译内核后,记录内核调试方法的整个过程,只有通过修改源码,才能真正理解代码,真正理解代码背后的设计思想,所以要多动手尝试,慢则是快.  1. 内核编译选项在你还没有打算定制内核以前,可以在内核文件中增加以下选项来增加内核调试功能1234# freebsd_src&#x2F;src&#x2F;sys&#x2F;amd64&#x2F;conf&#x2F;GENERICoptions     DDBoptions     GDBopt">
+<meta property="og:description" content="本文结合上文交叉编译内核后,记录内核调试方法的整个过程,分三步,编译可调试内核,部署调试符号,使用vscode调试.只有通过修改源码,才能真正理解代码,真正理解代码背后的设计思想,所以要多动手尝试,慢则是快.">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://dengwenyi88.github.io/blog/undefined/qemu.jpg">
-<meta property="og:image" content="https://dengwenyi88.github.io/blog/undefined/vscode.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/c379e926/qemu.jpg">
+<meta property="og:image" content="https://dengwenyi88.github.io/blog/c379e926/vscode.jpg">
 <meta property="article:published_time" content="2023-03-25T08:30:00.000Z">
-<meta property="article:modified_time" content="2023-03-25T09:02:55.115Z">
+<meta property="article:modified_time" content="2023-03-25T09:14:04.138Z">
 <meta property="article:author" content="咖啡">
 <meta property="article:tag" content="源码">
 <meta property="article:tag" content="FreeBSD">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://dengwenyi88.github.io/blog/undefined/qemu.jpg">
+<meta name="twitter:image" content="https://dengwenyi88.github.io/blog/c379e926/qemu.jpg">
 
 <link rel="canonical" href="https://dengwenyi88.github.io/blog/c379e926.html">
 
@@ -190,7 +190,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2023-03-25 16:30:00 / 修改时间：17:02:55" itemprop="dateCreated datePublished" datetime="2023-03-25T16:30:00+08:00">2023-03-25</time>
+              <time title="创建时间：2023-03-25 16:30:00 / 修改时间：17:14:04" itemprop="dateCreated datePublished" datetime="2023-03-25T16:30:00+08:00">2023-03-25</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -232,17 +232,18 @@
 
       
         <blockquote>
-<p>本文结合上文交叉编译内核后,记录内核调试方法的整个过程,只有通过修改源码,才能真正理解代码,真正理解代码背后的设计思想,所以要多动手尝试,慢则是快.</p>
+<p>本文结合上文交叉编译内核后,记录内核调试方法的整个过程,分三步,编译可调试内核,部署调试符号,使用vscode调试.只有通过修改源码,才能真正理解代码,真正理解代码背后的设计思想,所以要多动手尝试,慢则是快. <span id="more"></span></p>
 </blockquote>
 <h4 id="1-内核编译选项"><a href="#1-内核编译选项" class="headerlink" title="1. 内核编译选项"></a>1. 内核编译选项</h4><p>在你还没有打算定制内核以前,可以在内核文件中增加以下选项来增加内核调试功能<br><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># freebsd_src/src/sys/amd64/conf/GENERIC</span></span><br><span class="line">options     DDB</span><br><span class="line">options     GDB</span><br><span class="line">options     KDB</span><br></pre></td></tr></table></figure></p>
-<h4 id="2-内核的调试符号"><a href="#2-内核的调试符号" class="headerlink" title="2. 内核的调试符号"></a>2. 内核的调试符号</h4><p>在调试内核以前可以想一个问题,一个系统还没有完全加载完全,可以也就不存在系统调用准备好这么一说,那么ptrace功能就不可能使用,所以只能开启qemu内置的GDB功能。<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> -S  freeze CPU at startup (use <span class="string">&#x27;c&#x27;</span> to start execution)</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> -s  shorthand <span class="keyword">for</span> -gdb tcp::1234</span></span><br><span class="line">qemu-system-x86_64 -smp 2 -hda freebsd.qcow2 -m 2048M -boot cd \</span><br><span class="line">    -net user,hostfwd=tcp::2222-:22 -net nic -S -s</span><br></pre></td></tr></table></figure><br>这里qemu开启gdbserver端口监听在1234端口.如果出现以下画面,请不要慌,这个是-S选项,开启虚拟机后cpu停顿的缘故.<br><img src="/blog/undefined/qemu.jpg" class="" title="虚拟机开启"></p>
+<h4 id="2-内核的调试符号"><a href="#2-内核的调试符号" class="headerlink" title="2. 内核的调试符号"></a>2. 内核的调试符号</h4><p>在调试内核以前可以想一个问题,一个系统还没有完全加载完全,可以也就不存在系统调用准备好这么一说,那么ptrace功能就不可能使用,所以只能开启qemu内置的GDB功能。<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> -S  freeze CPU at startup (use <span class="string">&#x27;c&#x27;</span> to start execution)</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> -s  shorthand <span class="keyword">for</span> -gdb tcp::1234</span></span><br><span class="line">qemu-system-x86_64 -smp 2 -hda freebsd.qcow2 -m 2048M -boot cd \</span><br><span class="line">    -net user,hostfwd=tcp::2222-:22 -net nic -S -s</span><br></pre></td></tr></table></figure><br>这里qemu开启gdbserver端口监听在1234端口.如果出现以下画面,请不要慌,这个是-S选项,开启虚拟机后cpu停顿的缘故.<br><img src="/blog/c379e926/qemu.jpg" class="" title="虚拟机开启"></p>
 <h4 id="3-VScode的调试"><a href="#3-VScode的调试" class="headerlink" title="3. VScode的调试"></a>3. VScode的调试</h4><p>vscode打开文件夹src,编译内核的时候也是相对src目录的,参考<a href="4a62f164.html">FreeBSD源码笔记-内核交叉编译</a>,另外打包的kernel目录里生成两个kernel文件夹：</p>
 <ul>
 <li>kernel/boot/kernel/kernel文件是部署在qemu虚拟机上的.</li>
 <li>kernel/usr/lib/debug/boot/kernel/kernel.debug是vscode要用到的文件</li>
 </ul>
 <p>vscode的调试配置文件:<br><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;version&quot;</span>: <span class="string">&quot;0.2.0&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;configurations&quot;</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">&quot;name&quot;</span>: <span class="string">&quot;kernel debug&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;cppdbg&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;request&quot;</span>: <span class="string">&quot;launch&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;program&quot;</span>: <span class="string">&quot;$&#123;workspaceFolder&#125;/../kernel/usr/lib/debug/boot/kernel/kernel.debug&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;cwd&quot;</span>: <span class="string">&quot;$&#123;workspaceFolder&#125;&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;MIMode&quot;</span>: <span class="string">&quot;gdb&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;miDebuggerPath&quot;</span>:<span class="string">&quot;/usr/local/bin/gdb&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;miDebuggerServerAddress&quot;</span>: <span class="string">&quot;127.0.0.1:1234&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>开启调试后界面如下:<br><img src="/blog/undefined/vscode.jpg" class="" title="调试界面"></p>
+<p>开启调试后界面如下:<br><img src="/blog/c379e926/vscode.jpg" class="" title="调试界面"></p>
+<p>其他:如果使用命令行调试,进入gdb界面后,使用target remote 127.0.0.1:1234连接上去.<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gdb kernel.debug</span><br></pre></td></tr></table></figure></p>
 
     </div>
 
