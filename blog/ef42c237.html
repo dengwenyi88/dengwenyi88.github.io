@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="最近看golang1.21的发布时，看到已经有结构化日志库提供了，不过在项目中我经常用的到日志库是logrus。本文总结logrus的使用，并用笔记记录。logrus除了是结构化日志以外，我更看重的是有很多外部的hook支持,最初选择是因为可以向logstash发送日志。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="golang笔记-logrus组件">
+<meta property="og:url" content="https://dengwenyi88.github.io/blog/ef42c237.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="最近看golang1.21的发布时，看到已经有结构化日志库提供了，不过在项目中我经常用的到日志库是logrus。本文总结logrus的使用，并用笔记记录。logrus除了是结构化日志以外，我更看重的是有很多外部的hook支持,最初选择是因为可以向logstash发送日志。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-08-22T12:00:00.000Z">
+<meta property="article:modified_time" content="2023-08-22T14:45:34.437Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/blog/ef42c237.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>golang笔记-logrus组件 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/ef42c237.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术通过产品影响世界">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          golang笔记-logrus组件
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-08-22 20:00:00 / 修改时间：22:45:34" itemprop="dateCreated datePublished" datetime="2023-08-22T20:00:00+08:00">2023-08-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/3-%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">3-应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/3-%E5%BA%94%E7%94%A8/golang/" itemprop="url" rel="index"><span itemprop="name">golang</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/ef42c237.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/ef42c237.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近看golang1.21的发布时，看到已经有结构化日志库提供了，不过在项目中我经常用的到日志库是logrus。本文总结logrus的使用，并用笔记记录。logrus除了是结构化日志以外，我更看重的是有很多外部的hook支持,最初选择是因为可以向logstash发送日志。<br><span id="more"></span></p>
+<h4 id="1-使用方法"><a href="#1-使用方法" class="headerlink" title="1. 使用方法"></a>1. 使用方法</h4><p>日志最基础的使用就是文件日志，这里使用了另外两个库，以协助logrus进行日志的分割。一个是按照每小时进行滚动切割，这样在找问题时，可以按照一小时内去查找，另外如果一个小时内所产生的日志条数过多，也可以限制日志条数，超过条数要求日志文件切割。</p>
+<ul>
+<li><a href="github.com/rifflock/lfshook">lfshook</a></li>
+<li><a href="github.com/lestrrat-go/file-rotatelogs">file-rotatelogs</a></li>
+</ul>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newLfsHook</span><span class="params">(logName <span class="keyword">string</span>, logLevel log.Level, </span></span></span><br><span class="line"><span class="params"><span class="function">	maxRemainCnt <span class="keyword">uint</span>)</span> <span class="params">(log.Hook, error)</span></span> &#123;</span><br><span class="line">	writer, err := rotatelogs.New(</span><br><span class="line">		logName+<span class="string">&quot;.%Y%m%d%H&quot;</span>,</span><br><span class="line">		<span class="comment">// WithLinkName为最新的日志建立软连接，以方便随着找到当前日志文件</span></span><br><span class="line">		rotatelogs.WithLinkName(logName),</span><br><span class="line"></span><br><span class="line">		<span class="comment">// WithRotationTime设置日志分割的时间，这里设置为一小时分割一次</span></span><br><span class="line">		rotatelogs.WithRotationTime(time.Hour),</span><br><span class="line"></span><br><span class="line">		<span class="comment">// WithMaxAge和WithRotationCount二者只能设置一个，</span></span><br><span class="line">		<span class="comment">// WithMaxAge设置文件清理前的最长保存时间，</span></span><br><span class="line">		<span class="comment">// WithRotationCount设置文件清理前最多保存的个数。</span></span><br><span class="line">		<span class="comment">//rotatelogs.WithMaxAge(time.Hour*24*3),</span></span><br><span class="line">		rotatelogs.WithRotationCount(maxRemainCnt),</span><br><span class="line">	)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Errorf(<span class="string">&quot;config local filesystem for logger error: %v&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	writerMap := <span class="built_in">make</span>(<span class="keyword">map</span>[logrus.Level]io.Writer, <span class="number">0</span>)</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="keyword">int</span>(logLevel); i++ &#123;</span><br><span class="line">		writerMap[log.Level(i)] = writer</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	lfsHook := lfshook.NewHook(lfshook.WriterMap(writerMap), </span><br><span class="line">        &amp;log.TextFormatter&#123;DisableColors: <span class="literal">true</span>&#125;)</span><br><span class="line">	<span class="keyword">return</span> lfsHook, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>初始化logger,设置日志的等级，一般情况是错误日志单独一个文件处理。<br><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	log <span class="string">&quot;github.com/sirupsen/logrus&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">initLogger</span><span class="params">(logFilename <span class="keyword">string</span>, level log.Level)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	log.SetLevel(level)</span><br><span class="line">	fileHook, err := newLfsHook(logFilename, level, <span class="number">1024</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;log init fatal!&quot;</span>)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	log.AddHook(fileHook)</span><br><span class="line">    <span class="comment">// 一般情况可以给错误日志专门开一个hook</span></span><br><span class="line">	errHook, err := newLfsHook(<span class="string">&quot;logs/error.log&quot;</span>, </span><br><span class="line">        log.ErrorLevel, <span class="number">1024</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;errlog init fatal!&quot;</span>)</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	log.AddHook(errHook)</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="2-原理简介"><a href="#2-原理简介" class="headerlink" title="2. 原理简介"></a>2. 原理简介</h4><h5 id="2-1-最重要的三个结构。以下结构中列出重要的字段，部分省略"><a href="#2-1-最重要的三个结构。以下结构中列出重要的字段，部分省略" class="headerlink" title="2.1 最重要的三个结构。以下结构中列出重要的字段，部分省略"></a>2.1 最重要的三个结构。以下结构中列出重要的字段，部分省略</h5><ul>
+<li>第一个就是logger结构<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Logger <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// 写日志的处理器</span></span><br><span class="line">	Out io.Writer</span><br><span class="line">    <span class="comment">// Reusable empty entry</span></span><br><span class="line">	entryPool sync.Pool</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>第二个类就是entry结构,表示日志的一个条目<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Entry <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">	Logger *Logger</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">	<span class="comment">// When formatter is called in entry.log(), a Buffer may be set to entry</span></span><br><span class="line">	Buffer *bytes.Buffer</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>第三个类是hook,就是外部可以添加的各种支持的日志记录处理器.<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Hook <span class="keyword">interface</span> &#123;</span><br><span class="line">	Levels() []Level</span><br><span class="line">	Fire(*Entry) error</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Internal type for storing the hooks on a logger instance.</span></span><br><span class="line"><span class="keyword">type</span> LevelHooks <span class="keyword">map</span>[Level][]Hook</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h5 id="2-2-日志处理逻辑"><a href="#2-2-日志处理逻辑" class="headerlink" title="2.2 日志处理逻辑"></a>2.2 日志处理逻辑</h5><p>主要的逻辑是先复制entry条目，如果要报告调用的函数,则要加锁获取Buffer,这个buffer主要用于结构化。<br>在这里优先钩子上的记录处理器先处理，在进行默认处理。</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(entry *Entry)</span> <span class="title">log</span><span class="params">(level Level, msg <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> buffer *bytes.Buffer</span><br><span class="line">    <span class="comment">// 复制entry</span></span><br><span class="line">	newEntry := entry.Dup()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> newEntry.Time.IsZero() &#123;</span><br><span class="line">		newEntry.Time = time.Now()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	newEntry.Level = level</span><br><span class="line">	newEntry.Message = msg</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获得缓存和logger的是否报告调用者配置</span></span><br><span class="line">	newEntry.Logger.mu.Lock()</span><br><span class="line">	reportCaller := newEntry.Logger.ReportCaller</span><br><span class="line">	bufPool := newEntry.getBufferPool()</span><br><span class="line">	newEntry.Logger.mu.Unlock()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> reportCaller &#123;</span><br><span class="line">		newEntry.Caller = getCaller()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// hook先处理</span></span><br><span class="line">	newEntry.fireHooks()</span><br><span class="line">	buffer = bufPool.Get()</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		newEntry.Buffer = <span class="literal">nil</span></span><br><span class="line">		buffer.Reset()</span><br><span class="line">		bufPool.Put(buffer)</span><br><span class="line">	&#125;()</span><br><span class="line">	buffer.Reset()</span><br><span class="line">	newEntry.Buffer = buffer</span><br><span class="line">    <span class="comment">//日志的主处理器进行处理，见下面的注释。</span></span><br><span class="line">	newEntry.write()</span><br><span class="line"></span><br><span class="line">	newEntry.Buffer = <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">if</span> level &lt;= PanicLevel &#123;</span><br><span class="line">		<span class="built_in">panic</span>(newEntry)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>newEntry.write函数最后调用logger结构体的Write来处理日志。这里加锁的原因是，写日志有可能是不同的线程里，为了保持其输出的一致性，在这里加锁。这里要指出来的是,hook的线程安全由hook组件自己承担。<br><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(entry *Entry)</span> <span class="title">write</span><span class="params">()</span></span> &#123;</span><br><span class="line">	entry.Logger.mu.Lock()</span><br><span class="line">	<span class="keyword">defer</span> entry.Logger.mu.Unlock()</span><br><span class="line">	serialized, err := entry.Logger.Formatter.Format(entry)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Fprintf(os.Stderr, <span class="string">&quot;Failed to obtain reader, %v\n&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> _, err := entry.Logger.Out.Write(serialized); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Fprintf(os.Stderr, <span class="string">&quot;Failed to write to log, %v\n&quot;</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="3-结语"><a href="#3-结语" class="headerlink" title="3. 结语"></a>3. 结语</h4><p>最简单的组件，使用最常见，对性能的要求也比较苛刻，通常在前期的使用日志文件，到后期使用日志中心，日志组件要能够灵活支持，平滑过度，项目之初就要制定好日志结构化的一些基本字段，规则也相当重要，以便于日志采集，日志分析，日志提取相关工作可以顺利开展，这也是日志系统之外的事情了。</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/sirupsen/logrus/wiki/Hooks">Hooks列表</a><br><a target="_blank" rel="noopener" href="https://github.com/bshuster-repo/logrus-logstash-hook">logstash</a></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/golang/" rel="tag"># golang</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/c379e926.html" rel="prev" title="FreeBSD源码笔记06-内核调试指南">
+      <i class="fa fa-chevron-left"></i> FreeBSD源码笔记06-内核调试指南
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/6e2fc205.html" rel="next" title="golang笔记-redis的stream试用">
+      golang笔记-redis的stream试用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">1. 使用方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%8E%9F%E7%90%86%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">2. 原理简介</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-%E6%9C%80%E9%87%8D%E8%A6%81%E7%9A%84%E4%B8%89%E4%B8%AA%E7%BB%93%E6%9E%84%E3%80%82%E4%BB%A5%E4%B8%8B%E7%BB%93%E6%9E%84%E4%B8%AD%E5%88%97%E5%87%BA%E9%87%8D%E8%A6%81%E7%9A%84%E5%AD%97%E6%AE%B5%EF%BC%8C%E9%83%A8%E5%88%86%E7%9C%81%E7%95%A5"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 最重要的三个结构。以下结构中列出重要的字段，部分省略</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-%E6%97%A5%E5%BF%97%E5%A4%84%E7%90%86%E9%80%BB%E8%BE%91"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 日志处理逻辑</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E7%BB%93%E8%AF%AD"><span class="nav-number">3.</span> <span class="nav-text">3. 结语</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术通过产品影响世界</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://swordhell.github.io/" title="https:&#x2F;&#x2F;swordhell.github.io&#x2F;" rel="noopener" target="_blank">Abel'Blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'mail';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'bzp0CwMQschttuGek2pUcDtq-gzGzoHsz',
+      appKey     : 'SkCmikADMPFqRHPPU8KuSaDH',
+      placeholder: "欢迎交流讨论...",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
