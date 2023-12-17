@@ -158,6 +158,97 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/d9c4bf97.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术通过产品影响世界">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/d9c4bf97.html" class="post-title-link" itemprop="url">dapr中使用分布式配置中心</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-12-17 11:00:00 / 修改时间：11:56:59" itemprop="dateCreated datePublished" datetime="2023-12-17T11:00:00+08:00">2023-12-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/3-%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">3-应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/3-%E5%BA%94%E7%94%A8/dapr/" itemprop="url" rel="index"><span itemprop="name">dapr</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/d9c4bf97.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/d9c4bf97.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>本文记录gozero微服务在k8s中使用dapr的配置组件,做为分布式配置中心完整方案;因为agile使用的pgsql的数据库,这里首先在agile数据库中新建pgsql表,建立触发器通知dapr,agile微服务中改进为发布时往keyvalue表中插入配置以触发通知dapr,dapr再通知各个关注的微服务。<br>gozero微服务中通过dapr sdk,解析获得的配置数据。</p>
+<h4 id="1-建立pgsql表-agc-config-published-tab"><a href="#1-建立pgsql表-agc-config-published-tab" class="headerlink" title="1.建立pgsql表(agc_config_published_tab)"></a>1.建立pgsql表(agc_config_published_tab)</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> IF <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> agc_config_published_tab (</span><br><span class="line">  KEY <span class="type">VARCHAR</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  <span class="keyword">VALUE</span> <span class="type">VARCHAR</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  VERSION <span class="type">VARCHAR</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  METADATA JSON</span><br><span class="line">);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="2-建立触发器函数-notify-event"><a href="#2-建立触发器函数-notify-event" class="headerlink" title="2.建立触发器函数(notify_event)"></a>2.建立触发器函数(notify_event)</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">OR</span> REPLACE <span class="keyword">FUNCTION</span> notify_event() <span class="keyword">RETURNS</span> <span class="keyword">TRIGGER</span> <span class="keyword">AS</span> $$</span><br><span class="line">    <span class="keyword">DECLARE</span> </span><br><span class="line">        data json;</span><br><span class="line">        notification json;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">BEGIN</span></span><br><span class="line">        IF (TG_OP <span class="operator">=</span> <span class="string">&#x27;DELETE&#x27;</span>) <span class="keyword">THEN</span></span><br><span class="line">            data <span class="operator">=</span> row_to_json(<span class="keyword">OLD</span>);</span><br><span class="line">        <span class="keyword">ELSE</span></span><br><span class="line">            data <span class="operator">=</span> row_to_json(<span class="keyword">NEW</span>);</span><br><span class="line">        <span class="keyword">END</span> IF;</span><br><span class="line"></span><br><span class="line">        notification <span class="operator">=</span> json_build_object(</span><br><span class="line">                          <span class="string">&#x27;table&#x27;</span>,TG_TABLE_NAME,</span><br><span class="line">                          <span class="string">&#x27;action&#x27;</span>, TG_OP,</span><br><span class="line">                          <span class="string">&#x27;data&#x27;</span>, data);</span><br><span class="line">        PERFORM pg_notify(<span class="string">&#x27;config&#x27;</span>,notification::text);</span><br><span class="line">        <span class="keyword">RETURN</span> <span class="keyword">NULL</span>; </span><br><span class="line">    <span class="keyword">END</span>;</span><br><span class="line">$$ <span class="keyword">LANGUAGE</span> plpgsql;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="3-关联表和触发器-agc-config-published-trigger"><a href="#3-关联表和触发器-agc-config-published-trigger" class="headerlink" title="3.关联表和触发器(agc_config_published_trigger)"></a>3.关联表和触发器(agc_config_published_trigger)</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TRIGGER</span> agc_config_published_trigger</span><br><span class="line">AFTER <span class="keyword">INSERT</span> <span class="keyword">OR</span> UPDATE <span class="keyword">OR</span> <span class="keyword">DELETE</span> <span class="keyword">ON</span> agc_config_published_tab</span><br><span class="line">    <span class="keyword">FOR</span> <span class="keyword">EACH</span> <span class="type">ROW</span> <span class="keyword">EXECUTE</span> <span class="keyword">PROCEDURE</span> notify_event();</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="4-dapr在configure组件在k8s中的部署"><a href="#4-dapr在configure组件在k8s中的部署" class="headerlink" title="4.dapr在configure组件在k8s中的部署"></a>4.dapr在configure组件在k8s中的部署</h4><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">dapr.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Component</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">configstore</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">baas</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">configuration.postgresql</span></span><br><span class="line">  <span class="attr">version:</span> <span class="string">v1</span></span><br><span class="line">  <span class="attr">metadata:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">table</span></span><br><span class="line">      <span class="attr">value:</span> <span class="string">&quot;agc_config_published_tab&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">DbId</span></span><br><span class="line">      <span class="attr">secretKeyRef:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">k8s-secret</span></span><br><span class="line">        <span class="attr">key:</span>  <span class="string">DbId</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">DbPwd</span></span><br><span class="line">      <span class="attr">secretKeyRef:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">k8s-secret</span></span><br><span class="line">        <span class="attr">key:</span>  <span class="string">DbPwd</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">DbHost</span></span><br><span class="line">      <span class="attr">secretKeyRef:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">k8s-secret</span></span><br><span class="line">        <span class="attr">key:</span>  <span class="string">DbHost</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">DbPort</span></span><br><span class="line">      <span class="attr">secretKeyRef:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">k8s-secret</span></span><br><span class="line">        <span class="attr">key:</span>  <span class="string">DbPort</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">connectionString</span></span><br><span class="line">      <span class="attr">value:</span> <span class="string">host=$(DbHost)</span> <span class="string">user=$(DbId)</span> <span class="string">password=$(DbPwd)</span> <span class="string">port=$(DbPort)</span> <span class="string">sslmode=disable</span></span><br><span class="line"><span class="comment"># scopes:</span></span><br><span class="line"><span class="comment"># - service-api #可以限定某些应用</span></span><br></pre></td></tr></table></figure>
+<h4 id="5-agileconfig中的修改"><a href="#5-agileconfig中的修改" class="headerlink" title="5.agileconfig中的修改"></a>5.agileconfig中的修改</h4><p>在发布的时候需要往agc_config_published_tab表中插入发布的数据，发布的key在dapr有格式限制，只支持数字字母.和/,所以key在转换app_id,group中带-时要进行转换。在不能改变dap组件的情况下只能在agile和gozero中做出折中。<br>key : app_id.env.group.key<br>value: value<br>version: version<br>metadata: {update_time:xxxx}</p>
+<h4 id="6-go-zero中的使用"><a href="#6-go-zero中的使用" class="headerlink" title="6.go-zero中的使用"></a>6.go-zero中的使用</h4>
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/67530fa0.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1031,100 +1122,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/55caff1e.html">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/sherlock.png">
-      <meta itemprop="name" content="咖啡">
-      <meta itemprop="description" content="技术通过产品影响世界">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="咖啡's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/blog/55caff1e.html" class="post-title-link" itemprop="url">SHA-512算法2-轮函数计算</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2022-05-24 13:37:00 / 修改时间：14:38:19" itemprop="dateCreated datePublished" datetime="2022-05-24T13:37:00+08:00">2022-05-24</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/5-%E5%85%B6%E4%BB%96/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">加密算法</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/blog/55caff1e.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/55caff1e.html" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>SHA-512的轮函数计算，哈希函数是支撑单向性最重要的步骤,80轮计算是否可逆我不是很清楚，因为在我的脑子里所有关系式最终可以变成y=f(x),只不过有可能是离散的，有可能是连续的.
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/blog/55caff1e.html#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1196,20 +1193,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">66</span>
+          <span class="site-state-item-count">67</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-count">22</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-count">35</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

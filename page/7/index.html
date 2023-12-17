@@ -158,7 +158,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/a024be29.html">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/d8c3199e.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/sherlock.png">
@@ -172,7 +172,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/blog/a024be29.html" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--内存管理分析</a>
+            <a href="/blog/d8c3199e.html" class="post-title-link" itemprop="url">libevent笔记--定时事件分析</a>
         </h2>
 
         <div class="post-meta">
@@ -182,14 +182,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2017-01-12 20:00:00" itemprop="dateCreated datePublished" datetime="2017-01-12T20:00:00+08:00">2017-01-12</time>
+              <time title="创建时间：2017-06-30 18:30:00" itemprop="dateCreated datePublished" datetime="2017-06-30T18:30:00+08:00">2017-06-30</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-04-21 18:43:32" itemprop="dateModified" datetime="2022-04-21T18:43:32+08:00">2022-04-21</time>
+                <time title="修改时间：2022-05-02 18:16:27" itemprop="dateModified" datetime="2022-05-02T18:16:27+08:00">2022-05-02</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -197,11 +197,19 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">1-基础</span></a>
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">5-其他</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/Linux%E5%86%85%E6%A0%B8/" itemprop="url" rel="index"><span itemprop="name">Linux内核</span></a>
+                  <a href="/categories/5-%E5%85%B6%E4%BB%96/libevent/" itemprop="url" rel="index"><span itemprop="name">libevent</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/3-%E5%BA%94%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">3-应用</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/3-%E5%BA%94%E7%94%A8/C-C/" itemprop="url" rel="index"><span itemprop="name">C/C++</span></a>
                 </span>
             </span>
 
@@ -214,8 +222,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/blog/a024be29.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/a024be29.html" itemprop="commentCount"></span>
+    <a title="valine" href="/blog/d8c3199e.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/d8c3199e.html" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -230,10 +238,17 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          内存管理分析哦
+          <blockquote>
+<p>笔记重点:</p>
+<ul>
+<li>定时事件的处理依赖两个结构，一个是小根堆，一个是common_timeout的结构。</li>
+<li>小根堆根据超时时间进行排序，最近超时的为小根堆的根节点。</li>
+<li>common_timeout_list结构是为了处理超时时间相同的一系列事件的集合，以防止小根堆随超时事件的增多而过多增加的情况,对common-timeout的理解是依据《管理超时event》这篇博客进行分析的。</li>
+</ul>
+</blockquote>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/blog/a024be29.html#more" rel="contents">
+              <a class="btn" href="/blog/d8c3199e.html#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -339,6 +354,105 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/blog/428943f6.html#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/a024be29.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术通过产品影响世界">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/blog/a024be29.html" class="post-title-link" itemprop="url">《linux 0.12内核完全剖析》--内存管理分析</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-01-12 20:00:00" itemprop="dateCreated datePublished" datetime="2017-01-12T20:00:00+08:00">2017-01-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-21 18:43:32" itemprop="dateModified" datetime="2022-04-21T18:43:32+08:00">2022-04-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">1-基础</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/1-%E5%9F%BA%E7%A1%80/Linux%E5%86%85%E6%A0%B8/" itemprop="url" rel="index"><span itemprop="name">Linux内核</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/a024be29.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/a024be29.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          内存管理分析哦
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/blog/a024be29.html#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -853,20 +967,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">66</span>
+          <span class="site-state-item-count">67</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-count">22</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-count">35</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
