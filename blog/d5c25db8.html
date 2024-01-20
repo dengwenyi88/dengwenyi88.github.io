@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 5.4.0">
+<meta name="generator" content="Hexo 7.0.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -242,7 +242,7 @@
 <li>客户端 go build main/ngrok/ngrok.go</li>
 <li>服务器 go build main/ngrokd/ngrokd.go</li>
 </ul>
-<h4 id="服务器配置"><a href="#服务器配置" class="headerlink" title="服务器配置"></a>服务器配置</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> supervisord</span></span><br><span class="line">command=/root/ngrokd --tunnelAddr=&quot;:9002&quot; --domain=&quot;192.168.1.1&quot;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="服务器配置"><a href="#服务器配置" class="headerlink" title="服务器配置"></a>服务器配置</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">supervisord</span></span><br><span class="line">command=/root/ngrokd --tunnelAddr=&quot;:9002&quot; --domain=&quot;192.168.1.1&quot;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <h4 id="客户端配置"><a href="#客户端配置" class="headerlink" title="客户端配置"></a>客户端配置</h4><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">server_addr:</span> <span class="number">192.168</span><span class="number">.1</span><span class="number">.1</span><span class="string">:9002</span></span><br><span class="line"><span class="attr">trust_host_root_certs:</span> <span class="literal">false</span></span><br><span class="line"><span class="attr">tunnels:</span></span><br><span class="line"> <span class="attr">aliyun:</span></span><br><span class="line">  <span class="attr">hostname:</span> <span class="number">192.168</span><span class="number">.1</span><span class="number">.1</span></span><br><span class="line">  <span class="attr">remote_port:</span> <span class="number">2200</span></span><br><span class="line">  <span class="attr">proto:</span></span><br><span class="line">   <span class="attr">tcp:</span> <span class="number">22</span></span><br></pre></td></tr></table></figure>
 <h4 id="备注"><a href="#备注" class="headerlink" title="备注"></a>备注</h4><p>在反向代理ssh时请注意安全,更改默认端口,不允许root权限登录改用证书登录</p>
 
@@ -345,7 +345,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">68</span>
+          <span class="site-state-item-count">67</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 5.4.0">
+<meta name="generator" content="Hexo 7.0.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -247,7 +247,7 @@
 </blockquote>
 <h4 id="1-项目地址"><a href="#1-项目地址" class="headerlink" title="1. 项目地址"></a>1. 项目地址</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone --recurse-submodules https://gitee.com/korra/lib3rd.git</span><br></pre></td></tr></table></figure>
 <p>项目中包含了子模块(gflags)</p>
-<h4 id="2-gflags使用"><a href="#2-gflags使用" class="headerlink" title="2. gflags使用"></a>2. gflags使用</h4><p>网上有很多使用说明,类似<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/2179938a818d">gFlags使用指南</a><br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;gflags/gflags.h&quot;</span></span></span><br><span class="line"><span class="comment">// 定义一个变量</span></span><br><span class="line"><span class="built_in">DEFINE_int32</span>(end, <span class="number">1000</span>, <span class="string">&quot;The last record to read&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 解析命令行</span></span><br><span class="line">    gflags::<span class="built_in">ParseCommandLineFlags</span>(&amp;argc, &amp;argv, <span class="literal">true</span>);</span><br><span class="line">    <span class="comment">// 读取值</span></span><br><span class="line">    std::cout &lt;&lt; FLAGS_end &lt;&lt; std::endl;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="2-gflags使用"><a href="#2-gflags使用" class="headerlink" title="2. gflags使用"></a>2. gflags使用</h4><p>网上有很多使用说明,类似<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/2179938a818d">gFlags使用指南</a><br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;gflags/gflags.h&quot;</span></span></span><br><span class="line"><span class="comment">// 定义一个变量</span></span><br><span class="line"><span class="built_in">DEFINE_int32</span>(end, <span class="number">1000</span>, <span class="string">&quot;The last record to read&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 解析命令行</span></span><br><span class="line">    gflags::<span class="built_in">ParseCommandLineFlags</span>(&amp;argc, &amp;argv, <span class="literal">true</span>);</span><br><span class="line">    <span class="comment">// 读取值</span></span><br><span class="line">    std::cout &lt;&lt; FLAGS_end &lt;&lt; std::endl;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>请在vscode下安装clangd,cmake后会生成代码导航文件compile_commands.json文件。<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON</span><br></pre></td></tr></table></figure></p>
 
     </div>
@@ -350,7 +350,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">68</span>
+          <span class="site-state-item-count">67</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

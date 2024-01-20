@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 5.4.0">
+<meta name="generator" content="Hexo 7.0.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -252,7 +252,7 @@
 </ul>
 <h4 id="二-编译前准备工作"><a href="#二-编译前准备工作" class="headerlink" title="二. 编译前准备工作"></a>二. 编译前准备工作</h4><ul>
 <li>boost_1_70_0文件夹解压到mysql-8.0.18\boost\下</li>
-<li>按照 <a href="/blog/8660b909.html" title="这个编译安装openssl库">这个编译安装openssl库</a>;添加OPENSSL_ROOT环境变量为openssl安装目录</li>
+<li>按照 <a href="/blog/8660b909.html" title="openssl源码编译[windows版本]">这个编译安装openssl库</a>;添加OPENSSL_ROOT环境变量为openssl安装目录</li>
 <li>安装bison;这个是生成mysql的内部sql语句要用的解析器,增加bison目录到系统path中</li>
 <li><p>sql脚本更改:<br>mysql-8.0.18\scripts\fill_help_tables.sql中</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SET NAMES &#x27;utf8&#x27;;改成utf8mb4</span></span><br><span class="line"><span class="keyword">SET</span> NAMES <span class="string">&#x27;utf8mb4&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- ...</span></span><br><span class="line"><span class="comment">-- 搜索PI行注释掉</span></span><br><span class="line"><span class="comment">-- INSERT INTO help_topic (help_topic_id,help_category_id,name,description,example,url) VALUES (160,13,&#x27;PI&#x27;,</span></span><br><span class="line"><span class="comment">-- 搜索RADIANS注释掉这行</span></span><br><span class="line"><span class="comment">-- INSERT INTO help_topic (help_topic_id,help_category_id,name,description,example,url) VALUES (163,13,&#x27;RADIANS&#x27;,</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
@@ -260,7 +260,7 @@
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">-- SET @cmd = &quot;CREATE TABLE IF NOT EXISTS help_topic 这一行的编码格式由utf8改成utf8mb4</span></span><br><span class="line"><span class="keyword">SET</span> <span class="variable">@cmd</span> <span class="operator">=</span> &quot;CREATE TABLE IF NOT EXISTS help_topic ( help_topic_id int unsigned not null, name char(64) not null, help_category_id smallint unsigned not null, description text not null, example text not null, url text not null, primary key (help_topic_id), unique index (name) ) engine=INNODB STATS_PERSISTENT=0 CHARACTER SET utf8mb4 COLLATE utf8mb4_bin comment=&#x27;help topics&#x27; ROW_FORMAT=DYNAMIC TABLESPACE=mysql&quot;;</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
-<h4 id="三-编译源码"><a href="#三-编译源码" class="headerlink" title="三. 编译源码"></a>三. 编译源码</h4><h5 id="3-1-建立源码外编译目录"><a href="#3-1-建立源码外编译目录" class="headerlink" title="3.1 建立源码外编译目录"></a>3.1 建立源码外编译目录</h5><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p mysql-8.0.18\build &amp;&amp; mysql-8.0.18\build</span><br></pre></td></tr></table></figure>
+<h4 id="三-编译源码"><a href="#三-编译源码" class="headerlink" title="三. 编译源码"></a>三. 编译源码</h4><h5 id="3-1-建立源码外编译目录"><a href="#3-1-建立源码外编译目录" class="headerlink" title="3.1 建立源码外编译目录"></a>3.1 建立源码外编译目录</h5><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p mysql-8.0.18\build &amp;&amp; mysql-8.0.18\build</span><br></pre></td></tr></table></figure>
 <h5 id="3-2-使用cmake进行配置"><a href="#3-2-使用cmake进行配置" class="headerlink" title="3.2 使用cmake进行配置"></a>3.2 使用cmake进行配置</h5><p>在build目录生成MySQL.sln,以下用到的参数均可以在<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/source-configuration-options.html">mysql的官方文档</a>中找到;另外在这里没有特别配置的比较重要的选项是<br>DEFAULT_CHARSET默认值是utf8mb4,DEFAULT_COLLATION默认值为utf8mb4_0900_ai_ci,另外CMAKE_BUILD_TYPE的默认选项不是release,而是RelWithDebInfo.</p>
 <figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">cmake .. -DCMAKE_INSTALL_PREFIX=F:\\mysql \</span><br><span class="line">-DENABLED_LOCAL_INFILE=<span class="keyword">ON</span> \</span><br><span class="line">-DWITH_INNODB_MEMCACHED=<span class="keyword">ON</span> \</span><br><span class="line">-DWITH_INNOBASE_STORAGE_ENGINE=<span class="number">1</span> \</span><br><span class="line">-DWITH_BOOST=F:\\mysql-<span class="number">8.0</span>.<span class="number">18</span>\\boost\\boost_1_70_0 \</span><br><span class="line">-G <span class="string">&quot;Visual Studio 15 2017 Win64&quot;</span> \</span><br><span class="line">-DWITH_SSL=f:\\openssl_dev \</span><br><span class="line">-DCMAKE_BUILD_TYPE=Debug</span><br></pre></td></tr></table></figure>
 <h5 id="3-3-命令行编译MySQL-sln"><a href="#3-3-命令行编译MySQL-sln" class="headerlink" title="3.3 命令行编译MySQL.sln"></a>3.3 命令行编译MySQL.sln</h5><p>这里需要说明的是，第一遍编译时会产生编译错误</p>
@@ -374,7 +374,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">68</span>
+          <span class="site-state-item-count">67</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
