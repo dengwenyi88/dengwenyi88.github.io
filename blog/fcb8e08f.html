@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Monda:300,300italic,400,400italic,700,700italic|JetBrains Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"dengwenyi88.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"appID":"HG95CIAAGP","apiKey":"cb058191fc2599e72638aa2c23b77593","indexName":"sherlock","hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="本文是对游戏中逻辑数据的配置的一个总结。游戏逻辑数据的配置,是mmo游戏首要考虑的问题,从字面意思看就是简单的生成游戏逻辑配置,让前后端加载即可;实际上往中后期的测试和调试来讲,却又不是一个简简单单的游戏逻辑配置问题">
+<meta property="og:type" content="article">
+<meta property="og:title" content="游戏开发-数据配置">
+<meta property="og:url" content="https://dengwenyi88.github.io/blog/fcb8e08f.html">
+<meta property="og:site_name" content="咖啡&#39;s blog">
+<meta property="og:description" content="本文是对游戏中逻辑数据的配置的一个总结。游戏逻辑数据的配置,是mmo游戏首要考虑的问题,从字面意思看就是简单的生成游戏逻辑配置,让前后端加载即可;实际上往中后期的测试和调试来讲,却又不是一个简简单单的游戏逻辑配置问题">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-05-20T08:47:26.585Z">
+<meta property="article:modified_time" content="2024-05-20T10:03:00.223Z">
+<meta property="article:author" content="咖啡">
+<meta property="article:tag" content="游戏开发">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dengwenyi88.github.io/blog/fcb8e08f.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>游戏开发-数据配置 | 咖啡's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">咖啡's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">专心 专注 专业</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://dengwenyi88.github.io/blog/fcb8e08f.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/sherlock.png">
+      <meta itemprop="name" content="咖啡">
+      <meta itemprop="description" content="技术通过产品影响世界">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="咖啡's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          游戏开发-数据配置
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2024-05-20 16:47:26 / 修改时间：18:03:00" itemprop="dateCreated datePublished" datetime="2024-05-20T16:47:26+08:00">2024-05-20</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/4-%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/" itemprop="url" rel="index"><span itemprop="name">4-游戏开发</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/4-%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/%E5%90%8E%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">后端</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/fcb8e08f.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/fcb8e08f.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文是对游戏中逻辑数据的配置的一个总结。游戏逻辑数据的配置,是mmo游戏首要考虑的问题,从字面意思看就是简单的生成游戏逻辑配置,让前后端加载即可;实际上往中后期的测试和调试来讲,却又不是一个简简单单的游戏逻辑配置问题<span id="more"></span>,而是一个各个组员如何相互配合,如何保持配置即能健壮,又能在出错的时候能够及时反馈到来源方,既要保证配置的敏捷性,又要使开发人员,测试人员以及运维人员都能及时发现错误并正确的运行服务器,这个时候定制的一套规范就很有必要,而通过工具检查配置符合规范又显得很有必要。</p>
+<h4 id="1-从DataEditor说起"><a href="#1-从DataEditor说起" class="headerlink" title="1. 从DataEditor说起"></a>1. 从DataEditor说起</h4><p>使用c#写的DataEditor，目的是让策划人员从源头上避免数据出错,比如配置怪物的等级信息,NPC信息,而配置关卡信息时需要引用这个怪物和NPC的ID,配置怪物的一些数值信息,这里有表之间的引用关系,也有表内的字段之间的关系,数据编辑器就做的复杂无比,就算实现了,你会发现你还需要教会策划人员去学习使用它,这个成本是相当高的。索性后续退而求其次,策划还是使用excel来配置自己的数据。</p>
+<h4 id="2-csv2cpp的功能"><a href="#2-csv2cpp的功能" class="headerlink" title="2. csv2cpp的功能"></a>2. csv2cpp的功能</h4><p>csv2cpp是我用golang写的一个插件,给DataEditor调用使用，不过也可以单独使用。这个插件提供两个功能,一个功能是根据xml描述文件生成cpp文件用来读取csv文件,第二功能直接读取csv文件导出为lua文件,前者给服务器读取,后者给前端读取。</p>
+<h5 id="2-1-生成cpp文件"><a href="#2-1-生成cpp文件" class="headerlink" title="2.1 生成cpp文件"></a>2.1 生成cpp文件</h5><p>这里需要说明的是Description.xml,可以手动编写,也可以直接从csv文件中到处,csv文件有两项强制规范,首行是列表名字,名字C<em>前缀为前端专有,D</em>前缀表示不生成(用来缩小lua文件大小),默认是都会生成；第二行为列的字段类型,这里只有INT和STRING两种,至于策划用的逗号和分号之类的都用STRING表示了。Description.xml的格式说明，DataElement节点表示一张csv表格,Dir表示输出的目录名字,当前结构的版本号<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">DataElement</span> <span class="attr">Name</span>=<span class="string">&quot;mainMap&quot;</span> <span class="attr">Dir</span>=<span class="string">&quot;mainMap&quot;</span> <span class="attr">Version</span>=<span class="string">&quot;0.1.0&quot;</span> <span class="attr">MD5</span>=<span class="string">&quot;a567ec4898c9543128990729b8d2b408&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">Field</span> <span class="attr">Name</span>=<span class="string">&quot;id&quot;</span> <span class="attr">Type</span>=<span class="string">&quot;int&quot;</span> <span class="attr">Key</span>=<span class="string">&quot;true&quot;</span> <span class="attr">IsNULL</span>=<span class="string">&quot;true&quot;</span> <span class="attr">Desc</span>=<span class="string">&quot;地图id&quot;</span> <span class="attr">Flag</span>=<span class="string">&quot;3&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">Field</span> <span class="attr">Name</span>=<span class="string">&quot;name&quot;</span> <span class="attr">Type</span>=<span class="string">&quot;string&quot;</span> <span class="attr">IsNULL</span>=<span class="string">&quot;true&quot;</span> <span class="attr">Desc</span>=<span class="string">&quot;地图名称&quot;</span> <span class="attr">Flag</span>=<span class="string">&quot;3&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">Field</span> <span class="attr">Name</span>=<span class="string">&quot;startslot&quot;</span> <span class="attr">Type</span>=<span class="string">&quot;int&quot;</span> <span class="attr">IsNULL</span>=<span class="string">&quot;true&quot;</span> <span class="attr">Desc</span>=<span class="string">&quot;初始节点ID&quot;</span> <span class="attr">Flag</span>=<span class="string">&quot;3&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">Field</span> <span class="attr">Name</span>=<span class="string">&quot;nextmap&quot;</span> <span class="attr">Type</span>=<span class="string">&quot;int&quot;</span> <span class="attr">IsNULL</span>=<span class="string">&quot;true&quot;</span> <span class="attr">Desc</span>=<span class="string">&quot;后继地图ID&quot;</span> <span class="attr">Flag</span>=<span class="string">&quot;3&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">DataElement</span>&gt;</span></span><br></pre></td></tr></table></figure><br>格式中还定义了前后端可以通用的枚举和常量,这里要指出的是也可以通过协议定义来导出,不过这里导出的是逻辑配置中用到的一些枚举和常量。<br>如下所示：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">enum</span> <span class="attr">name</span>=<span class="string">&quot;eSkillTag&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">enumerator</span> <span class="attr">name</span>=<span class="string">&quot;eSkillTag_Unknow&quot;</span> <span class="attr">value</span>=<span class="string">&quot;0&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">enumerator</span> <span class="attr">name</span>=<span class="string">&quot;eSkillTag_Begin&quot;</span> <span class="attr">value</span>=<span class="string">&quot;1&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">enumerator</span> <span class="attr">name</span>=<span class="string">&quot;eSkillTag_Common&quot;</span> <span class="attr">value</span>=<span class="string">&quot;2&quot;</span> <span class="attr">comment</span>=<span class="string">&quot;普通攻击&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">enumerator</span> <span class="attr">name</span>=<span class="string">&quot;eSkillTag_AutoAttack&quot;</span> <span class="attr">value</span>=<span class="string">&quot;3&quot;</span> <span class="attr">comment</span>=<span class="string">&quot;自动攻击&quot;</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">enumerator</span> <span class="attr">name</span>=<span class="string">&quot;eSkillTag_End&quot;</span> <span class="attr">value</span>=<span class="string">&quot;3&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">enum</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">constant</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">define</span> <span class="attr">name</span>=<span class="string">&quot;equip_bag_maxnum&quot;</span> <span class="attr">type</span>=<span class="string">&quot;int&quot;</span> <span class="attr">value</span>=<span class="string">&quot;200&quot;</span> <span class="attr">comment</span>=<span class="string">&quot;装备背包最大值&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">define</span> <span class="attr">name</span>=<span class="string">&quot;pet_bag_maxnum&quot;</span> <span class="attr">type</span>=<span class="string">&quot;int&quot;</span> <span class="attr">value</span>=<span class="string">&quot;200&quot;</span> <span class="attr">comment</span>=<span class="string">&quot;宠物背包最大值&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">constant</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<h5 id="2-2-tpl目录说明"><a href="#2-2-tpl目录说明" class="headerlink" title="2.2 tpl目录说明"></a>2.2 tpl目录说明</h5><ul>
+<li>dataloadermanager.tpl 是数据加载的管理器</li>
+<li>dataloader 是csv的数据加载类</li>
+<li>idataloader 是dataloader的接口类</li>
+</ul>
+<h4 id="3-结语"><a href="#3-结语" class="headerlink" title="3. 结语"></a>3. 结语</h4><p>有几个需要注意的地方：</p>
+<ul>
+<li>策划的excel文件需要自行通过svn来管理版本,由主策同意生成csv的文件，同步更新Description.xml。</li>
+<li>Description.xml文件是策划和程序的数据结构接口，却不是数据内容接口;结构正确的情形下,策划仍然有可能填错内容，导致测试的工作在不准确的配置上;</li>
+<li>Description.xml可以及时更改以配合自身的开发,功能开发完毕后通知策划人员做出更改。这个时候测试有可能使用的还是旧的配置而无法快速测试新功能。</li>
+<li>Description.xml的字段类型还可以再扩展和细化,达到生成的代码在加载时就可以检测加载错误。但是交叉引用的逻辑错误还是无法通过读取配置代码来检查,这个需要在配置读取完毕以后做一次检查。</li>
+<li>关于服务器的配置热更新的问题，mmo服务器不建议热更配置！不过通过我长期实践k8s里的分布式配置中心的原理来说,也是可以做到的，这里需要考虑的问题是服务器热更是单独一台服务器热更还是保持所有的线上服务器配置数据的一致性问题，因此保守起见不建议热更。</li>
+</ul>
+<p><strong> 最后给上<a target="_blank" rel="noopener" href="https://gitee.com/korra/csv2cpp.git">源码链接</a> </strong></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/" rel="tag"># 游戏开发</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/dcaf917c.html" rel="prev" title="游戏开发-epoll笔记">
+      <i class="fa fa-chevron-left"></i> 游戏开发-epoll笔记
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E4%BB%8EDataEditor%E8%AF%B4%E8%B5%B7"><span class="nav-number">1.</span> <span class="nav-text">1. 从DataEditor说起</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-csv2cpp%E7%9A%84%E5%8A%9F%E8%83%BD"><span class="nav-number">2.</span> <span class="nav-text">2. csv2cpp的功能</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-%E7%94%9F%E6%88%90cpp%E6%96%87%E4%BB%B6"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 生成cpp文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-tpl%E7%9B%AE%E5%BD%95%E8%AF%B4%E6%98%8E"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 tpl目录说明</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E7%BB%93%E8%AF%AD"><span class="nav-number">3.</span> <span class="nav-text">3. 结语</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="咖啡"
+      src="/images/sherlock.png">
+  <p class="site-author-name" itemprop="name">咖啡</p>
+  <div class="site-description" itemprop="description">技术通过产品影响世界</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">70</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://swordhell.github.io/" title="https:&#x2F;&#x2F;swordhell.github.io&#x2F;" rel="noopener" target="_blank">Abel'Blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">咖啡</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'mail';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'bzp0CwMQschttuGek2pUcDtq-gzGzoHsz',
+      appKey     : 'SkCmikADMPFqRHPPU8KuSaDH',
+      placeholder: "欢迎交流讨论...",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
